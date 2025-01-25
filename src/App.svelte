@@ -207,7 +207,7 @@
   .simulation-time input {
     padding: 5px;
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.5em; /* Originally 1em */
+    font-size: 0.5em;
     width: 60px;
     text-align: center;
     margin-left: 10px;
@@ -247,13 +247,13 @@
   }
 </style>
 
-<!-- Import the Press Start 2P font -->
+<!-- import the Press Start 2P font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <div class="app">
-  <h1>Market Timing Simulator</h1>
+  <h1>Can You Beat The Market?</h1>
   <div class="timer">Time Left: {timer} seconds</div>
   <div class="portfolio">Portfolio Value: ${portfolio.portfolioValue.toFixed(2)}</div>
   <MarketChart />

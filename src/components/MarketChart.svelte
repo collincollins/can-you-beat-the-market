@@ -26,25 +26,26 @@
         {
           label: 'Market Price',
           data: [],
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 2,
+          borderColor: 'black',
+          pointStyle: 'line',
+          borderWidth: 1,
           fill: false,
           pointRadius: 0, // hide individual points for smoother lines
         },
         {
-          label: 'Buy Actions',
+          label: 'Buy Event',
           data: [],
           backgroundColor: 'green',
           pointStyle: 'circle',
-          pointRadius: 8,
+          pointRadius: 5,
           showLine: false,
         },
         {
-          label: 'Sell Actions',
+          label: 'Sell Event',
           data: [],
           backgroundColor: 'red',
           pointStyle: 'circle',
-          pointRadius: 8,
+          pointRadius: 5,
           showLine: false,
         }
       ],
@@ -77,6 +78,9 @@
       plugins: {
         legend: {
           display: true,
+          labels: {
+            usePointStyle: true
+          }
         },
         title: {
           display: false,
