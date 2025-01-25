@@ -1,10 +1,20 @@
 <!-- src/components/MarketChart.svelte -->
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { Chart, LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, Tooltip, Legend } from 'chart.js';
+    import {
+      Chart,
+      LineController,
+      LineElement,
+      PointElement,
+      LinearScale,
+      Title,
+      CategoryScale,
+      Tooltip,
+      Legend
+    } from 'chart.js';
     import { marketData } from '../logic/store';
   
-    // register necessary Chart.js components
+    // register all necessary Chart.js components
     Chart.register(
       LineController,
       LineElement,
@@ -16,23 +26,25 @@
       Legend
     );
   
-    let chart;           // reference to the chart instance
-    let ctx = null;      // canvas context
+    let chart;
+    let ctx = null;
   
-    // initial chart data structure
+    // prepare the datasets
     let data = {
       labels: [],
       datasets: [
         {
+          // rolling-average line
           label: 'Market Price',
           data: [],
           borderColor: 'black',
-          pointStyle: 'line',
-          borderWidth: 1,
+          borderWidth: 2,
           fill: false,
-          pointRadius: 0, // hide individual points for smoother lines
+          pointRadius: 0,
+          tension: 0
         },
         {
+          // buy markers
           label: 'Buy Event',
           data: [],
           backgroundColor: 'green',
@@ -41,6 +53,7 @@
           showLine: false,
         },
         {
+          // sell markers
           label: 'Sell Event',
           data: [],
           backgroundColor: 'red',
@@ -51,7 +64,7 @@
       ],
     };
   
-    // chart configuration options with y-axis limits
+    // chart options
     let options = {
       responsive: true,
       maintainAspectRatio: false,
@@ -60,79 +73,96 @@
         x: {
           type: 'linear',
           suggestedMin: 0,
-          suggestedMax: 1000,
+          suggestedMax: 1825,
           title: {
             display: true,
             text: 'Days',
+            font: {
+              family: "'Press Start 2P'",
+              size: 12
+            }
           },
+          ticks: {
+            font: {
+              family: "'Press Start 2P'",
+              size: 9
+            }
+          }
         },
         y: {
-          suggestedMin: 0,    
-          suggestedMax: 150,  
+          suggestedMin: 900,
+          suggestedMax: 1200,
           title: {
             display: true,
             text: 'Price ($)',
+            font: {
+              family: "'Press Start 2P'",
+              size: 12
+            }
           },
+          ticks: {
+            font: {
+              family: "'Press Start 2P'",
+              size: 9
+            }
+          }
         },
       },
       plugins: {
         legend: {
           display: true,
           labels: {
-            usePointStyle: true
+            usePointStyle: true,
+            font: {
+              family: "'Press Start 2P'",
+              size: 9
+            }
           }
         },
         title: {
-          display: false,
+          display: false
         },
         tooltip: {
-          enabled: true,
+          enabled: true
         }
       },
     };
   
-    let unsubscribe; // to store the unsubscribe function for the store
+    let unsubscribe;
   
-    // initialize the chart on component mount
     onMount(() => {
       if (ctx) {
+        // create the Chart.js instance
         chart = new Chart(ctx, {
           type: 'line',
           data,
-          options,
+          options
         });
   
         // subscribe to marketData store updates
         unsubscribe = marketData.subscribe(newData => {
-          chart.data.labels = newData.days;
-          chart.data.datasets[0].data = newData.marketPrices;
+          // 1) rolling-average line
+          chart.data.datasets[0].data = newData.rollingAverages.map((ra, i) => ({
+            x: newData.days[i],
+            y: ra
+          }));
   
-          // extract buy and sell actions
+          // 2) buy & sell
           const buyActions = newData.actions
-            .filter(action => action.type === 'buy')
-            .map(action => ({
-              x: action.day,
-              y: newData.marketPrices[action.day - 1] || newData.marketPrices[0],
-            }));
-  
+            .filter(a => a.type === 'buy')
+            .map(a => ({ x: a.day, y: a.executedPrice }));
           const sellActions = newData.actions
-            .filter(action => action.type === 'sell')
-            .map(action => ({
-              x: action.day,
-              y: newData.marketPrices[action.day - 1] || newData.marketPrices[0],
-            }));
+            .filter(a => a.type === 'sell')
+            .map(a => ({ x: a.day, y: a.executedPrice }));
   
-          // updatebBuy and sell sctions datasets
           chart.data.datasets[1].data = buyActions;
           chart.data.datasets[2].data = sellActions;
   
-          // update the chart
           chart.update('none');
         });
       }
     });
   
-    // clean up on component destroy
     onDestroy(() => {
       if (chart) chart.destroy();
       if (unsubscribe) unsubscribe();
@@ -142,13 +172,11 @@
   <style>
     .chart-container {
       position: relative;
-      height: 400px; 
-      width: 100%;
-      font-size: 0.5em; 
+      height: 350px;
+      width: 95%;
     }
   </style>
   
-  <!-- anvas element for Chart.js -->
   <div class="chart-container">
     <canvas bind:this={ctx}></canvas>
   </div>

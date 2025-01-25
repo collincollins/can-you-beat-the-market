@@ -1,48 +1,65 @@
+// src/logic/simulation.js
 import { marketData, userPortfolio } from './store';
 
 // simulation parameters
-const drift = 0.001; // slight positive drift per update (adjust as needed)
-const volatility = 0.01; // volatility per update
-const dt = 1; // time step (1 second for simulation)
-let frequency = 5; // updates per second (modifiable)
+// e.g. each step is 2.43 days => ~1 year in 30s if frequency=5 => 150 steps
+// Right now it's 4.86 => about 2 years in 30s at 5 updates/sec
+const daysPerStep = 5.09;
+const annualDrift = 0.08;
+const annualVol   = 0.10;
+const dt = daysPerStep / 365;
 
-// initialize simulation state
+// changes the speed of the market updates
+let frequency = 12;
+
+// simulation state
 let currentDay = 0;
-let currentPrice = 100; // starting price
+let currentPrice = 1000;
 let userShares = 1;
 let userCash = 0;
 let simulationInterval = null;
 
-// signals for buy/sell actions
+// signals
 let buySignal = false;
 let sellSignal = false;
 
-// function to calculate next price using Geometric Brownian Motion
+// geometric brownian motion
 function getNextPrice(price) {
   const random = Math.random();
   const z = Math.sqrt(-2.0 * Math.log(random)) * Math.cos(2.0 * Math.PI * Math.random());
-  const driftComponent = (drift - 0.5 * volatility ** 2) * dt;
-  const diffusionComponent = volatility * Math.sqrt(dt) * z;
-  const nextPrice = price * Math.exp(driftComponent + diffusionComponent);
-  return nextPrice;
+  
+  const driftComponent = (annualDrift - 0.5 * annualVol**2) * dt;
+  const diffusionComponent = annualVol * Math.sqrt(dt) * z;
+  
+  return price * Math.exp(driftComponent + diffusionComponent);
 }
 
-// function to update market data
 function updateMarket() {
-  currentDay += 1;
+  currentDay += daysPerStep;
   currentPrice = getNextPrice(currentPrice);
-
+  
   // update user portfolio value
   const userValue = userShares * currentPrice + userCash;
-
-  // update the marketData store
+  
+  // push data into marketData
   marketData.update(data => {
     data.days.push(currentDay);
     data.marketPrices.push(parseFloat(currentPrice.toFixed(2)));
+
+    // rolling avg of last N items
+    const windowSize = 5;
+    const len = data.marketPrices.length;
+    const start = Math.max(0, len - windowSize);
+    const subset = data.marketPrices.slice(start, len);
+    const sum = subset.reduce((a, b) => a + b, 0);
+    const avg = sum / subset.length;
+
+    data.rollingAverages.push(parseFloat(avg.toFixed(2)));
+
     return data;
   });
-
-  // update userPortfolio store
+  
+  // update userPortfolio
   userPortfolio.set({
     shares: userShares,
     cash: userCash,
@@ -50,19 +67,25 @@ function updateMarket() {
   });
 }
 
-// function to start the simulation
 export function startSimulation() {
   // reset simulation state
   currentDay = 0;
-  currentPrice = 100;
+  currentPrice = 1000;
   userShares = 1;
   userCash = 0;
 
-  // reset stores
+  // reset the store with day=0, price=100-, rolling=1000, plus initial Buy Action
   marketData.set({
-    days: [],
-    marketPrices: [],
-    actions: [],
+    days: [0],
+    marketPrices: [1000],
+    rollingAverages: [1000],
+    actions: [
+      {
+        type: 'buy',
+        day: 0,
+        executedPrice: 1000
+      }
+    ]
   });
 
   userPortfolio.set({
@@ -76,65 +99,71 @@ export function startSimulation() {
 
   // start simulation loop
   simulationInterval = setInterval(() => {
-    for (let i = 0; i < frequency; i++) {
-      updateMarket();
-      handleSignals();
-    }
-  }, 1000 / frequency); // adjust interval timing based on frequency
+    updateMarket();
+    handleSignals();
+  }, 1000 / frequency);
 }
 
-// function to handle buy/sell signals
 function handleSignals() {
   if (buySignal) {
     buyShares();
     buySignal = false;
   }
-
   if (sellSignal) {
     sellShares();
     sellSignal = false;
   }
 }
 
-// buy function: Buy as many shares as possible with all cash
 function buyShares() {
   if (userCash > 0) {
-    const sharesToBuy = userCash / currentPrice;
-    userShares += sharesToBuy;
-    userCash = 0;
-
-    // record buy action
     marketData.update(data => {
-      data.actions.push({ type: 'buy', day: currentDay });
+      // trade at rolling average
+      const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
+      
+      const sharesToBuy = userCash / avgPrice;
+      userShares += sharesToBuy;
+      userCash = 0;
+      
+      data.actions.push({
+        type: 'buy',
+        day: currentDay,
+        executedPrice: avgPrice
+      });
+      
       return data;
     });
   }
 }
 
-// sell function: Sell all shares and convert to cash
 function sellShares() {
   if (userShares > 0) {
-    userCash += userShares * currentPrice;
-    userShares = 0;
-
-    // record sell action
     marketData.update(data => {
-      data.actions.push({ type: 'sell', day: currentDay });
+      const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
+      
+      const cashGained = userShares * avgPrice;
+      userCash += cashGained;
+      userShares = 0;
+      
+      data.actions.push({
+        type: 'sell',
+        day: currentDay,
+        executedPrice: avgPrice
+      });
+      
       return data;
     });
   }
 }
 
-// functions to send buy/sell signals
+// signals
 export function sendBuySignal() {
   buySignal = true;
 }
-
 export function sendSellSignal() {
   sellSignal = true;
 }
 
-// function to stop the simulation
 export function stopSimulation() {
   if (simulationInterval) clearInterval(simulationInterval);
 }

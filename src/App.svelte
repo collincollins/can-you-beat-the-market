@@ -5,7 +5,7 @@
   import { startSimulation, stopSimulation } from './logic/simulation';
   import { userPortfolio, marketData } from './logic/store';
   
-  let simulationTime = 60;
+  let simulationTime = 30;
   let timer = simulationTime;
   let timerInterval = null;
   let simulationEnded = false;
@@ -36,23 +36,24 @@
     // compute buy-and-hold based on initial shares (1) and final market price
     const buyHoldFinal = parseFloat((1 * data.marketPrices[data.marketPrices.length - 1]).toFixed(2));
     const userFinal = parseFloat(portfolio.portfolioValue.toFixed(2));
-    return `Your final value: $${userFinal}<br>Buy-and-Hold: $${buyHoldFinal}`;
-  }
+
+    const formattedUserFinal = userFinal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedBuyHoldFinal = buyHoldFinal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    return `<p>Your final value: $${formattedUserFinal}</p><p>Buy-and-Hold: $${formattedBuyHoldFinal}</p>`;
+}
   
   onMount(() => {
-    // simulation starts only when Start button is clicked
-    // remove automatic start
+    // no automatic start; we wait for "Start Simulation" button
   });
   
   onDestroy(() => {
-    // clear all intervals on component destroy
     if (timerInterval) clearInterval(timerInterval);
     stopSimulation();
     if (actionTimeout) clearTimeout(actionTimeout);
   });
   
   function startSimulationHandler() {
-    // clear existing timer interval before starting a new one
     if (timerInterval) {
       clearInterval(timerInterval);
       timerInterval = null;
@@ -82,7 +83,6 @@
   }
   
   function restartSimulation() {
-    // reset state without starting simulation
     simulationEnded = false;
     simulationRunning = false;
     timer = simulationTime;
@@ -91,6 +91,7 @@
     marketData.set({
       days: [],
       marketPrices: [],
+      rollingAverages: [],
       actions: [],
     });
     
@@ -113,7 +114,7 @@
     if (actionTimeout) clearTimeout(actionTimeout);
     actionTimeout = setTimeout(() => {
       actionMessage = '';
-    }, 3000); // message disappears after 3 seconds
+    }, 3000);
   }
   
   function handleSell() {
@@ -121,7 +122,7 @@
     if (actionTimeout) clearTimeout(actionTimeout);
     actionTimeout = setTimeout(() => {
       actionMessage = '';
-    }, 3000); // message disappears after 3 seconds
+    }, 3000);
   }
   
   // handle simulation time change
@@ -142,20 +143,14 @@
       }, 1000);
     }
   }
-  
-  // determine if user can buy
-  $: canBuy = portfolio.cash > 0;
-  
 </script>
 
-<!-- svelte-ignore css_unused_selector -->
 <style>
   .app {
     font-family: 'Press Start 2P', cursive;
     text-align: center;
     padding: 10px;
-    background-color: #f0f0f0;
-    min-height: 100vh;
+    min-height: 80vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -164,20 +159,18 @@
 
   .timer {
     font-size: 1.1em;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin: 5px 0;
   }
   
   .portfolio {
     font-size: 1.25em; 
-    margin-top: 15px;
-    margin-bottom: 15px;
+    margin: 15px 0;
     color: #008b02;
   }
 
   .results {
-    margin-top: 20px;
-    padding: 20px;
+    margin-top: 30px;
+    padding: 12px;
     background-color: #008b022a;
     border: 2px solid black;
     border-radius: 10px;
@@ -188,29 +181,10 @@
     transition: all 0.3s ease;
   }
   
-  .results p {
-    margin: 0;
-    padding: 0;
-  }
-  
   .action-message {
     margin-top: 10px;
     font-size: 0.8em;
     color: #008b02;
-  }
-  
-  .simulation-time {
-    margin-top: 20px;
-    font-size: 1em; 
-  }
-  
-  .simulation-time input {
-    padding: 5px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.5em;
-    width: 60px;
-    text-align: center;
-    margin-left: 10px;
   }
 
   button {
@@ -218,25 +192,22 @@
     background-color: #008bba;
     border: 2px solid black;
     color: white;
-    padding: 10px 24px;
+    padding: 10px 20px;
     text-align: center;
-    text-decoration: none;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     border-radius: 10px;
-    font-size: 1em; 
-    margin-top: 15px;
+    font-size: 1em;
     margin: 10px 5px;
     cursor: pointer;
-    border-radius: 5px;
   }
   
   .stop {
-    color: white;
     background-color: #878282ae;
   }
 
   .buttons-container {
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -244,10 +215,41 @@
 
   .buttons-container button {
     margin: 5px 0;
+    padding: 12px;
   }
+
+  .simulation-time-container {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #008bba39;
+  border: 2px solid black;
+  border-radius: 10px;         
+  margin-bottom: 15px;         
+  display: inline-block;      
+  box-shadow: 2px 2px 0px black; 
+  font-size: 1.2em;
+  transition: all 0.3s ease;
+}
+
+.simulation-time-container label {
+  display: block;
+  margin-bottom: 10px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8em;
+}
+
+.simulation-time-container input {
+  padding: 5px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8em;
+  width: 60px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
 </style>
 
-<!-- import the Press Start 2P font -->
+<!-- link to Press Start 2P font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -255,16 +257,25 @@
 <div class="app">
   <h1>Can You Beat The Market?</h1>
   <div class="timer">Time Left: {timer} seconds</div>
-  <div class="portfolio">Portfolio Value: ${portfolio.portfolioValue.toFixed(2)}</div>
+  <div class="portfolio">
+    Portfolio Value: ${portfolio.portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+  </div>
+  
   <MarketChart />
   
   {#if !simulationRunning && !simulationEnded}
     <div class="buttons-container">
       <button class="start" on:click={startSimulationHandler}>Start Simulation</button>
     </div>
-    <div class="simulation-time">
+    <div class="simulation-time-container">
       <label for="simTime">Simulation Length (seconds):</label>
-      <input type="number" id="simTime" min="1" bind:value={simulationTime} on:change={handleSimulationTimeChange} />
+      <input
+        type="number"
+        id="simTime"
+        min="1"
+        bind:value={simulationTime}
+        on:change={handleSimulationTimeChange}
+      />
     </div>
   {/if}
   
@@ -281,11 +292,10 @@
   
   {#if simulationEnded}
     <div class="results">
-      <p>{@html finalComparison}</p>
+      {@html finalComparison}
     </div>
     <div class="buttons-container">
       <button on:click={restartSimulation}>Restart</button>
-      <!-- <button class="quit" on:click={() => window.close()}>Quit</button> -->
     </div>
   {/if}
 </div>

@@ -43,7 +43,6 @@
   
     button {
     font-family: 'Press Start 2P', cursive;
-    background-color: #008b02;
     border: 2px solid black;
     color: white;
     padding: 10px 24px;
@@ -51,7 +50,6 @@
     text-decoration: none;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
-    border-radius: 10px;
     font-size: 3em;
     margin: 10px 5px;
     cursor: pointer;
@@ -60,12 +58,19 @@
   
     .sell {
       background-color: #f44336;
+      border-radius: 10px;
     }
+
+    .buy {
+      background-color: #008b02;
+      border-radius: 10px;
+    }
+
   </style>
   
   <div class="controls">
     {#if canBuy}
-      <button on:click={handleBuy}>Buy</button>
+      <button class="buy" on:click={handleBuy}>Buy</button>
     {/if}
     
     {#if canSell}
