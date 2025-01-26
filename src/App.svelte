@@ -297,6 +297,7 @@
 
   button {
     font-family: 'Press Start 2P', cursive;
+    touch-action: manipulation;
     background-color: #435b9f;
     border: 2px solid black;
     color: white;
@@ -382,6 +383,7 @@
   }
 
   .coffee-button {
+    touch-action: manipulation;
     height: 50px;
     width: 181px;
     border-radius: 10px;
