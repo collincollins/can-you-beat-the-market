@@ -250,6 +250,7 @@
     background-color: #F3F4F6;
     height: 250px;
     width: 98%;
+    max-width: 800px;
     margin-top: 0px;
     margin-bottom: 0px;
     padding-left: 15px;

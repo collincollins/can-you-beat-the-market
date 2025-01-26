@@ -174,6 +174,7 @@
   position: relative;
   height: 250px;
   width: 95%;
+  max-width: 800px;
 }
 </style>
 
