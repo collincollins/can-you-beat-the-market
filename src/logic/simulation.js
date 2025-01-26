@@ -2,19 +2,14 @@
 import { marketData, userPortfolio } from './store';
 
 // simulation parameters
-// e.g. each step is 2.43 days => ~1 year in 30s if frequency=5 => 150 steps
-// Right now it's 4.86 => about 2 years in 30s at 5 updates/sec
 const daysPerStep = 5.09;
 const annualDrift = 0.08;
-const annualVol   = 0.10;
+const annualVol = 0.10;
 const dt = daysPerStep / 365;
-
-// changes the speed of the market updates
-let frequency = 12;
 
 // simulation state
 let currentDay = 0;
-let currentPrice = 1000;
+let currentPrice = 10000;
 let userShares = 1;
 let userCash = 0;
 let simulationInterval = null;
@@ -28,7 +23,7 @@ function getNextPrice(price) {
   const random = Math.random();
   const z = Math.sqrt(-2.0 * Math.log(random)) * Math.cos(2.0 * Math.PI * Math.random());
   
-  const driftComponent = (annualDrift - 0.5 * annualVol**2) * dt;
+  const driftComponent = (annualDrift - 0.5 * Math.pow(annualVol, 2)) * dt;
   const diffusionComponent = annualVol * Math.sqrt(dt) * z;
   
   return price * Math.exp(driftComponent + diffusionComponent);
@@ -46,14 +41,12 @@ function updateMarket() {
     data.days.push(currentDay);
     data.marketPrices.push(parseFloat(currentPrice.toFixed(2)));
 
-    // rolling avg of last N items
+    // rolling average of last N items
     const windowSize = 5;
     const len = data.marketPrices.length;
-    const start = Math.max(0, len - windowSize);
-    const subset = data.marketPrices.slice(start, len);
+    const subset = data.marketPrices.slice(Math.max(0, len - windowSize), len);
     const sum = subset.reduce((a, b) => a + b, 0);
     const avg = sum / subset.length;
-
     data.rollingAverages.push(parseFloat(avg.toFixed(2)));
 
     return data;
@@ -70,20 +63,20 @@ function updateMarket() {
 export function startSimulation() {
   // reset simulation state
   currentDay = 0;
-  currentPrice = 1000;
+  currentPrice = 10000;
   userShares = 1;
   userCash = 0;
 
-  // reset the store with day=0, price=100-, rolling=1000, plus initial Buy Action
+  // reset the store with initial data
   marketData.set({
     days: [0],
-    marketPrices: [1000],
-    rollingAverages: [1000],
+    marketPrices: [10000],
+    rollingAverages: [10000],
     actions: [
       {
         type: 'buy',
         day: 0,
-        executedPrice: 1000
+        executedPrice: 10000
       }
     ]
   });
@@ -101,7 +94,7 @@ export function startSimulation() {
   simulationInterval = setInterval(() => {
     updateMarket();
     handleSignals();
-  }, 1000 / frequency);
+  }, 1000 / 12);
 }
 
 function handleSignals() {
@@ -118,7 +111,6 @@ function handleSignals() {
 function buyShares() {
   if (userCash > 0) {
     marketData.update(data => {
-      // trade at rolling average
       const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
       
       const sharesToBuy = userCash / avgPrice;
@@ -156,14 +148,16 @@ function sellShares() {
   }
 }
 
-// signals
+// signal functions
 export function sendBuySignal() {
   buySignal = true;
 }
+
 export function sendSellSignal() {
   sellSignal = true;
 }
 
 export function stopSimulation() {
   if (simulationInterval) clearInterval(simulationInterval);
+  simulationInterval = null;
 }

@@ -1,16 +1,28 @@
 :root {
   /* keep the global font, but remove background color or color-scheme settings */
   font-family: 'Press Start 2P', cursive;
+  background-color: #B8BECE;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
+h1 {
+  color: #3B518B;
+}
+
 /* global resets */
 body {
+  font-family: 'Press Start 2P', cursive;
   margin: 0;
   padding: 0;
+  color: #6C727F;
+}
+
+p {
+  font-family: 'Press Start 2P', cursive;
+  color: #6C727F;
 }
 
 /* Basic link styling (optional) */

@@ -1,146 +1,153 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
   import Controls from './components/Controls.svelte';
   import { startSimulation, stopSimulation } from './logic/simulation';
   import { userPortfolio, marketData } from './logic/store';
+  // 1) bridging React -> Svelte import
+  // Import the custom-element definition code:
+  import './bridges/RetroCounterWrapper.jsx';
+  import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
   
+  // Simulation settings
   let simulationTime = 30;
   let timer = simulationTime;
-  let timerInterval = null;
   let simulationEnded = false;
   let simulationRunning = false;
   let finalComparison = '';
-  
-  // action message for buy/sell indications
-  let actionMessage = '';
-  let actionTimeout = null;
-  
-  // user state
+
+  // User state
   let portfolio = { shares: 1, cash: 0, portfolioValue: 0 };
   let data = { days: [], marketPrices: [], actions: [] };
-  
-  // reactive statement to compute final comparison when simulation ends
-  $: finalComparison = simulationEnded ? computeFinalComparison() : '';
-  
-  userPortfolio.subscribe(value => {
+
+  // Tracking buy-and-hold final value and color states
+  let buyHoldFinal = 0;
+  // Colors start as black
+  let portfolioColor = 'black';
+  let buyHoldColor = 'black';
+
+  // Subscribe to stores
+  const unsubscribePortfolio = userPortfolio.subscribe(value => {
     portfolio = value;
   });
-  
-  marketData.subscribe(value => {
+
+  const unsubscribeMarketData = marketData.subscribe(value => {
     data = value;
   });
-  
-  function computeFinalComparison() {
-    if (data.marketPrices.length === 0) return '';
-    // compute buy-and-hold based on initial shares (1) and final market price
-    const buyHoldFinal = parseFloat((1 * data.marketPrices[data.marketPrices.length - 1]).toFixed(2));
-    const userFinal = parseFloat(portfolio.portfolioValue.toFixed(2));
 
-    const formattedUserFinal = userFinal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formattedBuyHoldFinal = buyHoldFinal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    return `<p>Your final value: $${formattedUserFinal}</p><p>Buy-and-Hold: $${formattedBuyHoldFinal}</p>`;
-}
-  
-  onMount(() => {
-    // no automatic start; we wait for "Start Simulation" button
-  });
-  
   onDestroy(() => {
-    if (timerInterval) clearInterval(timerInterval);
+    unsubscribePortfolio();
+    unsubscribeMarketData();
     stopSimulation();
-    if (actionTimeout) clearTimeout(actionTimeout);
-  });
-  
-  function startSimulationHandler() {
     if (timerInterval) {
       clearInterval(timerInterval);
-      timerInterval = null;
     }
-    
+  });
+
+  let timerInterval;
+
+  function startSimulationHandler() {
     simulationEnded = false;
     simulationRunning = true;
     timer = simulationTime;
+
+    // Reset text colors to black at the start of each new run
+    portfolioColor = 'black';
+    buyHoldColor = 'black';
+    finalComparison = '';
+
     startSimulation();
-    
     timerInterval = setInterval(() => {
       timer -= 1;
       if (timer <= 0) {
-        endSimulation();
+        endSimulation(timerInterval);
       }
     }, 1000);
   }
-  
-  function endSimulation() {
+
+  function endSimulation(interval) {
     simulationEnded = true;
     simulationRunning = false;
     stopSimulation();
+
     if (timerInterval) {
       clearInterval(timerInterval);
       timerInterval = null;
     }
+
+    // Make sure we have marketPrices data to compare
+    if (data.marketPrices.length > 0) {
+      // Calculate final buy-and-hold and compare
+      buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
+      const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+
+      if (portfolioVal > buyHoldFinal) {
+        portfolioColor = '#008b02'; // green
+        buyHoldColor = '#f44336';   // red
+      } else if (portfolioVal < buyHoldFinal) {
+        portfolioColor = '#f44336'; // red
+        buyHoldColor = '#008b02';   // green
+      } else {
+        // equal
+        portfolioColor = '#008b02'; // green
+        buyHoldColor = '#008b02';   // green
+      }
+
+      // Build the finalComparison string with the correct color for buy-and-hold
+      finalComparison = `
+        <span style="color:${buyHoldColor}">
+          Buy-and-Hold Value<br>
+          $${buyHoldFinal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}
+        </span>
+      `;
+    }
   }
-  
+
   function restartSimulation() {
     simulationEnded = false;
     simulationRunning = false;
     timer = simulationTime;
-    
-    // reset market data and user portfolio
+
+    // Reset colors to black
+    portfolioColor = 'black';
+    buyHoldColor = 'black';
+    finalComparison = '';
+
+    // Reset market data and user portfolio
     marketData.set({
       days: [],
       marketPrices: [],
       rollingAverages: [],
       actions: [],
     });
-    
+
     userPortfolio.set({
       shares: 1,
       cash: 0,
       portfolioValue: 0,
     });
-    
-    // ensure no active timer
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
   }
-  
-  // handlers for buy/sell events
+
+  // Handlers for buy/sell events
   function handleBuy() {
-    actionMessage = 'Bought Shares!';
-    if (actionTimeout) clearTimeout(actionTimeout);
-    actionTimeout = setTimeout(() => {
-      actionMessage = '';
-    }, 3000);
   }
-  
+
   function handleSell() {
-    actionMessage = 'Sold Shares!';
-    if (actionTimeout) clearTimeout(actionTimeout);
-    actionTimeout = setTimeout(() => {
-      actionMessage = '';
-    }, 3000);
   }
-  
-  // handle simulation time change
+
+  // Handle simulation time change
   function handleSimulationTimeChange(event) {
     const value = parseInt(event.target.value, 10);
     if (!isNaN(value) && value > 0) {
       simulationTime = value;
       timer = simulationTime;
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+      if (simulationRunning) {
+        stopSimulation();
+        startSimulation();
       }
-      timerInterval = setInterval(() => {
-        timer -= 1;
-        if (timer <= 0) {
-          endSimulation();
-        }
-      }, 1000);
     }
   }
 </script>
@@ -149,56 +156,124 @@
   .app {
     font-family: 'Press Start 2P', cursive;
     text-align: center;
-    padding: 10px;
+    margin-top: -10px;
+    padding-top: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
     min-height: 80vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 0.8em;
+    font-size: 0.75em;
+  }
+
+  .header-container {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background-color: #ccd0dcd9;
+    border: 2px solid black;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 2px 2px 0px black;
+    font-size: 1em;
+    transition: all 0.3s ease;
+  }
+
+  .header-card {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 0px;
+    padding-bottom: 10px;
+    background-color: #F3F4F6;
+    border: 2px solid black;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 2px 2px 0px black;
+    font-size: 1em;
+    transition: all 0.3s ease;
   }
 
   .timer {
-    font-size: 1.1em;
-    margin: 5px 0;
-  }
-  
-  .portfolio {
-    font-size: 1.25em; 
-    margin: 15px 0;
-    color: #008b02;
-  }
-
-  .results {
-    margin-top: 30px;
-    padding: 12px;
-    background-color: #008b022a;
-    border: 2px solid black;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 0px;
+    padding-bottom: 5px;
     display: inline-block;
-    box-shadow: 2px 2px 0px black;
-    font-size: 1.2em; 
+    font-size: 1em;
     transition: all 0.3s ease;
   }
   
-  .action-message {
+  .portfolio {
+    margin-top: 5px;
+    padding: 10px;
+    background-color: #fefeff;
+    border: 2px solid #000000;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+    max-width: 300px;
+    box-shadow: 1px 1px 0px #000000;
+    font-size: 1.5em;
+    transition: all 0.3s ease;
+  }
+
+  .results {
     margin-top: 10px;
-    font-size: 0.8em;
-    color: #008b02;
+    margin-bottom: 0px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: #F3F4F6;
+    border: 2px solid black;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 2px 2px 0px black;
+    font-size: 1.5em; 
+    transition: all 0.3s ease;
+  }
+
+  .chart-container {
+    position: relative;
+    background-color: #F3F4F6;
+    height: 350px;
+    width: 98%;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-left: 15px;
+    padding-right: 0px;
+    padding-top: 15px;
+    padding-bottom: 30px;
+    border: 2px solid black;
+    border-radius: 15px;
+    box-shadow: 2px 2px 0px black;
   }
 
   button {
     font-family: 'Press Start 2P', cursive;
-    background-color: #008bba;
+    background-color: #3B518B;
     border: 2px solid black;
     color: white;
-    padding: 10px 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     text-align: center;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     border-radius: 10px;
-    font-size: 1em;
-    margin: 10px 5px;
+    font-size: 1.5em;
     cursor: pointer;
   }
   
@@ -207,68 +282,122 @@
   }
 
   .buttons-container {
-    margin-top: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
 
   .buttons-container button {
-    margin: 5px 0;
-    padding: 12px;
+    margin: 10px 0;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .simulation-time-container {
-  margin-top: 20px;
-  padding: 12px;
-  background-color: #008bba39;
-  border: 2px solid black;
-  border-radius: 10px;         
-  margin-bottom: 15px;         
-  display: inline-block;      
-  box-shadow: 2px 2px 0px black; 
-  font-size: 1.2em;
-  transition: all 0.3s ease;
-}
+    margin-top: 1px;
+    padding: 12px;
+    background-color: #F3F4F6;
+    border: 2px solid black;
+    border-radius: 10px;         
+    margin-bottom: 15px;         
+    display: inline-block;      
+    box-shadow: 2px 2px 0px black; 
+    font-size: 1.3em;
+    transition: all 0.3s ease;
+  }
 
-.simulation-time-container label {
-  display: block;
-  margin-bottom: 10px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 0.8em;
-}
+  .simulation-time-container label {
+    display: block;
+    margin-bottom: 10px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.8em;
+  }
 
-.simulation-time-container input {
-  padding: 5px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 0.8em;
-  width: 60px;
-  text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
+  .simulation-time-container input {
+    padding: 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.8em;
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .footer-card {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 10px;
+    padding-bottom: 15px;
+    background-color: #F3F4F6;
+    border: 2px solid black;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 2px 2px 0px black;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .coffee-button {
+    height: 50px;
+    width: 181px;
+    border-radius: 10px;
+    overflow:hidden;
+    border: 1px solid black;
+    box-shadow: 2px 2px 0px black;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .counter-container {
+    margin-top: 15px;
+  }
+
+
 </style>
 
-<!-- link to Press Start 2P font -->
+<!-- Link to Press Start 2P font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <div class="app">
-  <h1>Can You Beat The Market?</h1>
-  <div class="timer">Time Left: {timer} seconds</div>
-  <div class="portfolio">
-    Portfolio Value: ${portfolio.portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+  <div class="header-card">
+    <!-- Wrapped the header in a card-like container -->
+    <div class="header-container">
+      <h1>Can You Beat The Market?</h1>
+    </div>
+    <!-- Inline style binding for portfolio color -->
+    <div 
+      class="portfolio" 
+      style="color: {portfolioColor};"
+    >
+      Portfolio Value <br>
+      ${portfolio.portfolioValue.toLocaleString(undefined, { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      })}
+    </div>
   </div>
   
-  <MarketChart />
+  <div class="chart-container">
+    <div class="timer">Time Left: {timer} seconds</div>
+    <MarketChart />
+  </div>
   
   {#if !simulationRunning && !simulationEnded}
     <div class="buttons-container">
-      <button class="start" on:click={startSimulationHandler}>Start Simulation</button>
+      <button class="start" on:click={startSimulationHandler}>
+        Start Simulation
+      </button>
     </div>
     <div class="simulation-time-container">
-      <label for="simTime">Simulation Length (seconds):</label>
+      <label for="simTime">Simulation Length</label>
       <input
         type="number"
         id="simTime"
@@ -284,13 +413,10 @@
     <div class="buttons-container">
       <button class="stop" on:click={endSimulation}>Stop</button>
     </div>
-    
-    {#if actionMessage}
-      <div class="action-message">{actionMessage}</div>
-    {/if}
   {/if}
   
   {#if simulationEnded}
+    <!-- finalComparison already includes the buyHoldColor -->
     <div class="results">
       {@html finalComparison}
     </div>
@@ -298,4 +424,26 @@
       <button on:click={restartSimulation}>Restart</button>
     </div>
   {/if}
+
+  <div class="footer-card">
+    <p>Made by Collin</p>
+    {#if simulationEnded}
+    <a
+      href="https://www.buymeacoffee.com/B4Aaol3SrI"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="coffee-button"
+    >
+      <img
+        src={coffeeButton}
+        alt="Buy Me A Coffee"
+        style="height: 50px; width: 181px;"
+      />
+    </a>
+    {/if}
+    <div class="counter-container">
+      <retro-counter></retro-counter>
+    </div>
+  </div>
+
 </div>
