@@ -189,6 +189,7 @@
   .header-card {
     margin-top: 15px;
     margin-bottom: 10px;
+    justify-content: center;
     padding-left: 30px;
     padding-right: 30px;
     padding-top: 0px;
