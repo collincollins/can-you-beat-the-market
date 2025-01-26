@@ -248,7 +248,7 @@
   .chart-container {
     position: relative;
     background-color: #F3F4F6;
-    height: 300px;
+    height: 250px;
     width: 98%;
     margin-top: 0px;
     margin-bottom: 0px;
