@@ -41,6 +41,7 @@
 
   button {
     font-family: 'Press Start 2P', cursive;
+    touch-action: manipulation;
     border: 2px solid black;
     color: white;
     padding: 10px 24px;
