@@ -169,6 +169,7 @@
 
   .header-container {
     position: relative;
+    justify-content: center;
     margin-top: 20px;
     margin-bottom: 15px;
     padding-left: 30px;
@@ -336,6 +337,8 @@
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     font-size: 0.8em;
+    width: 88%;
+    max-width: 390px;
     text-align: center;
   }
 
