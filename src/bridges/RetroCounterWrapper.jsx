@@ -77,7 +77,7 @@ function RetroCounterWC(props) {
 }
 
 // convert the React component to a Web Component
-const RetroCounterElement = reactToWebComponent(RetroCounterWC, React, ReactDOM.createRoot ? ReactDOM.createRoot : ReactDOM);
+const RetroCounterElement = reactToWebComponent(RetroCounterWC, React, ReactDOM);
 
 // define the custom element if it hasn't been defined yet
 if (!customElements.get('retro-counter')) {
