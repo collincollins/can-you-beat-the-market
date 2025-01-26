@@ -164,17 +164,22 @@
   });
 
   onMount(() => {
-    // ensure fonts are loaded before initializing the chart
+  // Prevent infinite reloads by checking a sessionStorage flag
+  if (!sessionStorage.getItem('chartFontLoadAttempted')) {
     document.fonts.ready
       .then(() => {
         console.log('Fonts successfully loaded for the chart!');
-        initializeChart();
+        initializeChart(); // Initialize chart after fonts load
       })
       .catch(() => {
         console.error('Fonts failed to load. Reloading the page...');
-        location.reload(true); // reload only as a fallback if fonts fail
+        sessionStorage.setItem('chartFontLoadAttempted', 'true'); // Set flag to prevent reload loops
+        location.reload(true);
       });
-  });
+  } else {
+    initializeChart(); // Initialize chart even if reload failed previously
+  }
+});
 
   onDestroy(() => {
     if (chart) chart.destroy();

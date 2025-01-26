@@ -26,12 +26,18 @@
   <body>
     <div id="app"></div>
     <script>
-      document.fonts.ready.then(() => {
-        console.log('Fonts successfully loaded!');
-      }).catch(() => {
-        console.error('Fonts failed to load. Reloading the page...');
-        location.reload(true);
-      });
+    // Avoid infinite reload loops by checking a sessionStorage flag
+    if (!sessionStorage.getItem('fontLoadAttempted')) {
+      document.fonts.ready
+        .then(() => {
+          console.log('Fonts successfully loaded!');
+        })
+        .catch(() => {
+          console.error('Fonts failed to load. Reloading the page...');
+          sessionStorage.setItem('fontLoadAttempted', 'true'); // Set the flag
+          location.reload(true);
+        });
+    }
     </script>
   </body>
 </html>
