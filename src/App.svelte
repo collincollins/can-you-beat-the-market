@@ -217,8 +217,8 @@
     font-size: 7pt;
     text-align: left;
     max-width: 700px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .help-description-container {
