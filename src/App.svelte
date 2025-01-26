@@ -168,6 +168,7 @@
   }
 
   .header-container {
+    position: relative;
     margin-top: 20px;
     margin-bottom: 15px;
     padding-left: 30px;
@@ -196,7 +197,7 @@
     border-radius: 10px;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
-    width: 90%;
+    max-width: auto;
     font-size: 1em;
   }
 

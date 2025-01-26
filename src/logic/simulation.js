@@ -9,7 +9,7 @@ const dt = daysPerStep / 365;
 
 // simulation state
 let currentDay = 0;
-let currentPrice = 10000;
+let currentPrice = 100;
 let userShares = 1;
 let userCash = 0;
 let simulationInterval = null;
@@ -63,20 +63,20 @@ function updateMarket() {
 export function startSimulation() {
   // reset simulation state
   currentDay = 0;
-  currentPrice = 10000;
+  currentPrice = 100;
   userShares = 1;
   userCash = 0;
 
   // reset the store with initial data
   marketData.set({
     days: [0],
-    marketPrices: [10000],
-    rollingAverages: [10000],
+    marketPrices: [100],
+    rollingAverages: [100],
     actions: [
       {
         type: 'buy',
         day: 0,
-        executedPrice: 10000
+        executedPrice: 100
       }
     ]
   });

@@ -90,8 +90,8 @@
         }
       },
       y: {
-        suggestedMin: 9000,
-        suggestedMax: 11000,
+        suggestedMin: 95,
+        suggestedMax: 110,
         title: {
           display: true,
           text: 'Price ($)',
