@@ -179,8 +179,7 @@
     border-radius: 10px;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
-    font-size: 1em;
-    transition: all 0.3s ease;
+    font-size: 0.8em;
   }
 
   .header-card {
@@ -196,7 +195,6 @@
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     font-size: 1em;
-    transition: all 0.3s ease;
   }
 
   .timer {
@@ -208,7 +206,6 @@
     padding-bottom: 5px;
     display: inline-block;
     font-size: 1em;
-    transition: all 0.3s ease;
   }
   
   .portfolio {
@@ -224,8 +221,7 @@
     justify-content: center;
     max-width: 300px;
     box-shadow: 1px 1px 0px #000000;
-    font-size: 1.5em;
-    transition: all 0.3s ease;
+    font-size: 1.3em;
   }
 
   .results {
@@ -241,13 +237,12 @@
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     font-size: 1.5em; 
-    transition: all 0.3s ease;
   }
 
   .chart-container {
     position: relative;
     background-color: #F3F4F6;
-    height: 350px;
+    height: 300px;
     width: 98%;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -305,7 +300,6 @@
     display: inline-block;      
     box-shadow: 2px 2px 0px black; 
     font-size: 1.3em;
-    transition: all 0.3s ease;
   }
 
   .simulation-time-container label {

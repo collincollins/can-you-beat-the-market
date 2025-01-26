@@ -38,7 +38,7 @@
         label: 'Market Price ',
         data: [],
         borderColor: 'black',
-        borderWidth: 2.5,
+        borderWidth: 1.5,
         fill: false,
         pointRadius: 0,
         tension: 0
@@ -73,7 +73,7 @@
       x: {
         type: 'linear',
         suggestedMin: 0,
-        suggestedMax: 1825,
+        suggestedMax: 1000,
         title: {
           display: true,
           text: 'Days',
@@ -91,7 +91,7 @@
       },
       y: {
         suggestedMin: 9000,
-        suggestedMax: 12000,
+        suggestedMax: 11000,
         title: {
           display: true,
           text: 'Price ($)',
@@ -172,7 +172,7 @@
 <style>
 .chart-container {
   position: relative;
-  height: 350px;
+  height: 300px;
   width: 95%;
 }
 </style>

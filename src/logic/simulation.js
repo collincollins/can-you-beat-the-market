@@ -4,7 +4,7 @@ import { marketData, userPortfolio } from './store';
 // simulation parameters
 const daysPerStep = 5.09;
 const annualDrift = 0.08;
-const annualVol = 0.10;
+const annualVol = 0.085;
 const dt = daysPerStep / 365;
 
 // simulation state
@@ -42,7 +42,7 @@ function updateMarket() {
     data.marketPrices.push(parseFloat(currentPrice.toFixed(2)));
 
     // rolling average of last N items
-    const windowSize = 5;
+    const windowSize = 2;
     const len = data.marketPrices.length;
     const subset = data.marketPrices.slice(Math.max(0, len - windowSize), len);
     const sum = subset.reduce((a, b) => a + b, 0);
