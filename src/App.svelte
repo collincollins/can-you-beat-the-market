@@ -164,14 +164,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 0.75em;
+    font-size: 0.9em;
   }
 
   .header-container {
     margin-top: 20px;
     margin-bottom: 15px;
-    padding-left: 50px;
-    padding-right: 50px;
+    padding-left: 30px;
+    padding-right: 30px;
     padding-top: 0px;
     padding-bottom: 0px;
     background-color: #ccd0dcd9;
@@ -179,14 +179,16 @@
     border-radius: 10px;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
-    font-size: 0.8em;
+    width: 88%;
+    max-width: 450px;
+    font-size: 0.55em;
   }
 
   .header-card {
     margin-top: 15px;
     margin-bottom: 10px;
-    padding-left: 50px;
-    padding-right: 50px;
+    padding-left: 30px;
+    padding-right: 30px;
     padding-top: 0px;
     padding-bottom: 10px;
     background-color: #F3F4F6;
@@ -194,6 +196,7 @@
     border-radius: 10px;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
+    width: 90%;
     font-size: 1em;
   }
 
@@ -205,7 +208,7 @@
     padding-top: 0px;
     padding-bottom: 5px;
     display: inline-block;
-    font-size: 1em;
+    font-size: 0.85em;
   }
   
   .portfolio {
@@ -219,9 +222,9 @@
     margin-left: auto;
     margin-right: auto;
     justify-content: center;
-    max-width: 300px;
+    max-width: 270px;
     box-shadow: 1px 1px 0px #000000;
-    font-size: 1.3em;
+    font-size: 1em;
   }
 
   .results {
@@ -236,7 +239,7 @@
     border-radius: 10px;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
-    font-size: 1.5em; 
+    font-size: 1em; 
   }
 
   .chart-container {
@@ -268,7 +271,7 @@
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     border-radius: 10px;
-    font-size: 1.5em;
+    font-size: 1.2em;
     cursor: pointer;
   }
   
@@ -277,8 +280,8 @@
   }
 
   .buttons-container {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -304,15 +307,15 @@
 
   .simulation-time-container label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.8em;
+    font-size: 0.7em;
   }
 
   .simulation-time-container input {
-    padding: 5px;
+    padding: 6px;
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.8em;
+    font-size: 0.7em;
     width: 60px;
     text-align: center;
     border: 1px solid #ccc;
@@ -320,19 +323,18 @@
   }
 
   .footer-card {
-    margin-top: 10px;
+    margin-top: 1px;
     margin-bottom: 10px;
     padding-left: 50px;
     padding-right: 50px;
-    padding-top: 10px;
-    padding-bottom: 15px;
+    padding-top: 5px;
+    padding-bottom: 12px;
     background-color: #F3F4F6;
     border: 2px solid black;
     border-radius: 10px;
     display: inline-block;
     box-shadow: 2px 2px 0px black;
-    font-size: 1em;
-    transition: all 0.3s ease;
+    font-size: 0.8em;
     text-align: center;
   }
 
@@ -420,7 +422,9 @@
   {/if}
 
   <div class="footer-card">
-    <p>Made by Collin</p>
+    <div class="p">
+      <p>Made by Collin</p>
+    </div>
     {#if simulationEnded}
     <a
       href="https://www.buymeacoffee.com/B4Aaol3SrI"

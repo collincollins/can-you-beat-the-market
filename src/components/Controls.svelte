@@ -58,7 +58,7 @@
     background-color: #f44336;
     border-radius: 10px;
     font-size: 5em;
-    margin-top: 0px;
+    margin-top: -5px;
     margin-bottom: 0px;
   }
 
@@ -66,7 +66,7 @@
     background-color: #008b02;
     border-radius: 10px;
     font-size: 5em;
-    margin-top: 0px;
+    margin-top: -5px;
     margin-bottom: 0px;
   }
 </style>
