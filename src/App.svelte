@@ -172,8 +172,8 @@
     justify-content: center;
     margin-top: 20px;
     margin-bottom: 15px;
-    padding-left: 0px;
-    padding-right: 0px;
+    padding-left: 10px;
+    padding-right: 10px;
     padding-top: 0px;
     padding-bottom: 0px;
     background-color: #ccd0dcd9;

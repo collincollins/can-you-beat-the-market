@@ -73,7 +73,7 @@
       x: {
         type: 'linear',
         suggestedMin: 0,
-        suggestedMax: 1000,
+        suggestedMax: 500,
         title: {
           display: true,
           text: 'Days',

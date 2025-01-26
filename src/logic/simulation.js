@@ -2,7 +2,7 @@
 import { marketData, userPortfolio } from './store';
 
 // simulation parameters
-const daysPerStep = 5.09;
+const daysPerStep = 5.3;
 const annualDrift = 0.08;
 const annualVol = 0.085;
 const dt = daysPerStep / 365;
@@ -94,7 +94,7 @@ export function startSimulation() {
   simulationInterval = setInterval(() => {
     updateMarket();
     handleSignals();
-  }, 1000 / 12);
+  }, 1000 / 7);
 }
 
 function handleSignals() {
