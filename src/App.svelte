@@ -15,10 +15,12 @@
   let simulationEnded = false;
   let simulationRunning = false;
   let finalComparison = '';
+  let timerInterval;
 
   // User state
   let portfolio = { shares: 1, cash: 0, portfolioValue: 0 };
   let data = { days: [], marketPrices: [], actions: [] };
+  let isHelpVisible = false;
 
   // Tracking buy-and-hold final value and color states
   let buyHoldFinal = 0;
@@ -44,7 +46,9 @@
     }
   });
 
-  let timerInterval;
+  function toggleHelp() {
+    isHelpVisible = !isHelpVisible;
+  }
 
   function startSimulationHandler() {
     simulationEnded = false;
@@ -203,6 +207,35 @@
     font-size: 1em;
   }
 
+  .help-icon {
+    font-size: .6em;
+    padding: 8px;
+  }
+
+  .help-description {
+    font-family: "Player Start 2P";
+    font-size: 7pt;
+    text-align: left;
+    max-width: 700px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .help-description-container {
+    margin-top: 10px;
+    padding: 0px;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    margin-bottom: 0;
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+    box-shadow: 1px 1px 0px #000000;
+    font-size: 1em;
+  }
+
   .timer {
     margin-top: 0px;
     margin-bottom: 0px;
@@ -253,10 +286,10 @@
     max-width: 800px;
     margin-top: 0px;
     margin-bottom: 0px;
-    padding-left: 15px;
+    padding-left: 18px;
     padding-right: 0px;
     padding-top: 15px;
-    padding-bottom: 30px;
+    padding-bottom: 33px;
     border: 2px solid black;
     border-radius: 15px;
     box-shadow: 2px 2px 0px black;
@@ -264,7 +297,7 @@
 
   button {
     font-family: 'Press Start 2P', cursive;
-    background-color: #3B518B;
+    background-color: #435b9f;
     border: 2px solid black;
     color: white;
     padding-left: 20px;
@@ -278,6 +311,10 @@
     font-size: 1.2em;
     cursor: pointer;
   }
+
+  button:hover {
+    background-color: #384d86; /* slightly darker shade of the original color */
+}
   
   .stop {
     background-color: #878282ae;
@@ -385,6 +422,22 @@
         maximumFractionDigits: 2 
       })}
     </div>
+    <button class="help-icon" on:click={toggleHelp} aria-label="Help">
+      {isHelpVisible ? "Hide Help" : "Show Help"}
+    </button>
+    {#if isHelpVisible}
+    <div class="help-description-container">
+      <div class="help-description">
+        <p>
+        Outperform a buy-and-hold investment strategy by timing your trades in a simulated market</p>
+        <ol>
+          <li>Simulation: Five years in 30 seconds using a rolling average of a positively biased geometric brownian motion.</li>
+          <li>Trade: Use the 'Buy' and 'Sell' buttons to manage an all-in position in the market.</li>
+          <li>Results: See how your timed trades compare to a simple buy-and-hold position.</li>
+        </ol>
+      </div>
+    </div>
+  {/if}
   </div>
   
   <div class="chart-container">
@@ -399,7 +452,7 @@
       </button>
     </div>
     <div class="simulation-time-container">
-      <label for="simTime">Simulation Length</label>
+      <label for="simTime">Timer Length</label>
       <input
         type="number"
         id="simTime"

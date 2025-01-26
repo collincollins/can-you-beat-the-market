@@ -26,7 +26,13 @@ p {
   color: #6C727F;
 }
 
-/* Basic link styling (optional) */
+li {
+  font-family: 'Press Start 2P', cursive;
+  color: #6C727F;
+  font-size: 6pt;
+  margin-top: 12px;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

@@ -4,7 +4,7 @@ import { marketData, userPortfolio } from './store';
 // simulation parameters
 const daysPerStep = 5.3;
 const annualDrift = 0.08;
-const annualVol = 0.085;
+const annualVol = 0.09;
 const dt = daysPerStep / 365;
 
 // simulation state
