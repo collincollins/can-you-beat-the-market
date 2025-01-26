@@ -172,8 +172,8 @@
     justify-content: center;
     margin-top: 20px;
     margin-bottom: 15px;
-    padding-left: 30px;
-    padding-right: 30px;
+    padding-left: 0px;
+    padding-right: 0px;
     padding-top: 0px;
     padding-bottom: 0px;
     background-color: #ccd0dcd9;
@@ -183,15 +183,15 @@
     box-shadow: 2px 2px 0px black;
     width: 88%;
     max-width: 450px;
-    font-size: 0.55em;
+    font-size: 0.6em;
   }
 
   .header-card {
     margin-top: 15px;
     margin-bottom: 10px;
     justify-content: center;
-    padding-left: 30px;
-    padding-right: 30px;
+    padding-left: 20px;
+    padding-right: 20px;
     padding-top: 0px;
     padding-bottom: 10px;
     background-color: #F3F4F6;
