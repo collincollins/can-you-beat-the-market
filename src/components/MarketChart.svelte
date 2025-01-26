@@ -163,6 +163,19 @@
     }
   });
 
+  onMount(() => {
+    // ensure fonts are loaded before initializing the chart
+    document.fonts.ready
+      .then(() => {
+        console.log('Fonts successfully loaded for the chart!');
+        initializeChart();
+      })
+      .catch(() => {
+        console.error('Fonts failed to load. Reloading the page...');
+        location.reload(true); // reload only as a fallback if fonts fail
+      });
+  });
+
   onDestroy(() => {
     if (chart) chart.destroy();
     if (unsubscribe) unsubscribe();
