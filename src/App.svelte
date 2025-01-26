@@ -8,7 +8,7 @@
   // Import the custom-element definition code:
   import './bridges/RetroCounterWrapper.jsx';
   import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
-  
+
   // Simulation settings
   let simulationTime = 30;
   let timer = simulationTime;

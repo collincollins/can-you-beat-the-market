@@ -25,5 +25,13 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      document.fonts.ready.then(() => {
+        console.log('Fonts successfully loaded!');
+      }).catch(() => {
+        console.error('Fonts failed to load. Reloading the page...');
+        location.reload(true);
+      });
+    </script>
   </body>
 </html>
