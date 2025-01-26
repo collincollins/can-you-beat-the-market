@@ -305,7 +305,7 @@
     margin-bottom: 15px;         
     display: inline-block;      
     box-shadow: 2px 2px 0px black; 
-    font-size: 1.3em;
+    font-size: 16pt;
   }
 
   .simulation-time-container label {
