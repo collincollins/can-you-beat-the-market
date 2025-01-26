@@ -1,4 +1,3 @@
-<!-- src/components/MarketChart.svelte -->
 <script>
   import { onMount, onDestroy } from 'svelte';
   import {
@@ -14,7 +13,7 @@
   } from 'chart.js';
   import { marketData } from '../logic/store';
 
-  // Register Chart.js components
+  // register Chart.js components
   Chart.register(
     LineController,
     LineElement,
@@ -29,7 +28,7 @@
   let chart;
   let ctx;
 
-  // Prepare the datasets
+  // prepare the datasets
   const data = {
     labels: [],
     datasets: [
@@ -41,10 +40,10 @@
         borderWidth: 1.5,
         fill: false,
         pointRadius: 0,
-        tension: 0
+        tension: 0,
       },
       {
-        // Buy markers
+        // buy markers
         label: 'Buy Event ',
         data: [],
         backgroundColor: '#008b02',
@@ -60,7 +59,7 @@
         pointStyle: 'circle',
         pointRadius: 6,
         showLine: false,
-      }
+      },
     ],
   };
 
@@ -79,15 +78,15 @@
           text: 'Days',
           font: {
             family: "'Press Start 2P'",
-            size: 12
-          }
+            size: 12,
+          },
         },
         ticks: {
           font: {
             family: "'Press Start 2P'",
-            size: 9
-          }
-        }
+            size: 9,
+          },
+        },
       },
       y: {
         suggestedMin: 95,
@@ -97,15 +96,15 @@
           text: 'Price ($)',
           font: {
             family: "'Press Start 2P'",
-            size: 12
-          }
+            size: 12,
+          },
         },
         ticks: {
           font: {
             family: "'Press Start 2P'",
-            size: 9
-          }
-        }
+            size: 9,
+          },
+        },
       },
     },
     plugins: {
@@ -115,39 +114,39 @@
           usePointStyle: true,
           font: {
             family: "'Press Start 2P'",
-            size: 8.5
-          }
-        }
+            size: 8.5,
+          },
+        },
       },
       title: {
-        display: false
+        display: false,
       },
       tooltip: {
-        enabled: true
-      }
+        enabled: true,
+      },
     },
   };
 
   let unsubscribe;
 
-  onMount(() => {
+  // function to initialize the chart
+  function initializeChart() {
     if (ctx) {
-      // Initialize the Chart.js instance
       chart = new Chart(ctx, {
         type: 'line',
         data,
-        options
+        options,
       });
 
-      // Subscribe to marketData updates
+      // subscribe to marketData updates
       unsubscribe = marketData.subscribe(newData => {
-        // Update rolling-average line
+        // update rolling-average line
         chart.data.datasets[0].data = newData.rollingAverages.map((ra, i) => ({
           x: newData.days[i],
-          y: ra
+          y: ra,
         }));
 
-        // Update buy and sell actions
+        // update buy and sell actions
         const buyActions = newData.actions
           .filter(a => a.type === 'buy')
           .map(a => ({ x: a.day, y: a.executedPrice }));
@@ -161,25 +160,18 @@
         chart.update('none');
       });
     }
-  });
+  }
 
   onMount(() => {
-  // Prevent infinite reloads by checking a sessionStorage flag
-  if (!sessionStorage.getItem('chartFontLoadAttempted')) {
-    document.fonts.ready
-      .then(() => {
-        console.log('Fonts successfully loaded for the chart!');
-        initializeChart(); // Initialize chart after fonts load
-      })
-      .catch(() => {
-        console.error('Fonts failed to load. Reloading the page...');
-        sessionStorage.setItem('chartFontLoadAttempted', 'true'); // Set flag to prevent reload loops
-        location.reload(true);
-      });
-  } else {
-    initializeChart(); // Initialize chart even if reload failed previously
-  }
-});
+    // wait for fonts to load before rendering the chart
+    document.fonts.ready.then(() => {
+      console.log('Fonts loaded, initializing chart...');
+      initializeChart();
+    }).catch(() => {
+      console.error('Fonts failed to load, initializing chart anyway...');
+      initializeChart();
+    });
+  });
 
   onDestroy(() => {
     if (chart) chart.destroy();
@@ -197,5 +189,5 @@
 </style>
 
 <div class="chart-container">
-<canvas bind:this={ctx}></canvas>
+  <canvas bind:this={ctx}></canvas>
 </div>
