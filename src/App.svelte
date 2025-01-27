@@ -533,10 +533,11 @@
     <h2>Simulation Results (CAGR)</h2>
     <br>
       <p>
-        <strong>Your Annualized Return:</strong> {userAnnualReturn.toFixed(2)}%
+        Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
       </p>
+      <br>
       <p>
-        <strong>Buy-and-Hold Annualized Return:</strong> {buyHoldAnnualReturn.toFixed(2)}%
+        Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
       </p>
     <p>
       <br>
