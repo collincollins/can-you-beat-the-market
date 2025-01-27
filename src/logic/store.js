@@ -14,8 +14,11 @@ export const userPortfolio = writable({
   portfolioValue: 0
 });
 
-// New Store for High Score
+// High Score Store
 export const highScore = writable({
   score: 0,
   playerName: 'No one yet'
 });
+
+// **Consecutive Wins Store**
+export const consecutiveWins = writable(0);

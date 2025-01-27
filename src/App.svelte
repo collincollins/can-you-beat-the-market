@@ -4,11 +4,10 @@
   import MarketChart from './components/MarketChart.svelte';
   import Controls from './components/Controls.svelte';
   import { startSimulation, stopSimulation } from './logic/simulation';
-  import { userPortfolio, marketData, highScore } from './logic/store';
+  import { userPortfolio, marketData, highScore, consecutiveWins } from './logic/store';
   import { fetchHighScore, updateHighScore } from './logic/highScoreService';
   import './bridges/RetroCounterWrapper.jsx';
   import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
-  import { writable } from 'svelte/store';
 
   // Simulation settings
   let simulationTime = 30;
@@ -29,6 +28,7 @@
 
   // Tracking buy-and-hold final value and color states
   let buyHoldFinal = 0;
+
   // Colors start as black
   let portfolioColor = 'black';
   let buyHoldColor = 'black';
@@ -36,9 +36,7 @@
   // High Score State
   let currentHighScore = 0;
   let highScorePlayer = 'No one yet';
-
-  // Consecutive Wins
-  let consecutiveWins = 0;
+  let consecutiveWinsValue = 0; // to hold the store value
 
   // Subscribe to stores
   const unsubscribePortfolio = userPortfolio.subscribe(value => {
@@ -54,6 +52,10 @@
     highScorePlayer = value.playerName;
   });
 
+  const unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
+    consecutiveWinsValue = value;
+  });
+
   onMount(async () => {
     // Fetch High Score on app load
     const hs = await fetchHighScore();
@@ -64,6 +66,7 @@
     unsubscribePortfolio();
     unsubscribeMarketData();
     unsubscribeHighScore();
+    unsubscribeConsecutiveWins();
     stopSimulation();
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -112,33 +115,31 @@
       if (portfolioVal > buyHoldFinal) {
         portfolioColor = '#008b02'; // green
         buyHoldColor = '#f44336';   // red
-        consecutiveWins += 1;        // Increment consecutive wins
+        consecutiveWins.update(n => n + 1); // increment via store
+        console.log(`Consecutive Wins: ${consecutiveWinsValue + 1}`)
       } else if (portfolioVal < buyHoldFinal) {
         portfolioColor = '#f44336'; // red
         buyHoldColor = '#008b02';   // green
-        consecutiveWins = 0;         // Reset consecutive wins
+        consecutiveWins.set(0);      // reset via store
+        console.log('Consecutive Wins reset to 0');
       } else {
         // equal
         portfolioColor = '#008b02'; // green
         buyHoldColor = '#008b02';   // green
-        // Decide if equal counts as a win or not. Here, not a win.
-        consecutiveWins = 0;
+        consecutiveWins.set(0);
+        console.log('Consecutive Wins reset to 0');
       }
 
       // Update high score if necessary
-      if (portfolioVal > buyHoldFinal) {
-        if (consecutiveWins > currentHighScore) {
-          const playerName = prompt('Congratulations! You set a new high score. Please enter your name:');
-          if (playerName && playerName.trim() !== '') {
-            const success = await updateHighScore(playerName.trim(), consecutiveWins);
-            if (success) {
-              highScore.set({ score: consecutiveWins, playerName: playerName.trim() });
-              alert('New High Score!');
-
-              // Optionally, you can display a non-blocking notification instead of alert
-            } else {
-              alert('Failed to update high score. Please try again later.');
-            }
+      if (portfolioVal > buyHoldFinal && (consecutiveWinsValue + 1) > currentHighScore) {
+        const playerName = prompt('congratulations! you set a new high score. please enter your name:');
+        if (playerName && playerName.trim() !== '') {
+          const success = await updateHighScore(playerName.trim(), consecutiveWinsValue + 1);
+          if (success) {
+            highScore.set({ score: consecutiveWinsValue + 1, playerName: playerName.trim() });
+            alert('new high score!');
+          } else {
+            alert('failed to update high score. please try again later.');
           }
         }
       }
@@ -191,18 +192,13 @@
       cash: 0,
       portfolioValue: 0,
     });
-
-    // Reset consecutive wins
-    consecutiveWins = 0;
   }
 
   // Handlers for buy/sell events
   function handleBuy() {
-    // You can add additional logic here if needed
   }
 
   function handleSell() {
-    // You can add additional logic here if needed
   }
 
   // Handle simulation time change
@@ -317,7 +313,7 @@
     background-color: #ffffff;
     border: 2px solid #000000;
     border-radius: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     display: flex;
     margin-left: auto;
     margin-right: auto;
@@ -329,7 +325,7 @@
 
   .results {
     margin-top: 0px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     padding-left: 30px;
     padding-right: 30px;
     padding-top: 10px;
@@ -340,6 +336,21 @@
     display: inline-block;
     box-shadow: 1px 1px 0px black;
     font-size: 1em; 
+  }
+
+  .consecutive-wins-container {
+    margin-top: 0px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: #ffffff;
+    border: 1px solid black;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 1px 1px 0px black;
+    font-size: 0.5em; 
   }
 
   .chart-container {
@@ -545,11 +556,11 @@
       <div class="results">
         {@html finalComparison}
         <!-- Display Consecutive Wins -->
-        <div>
-          <strong>Consecutive Wins:</strong> {consecutiveWins}
-        </div>
       </div>
     {/if}
+    <div class="consecutive-wins-container">
+      Consecutive Wins: {consecutiveWinsValue}
+    </div>
     <div>
       <button class="help-icon" on:click={toggleHelp} aria-label="Help">
         {isHelpVisible ? "Hide Help" : "Show Help"}
@@ -611,7 +622,7 @@
   {#if simulationEnded}
   <!-- Results Details Card -->
     <div class="results-details-card">
-      <h2>Simulation Results (CAGR)</h2>
+      <h2>Simulation Results</h2>
         <p>
           Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
         </p>
