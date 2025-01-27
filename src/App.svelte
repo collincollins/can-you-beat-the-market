@@ -395,7 +395,7 @@
     box-shadow: 2px 2px 0px black;
     font-size: 0.8em;
     width: 88%;
-    max-width: 390px;
+    max-width: 350px;
     text-align: center;
   }
 
