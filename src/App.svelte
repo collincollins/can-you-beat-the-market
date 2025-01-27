@@ -22,6 +22,10 @@
   let data = { days: [], marketPrices: [], actions: [] };
   let isHelpVisible = false;
 
+  // New state variables for annualized returns
+  let userAnnualReturn = 0;
+  let buyHoldAnnualReturn = 0;
+
   // Tracking buy-and-hold final value and color states
   let buyHoldFinal = 0;
   // Colors start as black
@@ -96,6 +100,18 @@
         portfolioColor = '#008b02'; // green
         buyHoldColor = '#008b02';   // green
       }
+
+      // Calculate total simulated days
+      const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
+
+      // Initial portfolio value is assumed to be $100
+      const initialValue = 100;
+
+      // Calculate annualized return for user (CAGR)
+      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+      // Calculate annualized return for buy-and-hold (CAGR)
+      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
 
       // Build the finalComparison string with the correct color for buy-and-hold
       finalComparison = `
@@ -210,6 +226,7 @@
   .help-icon {
     font-size: .6em;
     padding: 8px;
+    margin-top: 5px;
   }
 
   .help-description {
@@ -250,7 +267,7 @@
   .portfolio {
     margin-top: 5px;
     padding: 10px;
-    background-color: #fefeff;
+    background-color: #ffffff;
     border: 2px solid #000000;
     border-radius: 10px;
     margin-bottom: 10px;
@@ -258,23 +275,23 @@
     margin-left: auto;
     margin-right: auto;
     justify-content: center;
-    max-width: 270px;
+    max-width: 350px;
     box-shadow: 1px 1px 0px #000000;
     font-size: 1em;
   }
 
   .results {
-    margin-top: 10px;
-    margin-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 5px;
     padding-left: 30px;
     padding-right: 30px;
     padding-top: 10px;
     padding-bottom: 10px;
-    background-color: #F3F4F6;
+    background-color: #ffffff;
     border: 2px solid black;
     border-radius: 10px;
     display: inline-block;
-    box-shadow: 2px 2px 0px black;
+    box-shadow: 1px 1px 0px black;
     font-size: 1em; 
   }
 
@@ -398,6 +415,34 @@
     margin-top: 15px;
   }
 
+  .results-details-card {
+    background-color: #F3F4F6;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    max-width: 450px;
+    box-shadow: 2px 2px 0px black;
+    font-size: 0.8em;
+    text-align: left;
+  }
+
+  .results-details-card h2 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-size: 1.2em;
+    text-align: center;
+    color: #3B518B;
+  }
+
+  .results-details-card p {
+    font-size: 0.9em;
+    margin: 2px 0;
+    text-align: center;
+  }
+
+
 
 </style>
 
@@ -418,15 +463,23 @@
       class="portfolio" 
       style="color: {portfolioColor};"
     >
-      Portfolio Value <br>
+      Your Portfolio Value <br>
       ${portfolio.portfolioValue.toLocaleString(undefined, { 
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
       })}
     </div>
-    <button class="help-icon" on:click={toggleHelp} aria-label="Help">
-      {isHelpVisible ? "Hide Help" : "Show Help"}
-    </button>
+    {#if simulationEnded}
+    <!-- finalComparison already includes the buyHoldColor -->
+      <div class="results">
+        {@html finalComparison}
+      </div>
+    {/if}
+    <div>
+      <button class="help-icon" on:click={toggleHelp} aria-label="Help">
+        {isHelpVisible ? "Hide Help" : "Show Help"}
+      </button>
+    </div>
     {#if isHelpVisible}
     <div class="help-description-container">
       <div class="help-description">
@@ -436,6 +489,9 @@
           <li>Trade: Use the 'Buy' and 'Sell' buttons to manage an all-in position in the market.</li>
           <li>Results: See how your timed trades compare to a simple buy-and-hold position.</li>
         </ol>
+        <ul>
+          <li>Note: Annualized returns are calculated using the Compound Annual Growth Rate (CAGR) to account for compounding effects over time.</li>
+        </ul>
       </div>
     </div>
   {/if}
@@ -470,12 +526,32 @@
       <button class="stop" on:click={endSimulation}>Stop</button>
     </div>
   {/if}
-  
+
   {#if simulationEnded}
-    <!-- finalComparison already includes the buyHoldColor -->
-    <div class="results">
-      {@html finalComparison}
+  <!-- Results Details Card -->
+  <div class="results-details-card">
+    <h2>Simulation Results (CAGR)</h2>
+    <br>
+      <p>
+        <strong>Your Annualized Return:</strong> {userAnnualReturn.toFixed(2)}%
+      </p>
+      <p>
+        <strong>Buy-and-Hold Annualized Return:</strong> {buyHoldAnnualReturn.toFixed(2)}%
+      </p>
+    <p>
+      <br>
+        {#if userAnnualReturn > buyHoldAnnualReturn}
+          <span style="color: #008b02;">You outperformed the buy-and-hold strategy</span>
+        {:else if userAnnualReturn < buyHoldAnnualReturn}
+        <span style="color: #f44336;">You underperformed compared to the buy-and-hold strategy</span>
+        {:else}
+          <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
+        {/if}
+      </p>
     </div>
+  {/if}
+
+  {#if simulationEnded}
     <div class="buttons-container">
       <button on:click={restartSimulation}>Restart</button>
     </div>
