@@ -394,8 +394,8 @@
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     font-size: 0.8em;
-    width: 88%;
-    max-width: 350px;
+    width: 65%;
+    max-width: 300px;
     text-align: center;
   }
 
