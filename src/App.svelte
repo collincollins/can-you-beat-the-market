@@ -131,12 +131,12 @@
       }
 
       // Update high score if necessary
-      if (portfolioVal > buyHoldFinal && (consecutiveWinsValue + 1) > currentHighScore) {
+      if (portfolioVal > buyHoldFinal && (consecutiveWinsValue) > currentHighScore) {
         const playerName = prompt('congratulations! you set a new high score. please enter your name:');
         if (playerName && playerName.trim() !== '') {
-          const success = await updateHighScore(playerName.trim(), consecutiveWinsValue + 1);
+          const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
           if (success) {
-            highScore.set({ score: consecutiveWinsValue + 1, playerName: playerName.trim() });
+            highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
             alert('new high score!');
           } else {
             alert('failed to update high score. please try again later.');
