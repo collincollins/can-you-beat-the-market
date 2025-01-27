@@ -1,13 +1,14 @@
+<!-- src/App.svelte -->
 <script>
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
   import Controls from './components/Controls.svelte';
   import { startSimulation, stopSimulation } from './logic/simulation';
-  import { userPortfolio, marketData } from './logic/store';
-  // 1) bridging React -> Svelte import
-  // Import the custom-element definition code:
+  import { userPortfolio, marketData, highScore } from './logic/store';
+  import { fetchHighScore, updateHighScore } from './logic/highScoreService';
   import './bridges/RetroCounterWrapper.jsx';
   import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
+  import { writable } from 'svelte/store';
 
   // Simulation settings
   let simulationTime = 30;
@@ -32,6 +33,13 @@
   let portfolioColor = 'black';
   let buyHoldColor = 'black';
 
+  // High Score State
+  let currentHighScore = 0;
+  let highScorePlayer = 'No one yet';
+
+  // Consecutive Wins
+  let consecutiveWins = 0;
+
   // Subscribe to stores
   const unsubscribePortfolio = userPortfolio.subscribe(value => {
     portfolio = value;
@@ -41,9 +49,21 @@
     data = value;
   });
 
+  const unsubscribeHighScore = highScore.subscribe(value => {
+    currentHighScore = value.score;
+    highScorePlayer = value.playerName;
+  });
+
+  onMount(async () => {
+    // Fetch High Score on app load
+    const hs = await fetchHighScore();
+    highScore.set({ score: hs.score, playerName: hs.playerName });
+  });
+
   onDestroy(() => {
     unsubscribePortfolio();
     unsubscribeMarketData();
+    unsubscribeHighScore();
     stopSimulation();
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -54,7 +74,7 @@
     isHelpVisible = !isHelpVisible;
   }
 
-  function startSimulationHandler() {
+  async function startSimulationHandler() {
     simulationEnded = false;
     simulationRunning = true;
     timer = simulationTime;
@@ -73,7 +93,7 @@
     }, 1000);
   }
 
-  function endSimulation(interval) {
+  async function endSimulation(interval) {
     simulationEnded = true;
     simulationRunning = false;
     stopSimulation();
@@ -92,13 +112,35 @@
       if (portfolioVal > buyHoldFinal) {
         portfolioColor = '#008b02'; // green
         buyHoldColor = '#f44336';   // red
+        consecutiveWins += 1;        // Increment consecutive wins
       } else if (portfolioVal < buyHoldFinal) {
         portfolioColor = '#f44336'; // red
         buyHoldColor = '#008b02';   // green
+        consecutiveWins = 0;         // Reset consecutive wins
       } else {
         // equal
         portfolioColor = '#008b02'; // green
         buyHoldColor = '#008b02';   // green
+        // Decide if equal counts as a win or not. Here, not a win.
+        consecutiveWins = 0;
+      }
+
+      // Update high score if necessary
+      if (portfolioVal > buyHoldFinal) {
+        if (consecutiveWins > currentHighScore) {
+          const playerName = prompt('Congratulations! You set a new high score. Please enter your name:');
+          if (playerName && playerName.trim() !== '') {
+            const success = await updateHighScore(playerName.trim(), consecutiveWins);
+            if (success) {
+              highScore.set({ score: consecutiveWins, playerName: playerName.trim() });
+              alert('New High Score!');
+
+              // Optionally, you can display a non-blocking notification instead of alert
+            } else {
+              alert('Failed to update high score. Please try again later.');
+            }
+          }
+        }
       }
 
       // Calculate total simulated days
@@ -149,13 +191,18 @@
       cash: 0,
       portfolioValue: 0,
     });
+
+    // Reset consecutive wins
+    consecutiveWins = 0;
   }
 
   // Handlers for buy/sell events
   function handleBuy() {
+    // You can add additional logic here if needed
   }
 
   function handleSell() {
+    // You can add additional logic here if needed
   }
 
   // Handle simulation time change
@@ -226,7 +273,7 @@
   .help-icon {
     font-size: .6em;
     padding: 8px;
-    margin-top: 5px;
+    margin-top: -2px;
   }
 
   .help-description {
@@ -282,7 +329,7 @@
 
   .results {
     margin-top: 0px;
-    margin-bottom: 5px;
+    margin-bottom: 12px;
     padding-left: 30px;
     padding-right: 30px;
     padding-top: 10px;
@@ -339,8 +386,8 @@
   }
 
   .buttons-container {
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 0px;
+    margin-bottom: 0px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -353,7 +400,7 @@
   }
 
   .simulation-time-container {
-    margin-top: 1px;
+    margin-top: 5px;
     padding: 12px;
     background-color: #F3F4F6;
     border: 2px solid black;
@@ -420,7 +467,7 @@
     border: 2px solid black;
     border-radius: 10px;
     padding: 15px 20px;
-    margin-top: 10px;
+    margin-top: 0px;
     margin-bottom: 0px;
     max-width: 450px;
     box-shadow: 2px 2px 0px black;
@@ -430,7 +477,7 @@
 
   .results-details-card h2 {
     margin-top: 0px;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
     font-size: 1.2em;
     text-align: center;
     color: #3B518B;
@@ -442,7 +489,31 @@
     text-align: center;
   }
 
+  .high-score-container {
+    margin-top: 10px;
+    padding: 12px 20px;
+    background-color: #F3F4F6;
+    border: 2px solid #000000;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 2px 2px 0px black;
+    font-size: 0.7em;
+    width: 65%;
+    max-width: 300px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
 
+  .high-score-container h2 {
+    margin-top: 0px;
+    margin-bottom: 5px;
+    color: #3B518B;
+  }
+
+  .high-score-container p {
+    margin-top: 0px;
+    margin-bottom: 5px;
+  }
 
 </style>
 
@@ -473,6 +544,10 @@
     <!-- finalComparison already includes the buyHoldColor -->
       <div class="results">
         {@html finalComparison}
+        <!-- Display Consecutive Wins -->
+        <div>
+          <strong>Consecutive Wins:</strong> {consecutiveWins}
+        </div>
       </div>
     {/if}
     <div>
@@ -501,7 +576,7 @@
     <div class="timer">Time Left: {timer} seconds</div>
     <MarketChart />
   </div>
-  
+
   {#if !simulationRunning && !simulationEnded}
     <div class="buttons-container">
       <button class="start" on:click={startSimulationHandler}>
@@ -528,36 +603,43 @@
   {/if}
 
   {#if simulationEnded}
+  <div class="buttons-container">
+    <button on:click={restartSimulation}>Restart</button>
+  </div>
+  {/if}
+
+  {#if simulationEnded}
   <!-- Results Details Card -->
-  <div class="results-details-card">
-    <h2>Simulation Results (CAGR)</h2>
-    <br>
+    <div class="results-details-card">
+      <h2>Simulation Results (CAGR)</h2>
+        <p>
+          Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
+        </p>
+        <p>
+          Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
+        </p>
       <p>
-        Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
-      </p>
-      <br>
-      <p>
-        Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
-      </p>
-    <p>
-      <br>
-        {#if userAnnualReturn > buyHoldAnnualReturn}
-          <span style="color: #008b02;">You outperformed the buy-and-hold strategy</span>
-        {:else if userAnnualReturn < buyHoldAnnualReturn}
-        <span style="color: #f44336;">You underperformed compared to the buy-and-hold strategy</span>
-        {:else}
-          <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
-        {/if}
+        <br>
+          {#if userAnnualReturn > buyHoldAnnualReturn}
+            <span style="color: #008b02;">You outperformed the buy-and-hold strategy</span>
+          {:else if userAnnualReturn < buyHoldAnnualReturn}
+          <span style="color: #f44336;">You underperformed compared to the buy-and-hold strategy</span>
+          {:else}
+            <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
+          {/if}
       </p>
     </div>
   {/if}
 
   {#if simulationEnded}
-    <div class="buttons-container">
-      <button on:click={restartSimulation}>Restart</button>
-    </div>
+  <!-- High Score Display -->
+  <div class="high-score-container">
+    <h2>High Score</h2>
+    <p>
+      {highScorePlayer} has the most consecutive wins with {currentHighScore}.
+    </p>
+  </div>
   {/if}
-
   <div class="footer-card">
     <div class="p">
       <p>Made by Collin</p>
