@@ -232,6 +232,7 @@
       // **Invalid Simulation**
       simulationValid = false;
       console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
+      consecutiveWins.set(0)
 
       if (data.marketPrices.length > 0) {
         // Calculate Buy-and-Hold final value
