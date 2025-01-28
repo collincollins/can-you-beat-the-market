@@ -1,3 +1,5 @@
+// src/bridges/RetroCounterWrapper.jsx
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import reactToWebComponent from 'react-to-webcomponent';
@@ -14,26 +16,26 @@ function parseNumber(val, fallback = 0) {
 }
 
 function RetroCounterWC(props) {
-  const { hits = 0 } = props; // destructure 'hits' from props with a default value
+  const { visitors = 0 } = props; // destructure 'visitors' from props with a default value
 
-  const [hitCount, setHitCount] = useState(parseNumber(hits)); // initialize state for hit count
+  const [visitorCount, setVisitorCount] = useState(parseNumber(visitors)); // initialize state for visitor count
 
   useEffect(() => {
-    // function to fetch the current hit count from the Netlify getHit function
-    const fetchHitCount = async () => {
+    // Function to fetch the current visitor count from the Netlify getVisitorCount function
+    const fetchVisitorCount = async () => {
       try {
-        const response = await fetch('/.netlify/functions/getHit'); // adjust the path if necessary
+        const response = await fetch('/.netlify/functions/getVisitorCount');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setHitCount(parseNumber(data.count)); // update state with the fetched hit count
+        setVisitorCount(parseNumber(data.count)); // update state with the fetched visitor count
       } catch (error) {
-        console.error('Error fetching hit count:', error);
+        console.error('Error fetching visitor count:', error);
       }
     };
 
-    // function to increment the hit count by calling the Netlify incrementHit function
+    // Function to increment the hit count by calling the Netlify incrementHit function
     const incrementHitCount = async () => {
       try {
         const response = await fetch('/.netlify/functions/incrementHit', {
@@ -42,23 +44,22 @@ function RetroCounterWC(props) {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        setHitCount(parseNumber(data.count)); // update state with the new hit count
+        // Hits are reported but not displayed
       } catch (error) {
         console.error('Error incrementing hit count:', error);
       }
     };
 
-    // fetch the current hit count when the component mounts
-    fetchHitCount();
+    // Fetch the current visitor count when the component mounts
+    fetchVisitorCount();
 
-    // increment the hit count when the component mounts
+    // Increment the hit count when the component mounts
     incrementHitCount();
   }, []); // empty dependency array ensures this runs once when the component mounts
 
   return (
     <RetroHitCounter
-      hits={parseNumber(hitCount)} // pass the current hit count to the RetroHitCounter component
+      hits={parseNumber(visitorCount)} // pass the current visitor count to the RetroHitCounter component
       withBorder={parseBool(true)}
       withGlow={parseBool(true)}
       minLength={7}
@@ -76,10 +77,10 @@ function RetroCounterWC(props) {
   );
 }
 
-// convert the React component to a Web Component
+// Convert the React component to a Web Component
 const RetroCounterElement = reactToWebComponent(RetroCounterWC, React, ReactDOM);
 
-// define the custom element if it hasn't been defined yet
+// Define the custom element if it hasn't been defined yet
 if (!customElements.get('retro-counter')) {
   customElements.define('retro-counter', RetroCounterElement);
 }

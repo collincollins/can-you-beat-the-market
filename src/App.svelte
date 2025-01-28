@@ -81,6 +81,24 @@
     unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
       consecutiveWinsValue = value;
     });
+
+    // **Visitor Counting Logic**
+    try {
+      const response = await fetch('/.netlify/functions/countVisitor', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      if (data.isNewVisitor) {
+        console.log('New visitor counted.');
+      } else {
+        console.log('Returning visitor.');
+      }
+      // Fetch the current visitor count
+      await fetchVisitorCount();
+    } catch (error) {
+      console.error('Error counting visitor:', error);
+    }
   });
 
   onDestroy(() => {
