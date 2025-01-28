@@ -50,7 +50,7 @@
     display: inline-block;
     box-shadow: 2px 2px 0px black;
     font-size: 3em;
-    margin: 10px 5spx;
+    margin: 10px 5px;
     cursor: pointer;
     border-radius: 5px;
   }
@@ -58,17 +58,17 @@
   .sell {
     background-color: #f44336;
     border-radius: 10px;
-    font-size: 5em;
-    margin-top: -5px;
-    margin-bottom: 0px;
+    font-size: 4em;
+    margin-top: 0px;
+    margin-bottom: 10px;
   }
 
   .buy {
     background-color: #008b02;
     border-radius: 10px;
-    font-size: 5em;
-    margin-top: -5px;
-    margin-bottom: 0px;
+    font-size: 4em;
+    margin-top: 0px;
+    margin-bottom: 10px;
   }
 </style>
 

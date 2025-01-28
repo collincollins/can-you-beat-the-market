@@ -1,4 +1,3 @@
-<!-- src/App.svelte -->
 <script>
   import { onDestroy, onMount } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
@@ -8,37 +7,37 @@
   import { fetchHighScore, updateHighScore } from './logic/highScoreService';
   import './bridges/RetroCounterWrapper.jsx';
   import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
+  import UsernameModal from './components/UsernameModal.svelte';
 
-  // Simulation settings
-  let simulationTime = 30;
-  let timer = simulationTime;
-  let simulationEnded = false;
-  let simulationRunning = false;
-  let finalComparison = '';
-  let timerInterval;
+  // **Simulation Settings**
+  let timerInput = 30;          // Initial timer input value
+  let timer = timerInput;       // Current timer value
+  let simulationEnded = false;  // Flag to indicate if simulation has ended
+  let simulationRunning = false;// Flag to indicate if simulation is running
+  let finalComparison = '';     // HTML string for Buy-and-Hold comparison
+  let timerInterval;            // Reference to the simulation timer interval
+  let showModal = false;        // Flag to control the visibility of the UsernameModal
 
-  // User state
+  // **User State**
   let portfolio = { shares: 1, cash: 0, portfolioValue: 0 };
   let data = { days: [], marketPrices: [], actions: [] };
-  let isHelpVisible = false;
+  let isHelpVisible = false;    // Flag to control the visibility of the help section
 
-  // New state variables for annualized returns
+  // **Annualized Returns**
   let userAnnualReturn = 0;
   let buyHoldAnnualReturn = 0;
 
-  // Tracking buy-and-hold final value and color states
-  let buyHoldFinal = 0;
+  // **Buy-and-Hold Tracking**
+  let buyHoldFinal = 0;          // Final Buy-and-Hold value
+  let portfolioColor = 'black'; // Color for the portfolio value text
+  let buyHoldColor = 'black';    // Color for the Buy-and-Hold value text
 
-  // Colors start as black
-  let portfolioColor = 'black';
-  let buyHoldColor = 'black';
-
-  // High Score State
+  // **High Score State**
   let currentHighScore = 0;
   let highScorePlayer = 'No one yet';
-  let consecutiveWinsValue = 0; // to hold the store value
+  let consecutiveWinsValue = 0; // Current consecutive wins count
 
-  // Subscribe to stores
+  // **Store Subscriptions**
   const unsubscribePortfolio = userPortfolio.subscribe(value => {
     portfolio = value;
   });
@@ -56,13 +55,16 @@
     consecutiveWinsValue = value;
   });
 
+  // **Lifecycle Hooks**
+
   onMount(async () => {
-    // Fetch High Score on app load
+    // Fetch High Score when the app mounts
     const hs = await fetchHighScore();
     highScore.set({ score: hs.score, playerName: hs.playerName });
   });
 
   onDestroy(() => {
+    // Clean up subscriptions and stop simulation when the component is destroyed
     unsubscribePortfolio();
     unsubscribeMarketData();
     unsubscribeHighScore();
@@ -73,106 +75,120 @@
     }
   });
 
+  // **Helper Functions**
+
   function toggleHelp() {
+    // Toggle the visibility of the help section
     isHelpVisible = !isHelpVisible;
   }
 
+  async function handleUsernameSubmit(playerName) {
+    // Handle the submission of the username in the modal
+    const success = await updateHighScore(playerName, consecutiveWinsValue);
+    if (success) {
+      highScore.set({ score: consecutiveWinsValue, playerName });
+    } else {
+      alert('Failed to update high score. Please try again.');
+    }
+    showModal = false;
+  }
+
   async function startSimulationHandler() {
+    // Initialize simulation state and start the simulation
     simulationEnded = false;
     simulationRunning = true;
-    timer = simulationTime;
+    timer = timerInput;
 
     // Reset text colors to black at the start of each new run
     portfolioColor = 'black';
     buyHoldColor = 'black';
     finalComparison = '';
 
+    // Start the simulation
     startSimulation();
+
+    // Start the timer countdown
     timerInterval = setInterval(() => {
       timer -= 1;
       if (timer <= 0) {
-        endSimulation(timerInterval);
+        endSimulation();
       }
     }, 1000);
   }
 
-  async function endSimulation(interval) {
-    simulationEnded = true;
-    simulationRunning = false;
-    stopSimulation();
+  async function endSimulation() {
+  // Terminate the simulation and process results
+  simulationEnded = true;
+  simulationRunning = false;
+  stopSimulation();
 
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-
-    // Make sure we have marketPrices data to compare
-    if (data.marketPrices.length > 0) {
-      // Calculate final buy-and-hold and compare
-      buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
-      const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
-
-      if (portfolioVal > buyHoldFinal) {
-        portfolioColor = '#008b02'; // green
-        buyHoldColor = '#f44336';   // red
-        consecutiveWins.update(n => n + 1); // increment via store
-        console.log(`Consecutive Wins: ${consecutiveWinsValue + 1}`)
-      } else if (portfolioVal < buyHoldFinal) {
-        portfolioColor = '#f44336'; // red
-        buyHoldColor = '#008b02';   // green
-        consecutiveWins.set(0);      // reset via store
-        console.log('Consecutive Wins reset to 0');
-      } else {
-        // equal
-        portfolioColor = '#008b02'; // green
-        buyHoldColor = '#008b02';   // green
-        consecutiveWins.set(0);
-        console.log('Consecutive Wins reset to 0');
-      }
-
-      // Update high score if necessary
-      if (portfolioVal > buyHoldFinal && (consecutiveWinsValue) > currentHighScore) {
-        const playerName = prompt('congratulations! you set a new high score. please enter your name:');
-        if (playerName && playerName.trim() !== '') {
-          const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
-          if (success) {
-            highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
-            alert('new high score!');
-          } else {
-            alert('failed to update high score. please try again later.');
-          }
-        }
-      }
-
-      // Calculate total simulated days
-      const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
-
-      // Initial portfolio value is assumed to be $100
-      const initialValue = 100;
-
-      // Calculate annualized return for user (CAGR)
-      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // Calculate annualized return for buy-and-hold (CAGR)
-      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // Build the finalComparison string with the correct color for buy-and-hold
-      finalComparison = `
-        <span style="color:${buyHoldColor}">
-          Buy-and-Hold Value<br>
-          $${buyHoldFinal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
-        </span>
-      `;
-    }
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
   }
 
+  if (data.marketPrices.length > 0) {
+    // Calculate Buy-and-Hold final value
+    buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
+    const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+
+    // Determine performance and update colors
+    if (portfolioVal > buyHoldFinal) {
+      portfolioColor = '#008b02'; // Green for outperforming
+      buyHoldColor = '#f44336';   // Red for underperforming
+
+      // Compute the new consecutive wins value
+      const newConsecutiveWins = consecutiveWinsValue + 1;
+
+      // Check if the new streak exceeds the current high score
+      if (newConsecutiveWins > currentHighScore) {
+        showModal = true; // Trigger the UsernameModal
+      }
+
+      // Update the consecutiveWins store
+      consecutiveWins.set(newConsecutiveWins);
+      console.log(`Consecutive Wins: ${newConsecutiveWins}`);
+    } else if (portfolioVal < buyHoldFinal) {
+      portfolioColor = '#f44336'; // Red for underperforming
+      buyHoldColor = '#008b02';   // Green for outperforming
+      consecutiveWins.set(0);      // Reset streak
+      console.log('Consecutive Wins reset to 0');
+    } else {
+      // Equal performance
+      portfolioColor = '#008b02'; // Green
+      buyHoldColor = '#008b02';   // Green
+      consecutiveWins.set(0);      // Reset streak
+      console.log('Consecutive Wins reset to 0');
+    }
+
+    // **Calculate Annualized Returns (CAGR)**
+    const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
+    const initialValue = 100; // Assumed initial portfolio value
+
+    // User's CAGR
+    userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+    // Buy-and-Hold CAGR
+    buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+    // **Update finalComparison HTML**
+    finalComparison = `
+      <span style="color:${buyHoldColor}">
+        Buy-and-Hold Value<br>
+        $${buyHoldFinal.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
+      </span>
+    `;
+  }
+}
+
   function restartSimulation() {
+    // Reset the simulation to its initial state
     simulationEnded = false;
     simulationRunning = false;
-    timer = simulationTime;
+    timer = timerInput;
 
     // Reset colors to black
     portfolioColor = 'black';
@@ -192,486 +208,481 @@
       cash: 0,
       portfolioValue: 0,
     });
+    // Note: Do not reset consecutiveWins here to preserve streak
   }
 
-  // Handlers for buy/sell events
+  // **Event Handlers for Buy/Sell Buttons**
   function handleBuy() {
+    // Optional: Implement additional logic after a buy action if needed
   }
 
   function handleSell() {
-  }
-
-  // Handle simulation time change
-  function handleSimulationTimeChange(event) {
-    const value = parseInt(event.target.value, 10);
-    if (!isNaN(value) && value > 0) {
-      simulationTime = value;
-      timer = simulationTime;
-      if (simulationRunning) {
-        stopSimulation();
-        startSimulation();
-      }
-    }
+    // Optional: Implement additional logic after a sell action if needed
   }
 </script>
 
 <style>
-  .app {
-    font-family: 'Press Start 2P', cursive;
-    text-align: center;
-    margin-top: -10px;
-    padding-top: 5px;
-    padding-left: 15px;
-    padding-right: 15px;
-    min-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 0.9em;
-  }
-
-  .header-container {
-    position: relative;
-    justify-content: center;
-    margin-top: 20px;
-    margin-bottom: 15px;
-    padding-left: 12px;
-    padding-right: 12px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    background-color: #ccd0dcd9;
-    border: 2px solid black;
-    border-radius: 10px;
-    display: inline-block;
-    box-shadow: 2px 2px 0px black;
-    width: 88%;
-    max-width: 450px;
-    font-size: 0.6em;
-  }
-
-  .header-card {
-    margin-top: 15px;
-    margin-bottom: 10px;
-    justify-content: center;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 0px;
-    padding-bottom: 10px;
-    background-color: #F3F4F6;
-    border: 2px solid black;
-    border-radius: 10px;
-    display: inline-block;
-    box-shadow: 2px 2px 0px black;
-    max-width: auto;
-    font-size: 1em;
-  }
-
-  .help-icon {
-    font-size: .6em;
-    padding: 8px;
-    margin-top: -2px;
-  }
-
-  .help-description {
-    font-family: "Player Start 2P";
-    font-size: 7pt;
-    text-align: left;
-    max-width: 700px;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .help-description-container {
-    margin-top: 10px;
-    padding: 0px;
-    background-color: #ffffff;
-    border: 1px solid #000000;
-    border-radius: 8px;
-    margin-bottom: 0;
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-    justify-content: center;
-    box-shadow: 1px 1px 0px #000000;
-    font-size: 1em;
-  }
-
-  .timer {
-    margin-top: 0px;
-    margin-bottom: 0px;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 0px;
-    padding-bottom: 5px;
-    display: inline-block;
-    font-size: 0.85em;
-  }
+    .app {
+      font-family: 'Press Start 2P', cursive;
+      text-align: center;
+      margin-top: -10px;
+      padding-top: 5px;
+      padding-left: 15px;
+      padding-right: 10px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.9em;
+      padding-bottom: 0;
+    }
   
-  .portfolio {
-    margin-top: 5px;
-    padding: 10px;
-    background-color: #ffffff;
-    border: 2px solid #000000;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-    justify-content: center;
-    max-width: 350px;
-    box-shadow: 1px 1px 0px #000000;
-    font-size: 1em;
-  }
-
-  .results {
-    margin-top: 0px;
-    margin-bottom: 8px;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    background-color: #ffffff;
-    border: 2px solid black;
-    border-radius: 10px;
-    display: inline-block;
-    box-shadow: 1px 1px 0px black;
-    font-size: 1em; 
-  }
-
-  .consecutive-wins-container {
-    margin-top: 0px;
-    margin-bottom: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    background-color: #ffffff;
-    border: 1px solid black;
-    border-radius: 10px;
-    display: inline-block;
-    box-shadow: 1px 1px 0px black;
-    font-size: 0.5em; 
-  }
-
-  .chart-container {
-    position: relative;
-    background-color: #F3F4F6;
-    height: 250px;
-    width: 98%;
-    max-width: 800px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    padding-left: 18px;
-    padding-right: 0px;
-    padding-top: 15px;
-    padding-bottom: 33px;
-    border: 2px solid black;
-    border-radius: 15px;
-    box-shadow: 2px 2px 0px black;
-  }
-
-  button {
-    font-family: 'Press Start 2P', cursive;
-    touch-action: manipulation;
-    background-color: #435b9f;
-    border: 2px solid black;
-    color: white;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    text-align: center;
-    display: inline-block;
-    box-shadow: 2px 2px 0px black;
-    border-radius: 10px;
-    font-size: 1.2em;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background-color: #384d86; /* slightly darker shade of the original color */
-}
+    .header-container {
+      position: relative;
+      justify-content: center;
+      margin-top: 20px;
+      margin-bottom: 15px;
+      padding-left: 12px;
+      padding-right: 12px;
+      padding-top: 0px;
+      padding-bottom: 0px;
+      background-color: #ccd0dcd9;
+      border: 2px solid black;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 2px 2px 0px black;
+      width: 88%;
+      max-width: 450px;
+      font-size: 0.6em;
+    }
   
-  .stop {
-    background-color: #878282ae;
+    .header-card {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      justify-content: center;
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-top: 0px;
+      padding-bottom: 10px;
+      background-color: #F3F4F6;
+      border: 2px solid black;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 2px 2px 0px black;
+      max-width: auto;
+      font-size: 1em;
+    }
+  
+    .help-icon {
+      font-size: .6em;
+      padding: 8px;
+      margin-top: -2px;
+    }
+  
+    .help-description {
+      font-family: "Player Start 2P";
+      font-size: 7pt;
+      text-align: left;
+      max-width: 400px;
+      padding-left: 5px;
+      padding-right: 10px;
+    }
+  
+    .help-description-container {
+      margin-top: 10px;
+      padding: 0px;
+      background-color: #ffffff;
+      border: 1px solid #000000;
+      border-radius: 8px;
+      margin-bottom: 0;
+      display: flex;
+      margin-left: auto;
+      margin-right: auto;
+      justify-content: center;
+      box-shadow: 1px 1px 0px #000000;
+      font-size: 1em;
+    }
+  
+    .timer-container input {
+      padding: 3px;
+      margin-left: 0px;
+      margin-right: -5px;
+      margin-bottom: 0px;
+      background-color: F3F4F6;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.9em;
+      width: 40px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: center;
+    }
+    
+    .portfolio {
+      margin-top: 0px;
+      padding: 8px;
+      background-color: #ffffff;
+      border: 2px solid #000000;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      margin-left: auto;
+      margin-right: auto;
+      justify-content: center;
+      max-width: 250px;
+      box-shadow: 1px 1px 0px #000000;
+      font-size: 0.85em;
+    }
+  
+    .results {
+      margin-top: 0px;
+      padding: 8px;
+      background-color: #ffffff;
+      border: 2px solid #000000;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      margin-left: auto;
+      margin-right: auto;
+      justify-content: center;
+      max-width: 250px;
+      box-shadow: 1px 1px 0px #000000;
+      font-size: 0.85em;
+    }
+  
+    .consecutive-wins-container {
+      color: #545454;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-top: 5px;
+      padding-bottom: 0;
+      background-color: #F3F4F6;
+      border-radius: 10px;
+      display: inline-block;
+      font-size: 0.8em; 
+    }
+  
+    .chart-container {
+      position: relative;
+      background-color: #F3F4F6;
+      height: 275px;
+      width: 98%;
+      max-width: 800px;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      padding-left: 18px;
+      padding-right: 0px;
+      padding-top: 15px;
+      padding-bottom: 33px;
+      border: 2px solid black;
+      border-radius: 15px;
+      box-shadow: 2px 2px 0px black;
+    }
+  
+    button {
+      font-family: 'Press Start 2P', cursive;
+      touch-action: manipulation;
+      background-color: #435b9f;
+      border: 2px solid black;
+      color: white;
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      text-align: center;
+      display: inline-block;
+      box-shadow: 2px 2px 0px black;
+      border-radius: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+  
+    button:hover {
+      background-color: #384d86;
   }
+    
+    .stop {
+      background-color: #878282ae;
+    }
+  
+    .buttons-container {
+      margin-top: 0px;
+      margin-bottom: 0px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .buttons-container button {
+      margin: 10px 0;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  
+    .footer-card {
+      bottom: 0px;
+      left: center;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 5px;
+      padding-bottom: 15px;
+      background-color: #F3F4F6;
+      border: 2px solid black;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 2px 2px 0px black;
+      font-size: 0.8em;
+      width: 65%;
+      max-width: 300px;
+      text-align: center;
+    }
 
-  .buttons-container {
-    margin-top: 0px;
-    margin-bottom: 0px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .buttons-container button {
-    margin: 10px 0;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .simulation-time-container {
-    margin-top: 5px;
-    padding: 12px;
-    background-color: #F3F4F6;
-    border: 2px solid black;
-    border-radius: 10px;         
-    margin-bottom: 15px;         
-    display: inline-block;      
-    box-shadow: 2px 2px 0px black; 
-    font-size: 1.3em;
-  }
-
-  .simulation-time-container label {
-    display: block;
-    margin-bottom: 0px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.7em;
-  }
-
-  .simulation-time-container input {
-    padding: 6px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.7em;
-    width: 60px;
-    text-align: center;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-
-  .footer-card {
-    margin-top: 1px;
-    margin-bottom: 10px;
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-top: 5px;
-    padding-bottom: 12px;
-    background-color: #F3F4F6;
-    border: 2px solid black;
-    border-radius: 10px;
-    display: inline-block;
-    box-shadow: 2px 2px 0px black;
-    font-size: 0.8em;
-    width: 65%;
-    max-width: 300px;
-    text-align: center;
-  }
-
-  .coffee-button {
-    touch-action: manipulation;
-    height: 50px;
-    width: 181px;
-    border-radius: 10px;
-    overflow:hidden;
-    border: 1px solid black;
-    box-shadow: 2px 2px 0px black;
-    display: block;
-    margin: 0 auto;
-  }
-
-  .counter-container {
-    margin-top: 15px;
-  }
-
-  .results-details-card {
-    background-color: #F3F4F6;
-    border: 2px solid black;
-    border-radius: 10px;
-    padding: 15px 20px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    max-width: 450px;
-    box-shadow: 2px 2px 0px black;
-    font-size: 0.8em;
-    text-align: left;
-  }
-
-  .results-details-card h2 {
-    margin-top: 0px;
-    margin-bottom: 5px;
-    font-size: 1.2em;
-    text-align: center;
-    color: #3B518B;
-  }
-
-  .results-details-card p {
-    font-size: 0.9em;
-    margin: 2px 0;
-    text-align: center;
-  }
-
-  .high-score-container {
-    margin-top: 10px;
-    padding: 12px 20px;
-    background-color: #F3F4F6;
-    border: 2px solid #000000;
-    border-radius: 10px;
-    display: inline-block;
-    box-shadow: 2px 2px 0px black;
-    font-size: 0.7em;
-    width: 65%;
-    max-width: 300px;
-    text-align: center;
-    margin-bottom: 10px;
-  }
-
-  .high-score-container h2 {
-    margin-top: 0px;
-    margin-bottom: 5px;
-    color: #3B518B;
-  }
-
-  .high-score-container p {
-    margin-top: 0px;
-    margin-bottom: 5px;
-  }
-
-</style>
-
-<!-- Link to Press Start 2P font -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
-<div class="app">
-
-  <div class="header-card">
-    <!-- Wrapped the header in a card-like container -->
-    <div class="header-container">
-      <h1>Can You Beat The Market?</h1>
-    </div>
-    <!-- Inline style binding for portfolio color -->
-    <div 
-      class="portfolio" 
-      style="color: {portfolioColor};"
-    >
-      Your Portfolio Value <br>
-      ${portfolio.portfolioValue.toLocaleString(undefined, { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-      })}
-    </div>
-    {#if simulationEnded}
-    <!-- finalComparison already includes the buyHoldColor -->
-      <div class="results">
-        {@html finalComparison}
-        <!-- Display Consecutive Wins -->
+        /* New class to hide the footer */
+    .hidden-footer {
+      transform: translateX(0%) translateY(200%); /* Pushes the footer down by 100% of its height */
+    }
+  
+    .coffee-button {
+      touch-action: manipulation;
+      height: 50px;
+      width: 181px;
+      border-radius: 10px;
+      overflow:hidden;
+      border: 1px solid black;
+      box-shadow: 2px 2px 0px black;
+      display: block;
+      margin: 0 auto;
+    }
+  
+    .counter-container {
+      margin-top: 15px;
+    }
+  
+    .results-details-card {
+      background-color: #F3F4F6;
+      border: 2px solid black;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      max-width: 450px;
+      box-shadow: 2px 2px 0px black;
+      font-size: 0.8em;
+      text-align: left;
+    }
+  
+    .results-details-card h2 {
+      margin-top: 0px;
+      margin-bottom: 5px;
+      font-size: 1.2em;
+      text-align: center;
+      color: #3B518B;
+    }
+  
+    .results-details-card p {
+      font-size: 0.9em;
+      margin: 2px 0;
+      text-align: center;
+    }
+  
+    .high-score-container {
+      margin-top: 2px;
+      padding: 12px 20px;
+      background-color: #F3F4F6;
+      border: 2px solid #000000;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 2px 2px 0px black;
+      font-size: 0.7em;
+      width: 65%;
+      max-width: 300px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+  
+    .high-score-container h2 {
+      margin-top: 0px;
+      margin-bottom: 5px;
+      color: #3B518B;
+    }
+  
+    .high-score-container p {
+      margin-top: 0px;
+      margin-bottom: 5px;
+    }
+  
+  </style>
+  
+  <!-- Link to Press Start 2P font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <div class="app">
+  
+    <div class="header-card">
+      <!-- Wrapped the header in a card-like container -->
+      <div class="header-container">
+        <h1>Can You Beat The Market?</h1>
+      </div>
+      {#if simulationRunning || !simulationEnded}
+        <div 
+        class="portfolio" 
+        style="
+        color: {portfolioColor};
+        margin-bottom: 72px;
+        
+        "
+        >
+        Your Portfolio Value <br>
+        ${portfolio.portfolioValue.toLocaleString(undefined, { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}
+        </div>
+        {:else}
+        <div 
+        class="portfolio" 
+        style="color: {portfolioColor};"
+        >
+        Your Portfolio Value <br>
+        ${portfolio.portfolioValue.toLocaleString(undefined, { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}
+        </div>
+      {/if}
+      {#if simulationEnded}
+      <!-- finalComparison already includes the buyHoldColor -->
+        <div class="results">
+          {@html finalComparison}
+        </div>
+      {/if}
+      <div>
+        <button class="help-icon" on:click={toggleHelp} aria-label="Help">
+          {isHelpVisible ? "Hide Help" : "Show Help"}
+        </button>
+      </div>
+      {#if isHelpVisible}
+      <div class="help-description-container">
+        <div class="help-description">
+          <p>Can you outperform a buy-and-hold investment strategy by timing your trades in a simulated market?</p>
+          <ol>
+            <li>Simulation: Five years in 30 seconds using a rolling average of a positively biased geometric brownian motion.</li>
+            <li>Trade: Use the 'Buy' and 'Sell' buttons to manage an all-in position in the market.</li>
+            <li>Results: See how your timed trades compare to a simple buy-and-hold position.</li>
+          </ol>
+          <ul>
+            <li>Note: Annualized returns are calculated using the Compound Annual Growth Rate (CAGR) to account for compounding effects over time.</li>
+          </ul>
+        </div>
       </div>
     {/if}
-    <div class="consecutive-wins-container">
-      Consecutive Wins: {consecutiveWinsValue}
     </div>
-    <div>
-      <button class="help-icon" on:click={toggleHelp} aria-label="Help">
-        {isHelpVisible ? "Hide Help" : "Show Help"}
-      </button>
-    </div>
-    {#if isHelpVisible}
-    <div class="help-description-container">
-      <div class="help-description">
-        <p> Can you outperform a buy-and-hold investment strategy by timing your trades in a simulated market?</p>
-        <ol>
-          <li>Simulation: Five years in 30 seconds using a rolling average of a positively biased geometric brownian motion.</li>
-          <li>Trade: Use the 'Buy' and 'Sell' buttons to manage an all-in position in the market.</li>
-          <li>Results: See how your timed trades compare to a simple buy-and-hold position.</li>
-        </ol>
-        <ul>
-          <li>Note: Annualized returns are calculated using the Compound Annual Growth Rate (CAGR) to account for compounding effects over time.</li>
-        </ul>
+    
+    <div class="chart-container">
+      <div class="timer-container">
+        {#if !simulationRunning && !simulationEnded}
+          <span>Time Left:</span>
+          <input
+            type="number"
+            min="10"
+            bind:value={timerInput}
+            /> 
+          <span>seconds</span>
+        {:else}
+           <span class="timer">Time Left: {timer} seconds</span>
+        {/if}
       </div>
+      <div class="consecutive-wins-container">
+        Win Streak: {consecutiveWinsValue}
+      </div>
+      <MarketChart />
     </div>
-  {/if}
-  </div>
   
-  <div class="chart-container">
-    <div class="timer">Time Left: {timer} seconds</div>
-    <MarketChart />
-  </div>
-
-  {#if !simulationRunning && !simulationEnded}
-    <div class="buttons-container">
-      <button class="start" on:click={startSimulationHandler}>
-        Start Simulation
-      </button>
-    </div>
-    <div class="simulation-time-container">
-      <label for="simTime">Timer Length</label>
-      <input
-        type="number"
-        id="simTime"
-        min="1"
-        bind:value={simulationTime}
-        on:change={handleSimulationTimeChange}
-      />
-    </div>
-  {/if}
+    {#if !simulationRunning && !simulationEnded}
+      <div class="buttons-container" style="margin-top: 10px; margin-bottom: 10px">
+        <button class="start" on:click={startSimulationHandler}>
+          Start Simulation
+        </button>
+      </div>
+    {/if}
+    
+    {#if simulationRunning}
+      <Controls on:buy={handleBuy} on:sell={handleSell} />
+      <div class="buttons-container">
+        <button class="stop" on:click={endSimulation}>Stop</button>
+      </div>
+    {/if}
   
-  {#if simulationRunning}
-    <Controls on:buy={handleBuy} on:sell={handleSell} />
-    <div class="buttons-container">
-      <button class="stop" on:click={endSimulation}>Stop</button>
+    {#if simulationEnded}
+    <div class="buttons-container" style="margin-top: 10px">
+      <button on:click={restartSimulation}>Restart</button>
     </div>
-  {/if}
-
-  {#if simulationEnded}
-  <div class="buttons-container">
-    <button on:click={restartSimulation}>Restart</button>
-  </div>
-  {/if}
-
-  {#if simulationEnded}
-  <!-- Results Details Card -->
-    <div class="results-details-card">
-      <h2>Simulation Results</h2>
+    {/if}
+  
+    {#if simulationEnded}
+    <!-- Results Details Card -->
+      <div class="results-details-card">
+        <h2>Simulation Results</h2>
+          <p>
+            Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
+          </p>
+          <p>
+            Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
+          </p>
         <p>
-          Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
+          <br>
+            {#if userAnnualReturn > buyHoldAnnualReturn}
+              <span style="color: #008b02;">You outperformed the buy-and-hold strategy</span>
+            {:else if userAnnualReturn < buyHoldAnnualReturn}
+            <span style="color: #f44336;">You underperformed compared to the buy-and-hold strategy</span>
+            {:else}
+              <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
+            {/if}
         </p>
-        <p>
-          Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
-        </p>
+      </div>
+    {/if}
+  
+    {#if simulationEnded}
+    <!-- High Score Display -->
+    <div class="high-score-container">
+      <h2>High Score</h2>
       <p>
-        <br>
-          {#if userAnnualReturn > buyHoldAnnualReturn}
-            <span style="color: #008b02;">You outperformed the buy-and-hold strategy</span>
-          {:else if userAnnualReturn < buyHoldAnnualReturn}
-          <span style="color: #f44336;">You underperformed compared to the buy-and-hold strategy</span>
-          {:else}
-            <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
-          {/if}
+        {highScorePlayer} has the most consecutive wins with {currentHighScore}.
       </p>
     </div>
-  {/if}
-
-  {#if simulationEnded}
-  <!-- High Score Display -->
-  <div class="high-score-container">
-    <h2>High Score</h2>
-    <p>
-      {highScorePlayer} has the most consecutive wins with {currentHighScore}.
-    </p>
-  </div>
-  {/if}
-  <div class="footer-card">
+    {/if}
+    <div
+    class="footer-card"
+    class:hidden-footer={simulationRunning || !simulationEnded}>
     <div class="p">
       <p>Made by Collin</p>
     </div>
     {#if simulationEnded}
-    <a
-      href="https://www.buymeacoffee.com/B4Aaol3SrI"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="coffee-button"
-    >
-      <img
-        src={coffeeButton}
-        alt="Buy Me A Coffee"
-        style="height: 50px; width: 181px;"
-      />
-    </a>
+      <a
+        href="https://www.buymeacoffee.com/B4Aaol3SrI"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="coffee-button"
+      >
+        <img
+          src={coffeeButton}
+          alt="Buy Me A Coffee"
+          style="height: 50px; width: 181px;"
+        />
+      </a>
     {/if}
     <div class="counter-container">
       <retro-counter></retro-counter>
     </div>
   </div>
 
-</div>
+    {#if showModal}
+      <UsernameModal on:submit={handleUsernameSubmit} />
+    {/if}
+
+  </div>
