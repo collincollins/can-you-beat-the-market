@@ -43,8 +43,16 @@ function RetroCounterWC(props) {
         // Update the state with the new visitor count
         const data = await getVisitorResponse.json();
         setVisitorCount(data.count);
+  
+        // Increment the hit count in the database
+        const incrementHitResponse = await fetch('/.netlify/functions/incrementHit', {
+          method: 'POST',
+        });
+        if (!incrementHitResponse.ok) {
+          throw new Error(`HTTP error! status: ${incrementHitResponse.status}`);
+        }
       } catch (error) {
-        console.error('Error updating visitor count:', error);
+        console.error('Error updating visitor count or incrementing hits:', error);
       }
     };
   
