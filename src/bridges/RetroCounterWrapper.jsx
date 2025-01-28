@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import reactToWebComponent from 'react-to-webcomponent';
 import RetroHitCounter from 'react-retro-hit-counter';
+import { fetchVisitorCount } from '../logic/visitorCountStore';
 
 // Utility functions to parse boolean and number values
 function parseBool(val) {
@@ -21,20 +22,6 @@ function RetroCounterWC(props) {
   const [visitorCount, setVisitorCount] = useState(parseNumber(visitors)); // initialize state for visitor count
 
   useEffect(() => {
-    // Function to fetch the current visitor count from the Netlify getVisitorCount function
-    const fetchVisitorCount = async () => {
-      try {
-        const response = await fetch('/.netlify/functions/getVisitorCount');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setVisitorCount(parseNumber(data.count)); // update state with the fetched visitor count
-      } catch (error) {
-        console.error('Error fetching visitor count:', error);
-      }
-    };
-
     // Function to increment the hit count by calling the Netlify incrementHit function
     const incrementHitCount = async () => {
       try {

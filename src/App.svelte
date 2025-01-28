@@ -94,8 +94,6 @@
       } else {
         console.log('Returning visitor.');
       }
-      // Fetch the current visitor count
-      await fetchVisitorCount();
     } catch (error) {
       console.error('Error counting visitor:', error);
     }
