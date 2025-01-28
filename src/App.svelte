@@ -327,7 +327,7 @@
     font-size: 1em;
     padding-top: 5px;
     width: 80%; /* max-width override */
-    max-width: 900px;
+    max-width: 500px;
   }
 
   /* Help Icon Specific Styles */
@@ -399,6 +399,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  /* Results and High Score Container Specific Styles */
+  .results-details-card {
+    width: 80%;
+    max-width: 400px;
+    font-size: 0.75em;
+    padding-top: 5px;
   }
 
   /* Invalid Simulation Message Specific Styles */
@@ -543,7 +551,7 @@
 
   <!-- Simulation Results Details -->
   {#if simulationEnded}
-    <div class="card results-details-card" style="margin-top: 10px;">
+    <div class="card results-details-card" style="margin-top: 20px;">
       <h2>Simulation Results</h2>
       <p style="font-size: 0.90em;">
         Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
@@ -572,7 +580,7 @@
 
   <!-- High Score Display -->
   {#if simulationEnded}
-    <div class="card">
+    <div class="card results-details-card">
       <h2>High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}

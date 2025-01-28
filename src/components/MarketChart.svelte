@@ -75,7 +75,7 @@
         suggestedMax: 500,
         title: {
           display: true,
-          text: 'Days',
+          text: 'Days  ', // tactical spaces to make the text centered
           font: {
             family: "'Press Start 2P'",
             size: 12,
