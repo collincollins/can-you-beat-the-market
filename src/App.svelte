@@ -15,6 +15,7 @@
   let timerInput = 30;          // Initial timer input value
   let timer = timerInput;       // Current timer value
   let simulationEnded = false;  // Flag to indicate if simulation has ended
+  let simulationValid = false;  // Flag to indicate if simulation was valid
   let simulationRunning = false;// Flag to indicate if simulation is running
   let finalComparison = '';     // HTML string for Buy-and-Hold comparison
   let timerInterval;            // Reference to the simulation timer interval
@@ -124,6 +125,7 @@
   async function startSimulationHandler() {
     // Initialize simulation state and start the simulation
     simulationEnded = false;
+    simulationValid = false; // Reset simulation validity
     simulationRunning = true;
     timer = timerInput;
 
@@ -134,6 +136,11 @@
     portfolioColor = 'black';
     buyHoldColor = 'black';
     finalComparison = '';
+
+    // Reset annualized returns and buy-and-hold values
+    userAnnualReturn = 0;
+    buyHoldAnnualReturn = 0;
+    buyHoldFinal = 0;
 
     // Start the simulation
     startSimulation();
@@ -163,7 +170,8 @@
     const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
 
     if (durationInSeconds >= 30) {
-      // Proceed only if simulation ran for at least 30 seconds
+      // **Valid Simulation**
+      simulationValid = true;
 
       if (data.marketPrices.length > 0) {
         // Calculate Buy-and-Hold final value
@@ -221,16 +229,56 @@
         `;
       }
     } else {
-      // **Simulation Ran for Less Than 30 Seconds**
+      // **Invalid Simulation**
+      simulationValid = false;
       console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
-      // Do not update high score or consecutiveWinsValue
-      // Optionally, you can reset colors or other states if needed
+
+      if (data.marketPrices.length > 0) {
+        // Calculate Buy-and-Hold final value
+        buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
+        const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+
+        // Determine performance and update colors
+        if (portfolioVal > buyHoldFinal) {
+          portfolioColor = '#008b02'; // Green for outperforming
+          buyHoldColor = '#f44336';   // Red for underperforming
+        } else if (portfolioVal < buyHoldFinal) {
+          portfolioColor = '#f44336'; // Red for underperforming
+          buyHoldColor = '#008b02';   // Green for outperforming
+        } else {
+          // Equal performance
+          portfolioColor = '#008b02'; // Green
+          buyHoldColor = '#008b02';   // Green
+        }
+
+        // **Calculate Annualized Returns (CAGR)**
+        const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
+        const initialValue = 100; // Assumed initial portfolio value
+
+        // User's CAGR
+        userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+        // Buy-and-Hold CAGR
+        buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+        // **Update finalComparison HTML**
+        finalComparison = `
+          <span style="color:${buyHoldColor}">
+            Buy-and-Hold Value<br>
+            $${buyHoldFinal.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}
+          </span>
+        `;
+      }
     }
   }
 
   function restartSimulation() {
     // Reset the simulation to its initial state
     simulationEnded = false;
+    simulationValid = false;
     simulationRunning = false;
     timer = timerInput;
 
@@ -238,6 +286,11 @@
     portfolioColor = 'black';
     buyHoldColor = 'black';
     finalComparison = '';
+
+    // Reset annualized returns and buy-and-hold values
+    userAnnualReturn = 0;
+    buyHoldAnnualReturn = 0;
+    buyHoldFinal = 0;
 
     // Reset market data and user portfolio
     marketData.set({
@@ -554,6 +607,12 @@
       margin-top: 0px;
       margin-bottom: 5px;
     }
+
+    .invalid-simulation-message {
+      color: #f44336;
+      margin-top: 10px;
+      text-align: center;
+    }
   
   </style>
   
@@ -653,7 +712,6 @@
     {/if}
     
     {#if simulationRunning}
-      <!-- Pass canBuy and canSell as props to Controls.svelte -->
       <Controls {canBuy} {canSell} on:buy={handleBuy} on:sell={handleSell} />
       <div class="buttons-container">
         <button class="stop" on:click={endSimulation}>Stop</button>
@@ -664,7 +722,7 @@
     <div class="buttons-container" style="margin-top: 10px">
       <button on:click={restartSimulation}>Restart</button>
     </div>
-    {/if}
+  {/if}
   
     {#if simulationEnded}
     <!-- Results Details Card -->
@@ -686,6 +744,12 @@
               <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
             {/if}
         </p>
+        {#if simulationEnded && !simulationValid}
+        <!-- Optional: Invalid Simulation Message -->
+        <div class="invalid-simulation-message">
+          Simulation did not run long enough to count towards win streak. Please run again for at least 30 seconds
+        </div>
+        {/if}
       </div>
     {/if}
   
@@ -694,10 +758,11 @@
     <div class="high-score-container">
       <h2>High Score</h2>
       <p>
-        {highScorePlayer} has the most consecutive wins with {currentHighScore}.
+        {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
     </div>
     {/if}
+
     <div
     class="footer-card"
     class:hidden-footer={simulationRunning || !simulationEnded}>
