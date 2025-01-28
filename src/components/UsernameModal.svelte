@@ -1,13 +1,40 @@
-<!-- src/components/UsernameModal.svelte -->
 <script>
   import { createEventDispatcher } from 'svelte';
+
   let playerName = '';
+  let errorMessage = '';
   const dispatch = createEventDispatcher();
 
   function submitName() {
-    if (playerName.trim() !== '') {
-      console.log("Dispatching 'submit' event with playerName:", playerName.trim());
-      dispatch('submit', playerName.trim()); // Dispatch as a string
+    const trimmedName = playerName.trim();
+
+    // Reset error message
+    errorMessage = '';
+
+    // Validate trimmedName is not empty
+    if (trimmedName === '') {
+      errorMessage = 'Username cannot be empty.';
+      return;
+    }
+
+    // Validate length of the username
+    if (trimmedName.length > 16) {
+      errorMessage = 'Username must be 16 characters or fewer.';
+      return;
+    }
+
+    // Dispatch the trimmed name if valid
+    dispatch('submit', trimmedName);
+  }
+
+  function handleInput(event) {
+    playerName = event.target.value;
+
+    // Real-time validation
+    if (playerName.length > 16) {
+      errorMessage = 'Username must be 16 characters or fewer.';
+    } else {
+      errorMessage = '';
     }
   }
 </script>
@@ -16,8 +43,19 @@
   <div class="modal">
     <h2>New High Score!</h2>
     <p>Please enter your name:</p>
-    <input type="text" bind:value={playerName} placeholder="Your Name" />
-    <button on:click={submitName}>Submit</button>
+    <input
+      type="text"
+      bind:value={playerName}
+      placeholder="Your Name"
+      class:invalid={errorMessage !== ''}
+      on:input={handleInput}
+    />
+    {#if errorMessage}
+      <p class="error-message">{errorMessage}</p>
+    {/if}
+    <button on:click={submitName} disabled={errorMessage !== '' || playerName.trim() === ''}>
+      Submit
+    </button>
   </div>
 </div>
 
@@ -51,13 +89,18 @@
   input {
     padding: 10px;
     margin-bottom: 20px;
-    background-color: F3F4F6;
+    background-color: #F3F4F6;
     font-family: 'Press Start 2P', cursive;
     font-size: 0.9em;
     width: 70%;
     border: 1px solid #ccc;
     border-radius: 5px;
     text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  input.invalid {
+    border-color: red; /* Highlight invalid input with red border */
   }
 
   button {
@@ -78,7 +121,18 @@
     cursor: pointer;
   }
 
-  button:hover {
+  button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+  }
+
+  button:hover:enabled {
     background-color: #006f00;
+  }
+
+  .error-message {
+    color: red;
+    font-size: 0.7em;
+    margin-top: -5px;
   }
 </style>
