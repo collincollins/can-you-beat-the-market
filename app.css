@@ -1,72 +1,235 @@
+/* app.css */
+
 :root {
-  /* keep the global font, but remove background color or color-scheme settings */
-  font-family: 'Press Start 2P', cursive;
-  background-color: #B8BECE;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Colors */
+  --color-background-card: #F3F4F6;
+  --color-primary: #3B518B;
+  --color-dark-text: #353535;
+  --color-success: #008b02;
+  --color-danger: #f44336;
+  --color-neutral: #545454;
+  --color-button-default: #435b9f;
+  --color-button-hover: #384d86;
+  --color-background-dark: #B8BECE;
+  --color-pure-white: #ffffff;
+
+  /* Fonts */
+  --font-main: 'Press Start 2P', cursive;
+  line-height: 1.4;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
+  /* Shadows */
+  --shadow-default: 2px 2px 0px black;
+  --shadow-light: 2px 2px 0px black;
+}
+
+/* Global Styles */
+body {
+  background-color: var(--color-background-dark);
+  font-family: var(--font-main);
+  margin: 0;
+  padding: 0;
+  color: var(--color-neutral);
 }
 
 html {
   overflow-y: scroll;
 }
-
-/* Customize the scrollbar track */
 html::-webkit-scrollbar-track {
-  background: #B8BECE; /* match background color */
+  background: --color-background-dark;
 }
-
-/* Customize the scrollbar thumb */
 html::-webkit-scrollbar-thumb {
-  background-color: #B8BECE; /* match background color */
+  background-color: --color-background-dark;
   border-radius: 6px;
-  border: 0px solid #ffffff;
+  border: 0px solid var(--color-pure-white);
+}
+html::-webkit-scrollbar {
+  width: 5px;
 }
 
-/* Set the scrollbar width */
-html::-webkit-scrollbar {
-  width: 5px; /* Adjust width as needed */
-}
 
 h1 {
-  color: #3B518B;
-  font-size: 2em;
+  color: var(--color-primary);
+  font-size: 1.8em;
 }
 
-/* global resets */
-body {
-  font-family: 'Press Start 2P', cursive;
-  margin: 0;
-  padding: 0;
-  color: #545454;
+h2 {
+  color: var(--color-dark-text);
+  font-size: 1.3em;
+  text-align: center;
+  margin-top: 8px;
+  margin-bottom: 20px;
+
+}
+
+/* Global Resets */
+p, li, a {
+  color: var(--color-dark-text);
+  font-family: var(--font-main);
 }
 
 p {
-  font-family: 'Press Start 2P', cursive;
-  color: #353535;
   text-align: center;
 }
 
 li {
-  font-family: 'Press Start 2P', cursive;
-  color: #353535;
   font-size: 6pt;
   margin-top: 12px;
+  text-align: left;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+
+/* 1. Generic Card Style */
+
+.card {
+  font-size: 0.8em; /* Standard font-size, can be overridden */
+  text-align: center; /* Default text alignment */
+  background-color: var(--color-background-card);
+
+  margin: 10px auto; /* Centered with vertical spacing */
+  max-width: 400px; /* Standard max-width, can be overridden */
+  
+  padding: 10px 20px; /* Standard padding, adjust if necessary */
+
+  border-radius: 10px;
+  border: 2px solid #000000;
+  box-shadow: var(--shadow-default);
 }
 
-/* light vs. dark theme? optional. minimal approach shown here. */
-@media (prefers-color-scheme: light) {
-  a:hover {
-    color: #747bff;
-  }
+/* 2. Specific Adjustments */
+
+/* Header Card (Contains "Can You Beat The Market") */ 
+.header-card {
+  font-size: 1em;
+}
+
+/* Header Container (Holds: .header-card) */
+.header-container {
+  font-size: 0.6em;
+  background-color: #ccd0dcd9;
+
+  margin-top: 2%;
+  margin-bottom: 15px;
+
+  width: 88%;
+  max-width: 450px;
+
+  padding-top: 0px;
+  padding-bottom: 0px;
+  padding-left: 12px;
+  padding-right: 12px;
+
+  border-radius: 10px;
+  box-shadow: 2px 2px 0px black;
+  border: 2px solid black;
+
+  display: inline-block;
+}
+
+/* High Score Container (contains "Win Streak") */
+.high-score-container {
+  /* Inherits all styles from .card */
+  font-size: 0.7em;
+  width: 65%;
+  max-width: 300px;
+}
+
+/* Footer Card */
+.footer-card {
+  /* Inherits all styles from .card */
+  width: 75%;
+  max-width: 600px;
+  text-align: center;
+  margin-bottom: 30px;
+  margin-top: 30px;
+}
+
+/* Results Details Card */
+.results-details-card {
+  /* Inherits all styles from .card */
+  text-align: left;
+  font-size: 0.8em;
+}
+
+/* 3. Base Button Style */
+.button {
+  background-color: var(--color-button-default);
+
+  font-size: 1.2em;
+  font-family: var(--font-main);
+  text-align: center;
+
+  padding: 10px 20px;
+
+  touch-action: manipulation;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  color: white;
+
+  border: 2px solid black;
+  box-shadow: var(--shadow-default);
+  border-radius: 10px;
+
+  display: inline-block;
+}
+
+/* 4. Hover Effect for Buttons */
+.button:hover {
+  background-color: var(--color-button-hover); /* Default hover color */
+}
+
+/* 5. Modifier Classes */
+
+/* Buy Button */
+.button.buy {
+  background-color: var(--color-success);
+  font-size: 4em; /* Specific font size */
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+.button.buy:hover {
+  background-color: #016101; /* Darker green on hover */
+}
+
+/* Sell Button */
+.button.sell {
+  background-color: var(--color-danger);
+  font-size: 4em;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+.button.sell:hover {
+  background-color: #a62525; /* Darker red on hover */
+}
+
+/* Stop Button */
+.button.stop {
+  background-color: #878282ae;
+  /* Inherits other styles from .button */
+}
+
+.button.stop:hover {
+  background-color: #6b6b6b; /* Darker shade on hover */
+}
+
+/* Utility Classes */
+.text-small {
+  font-size: 0.7em;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.margin-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hidden-footer {
+  transform: translateX(0%) translateY(300%);
 }

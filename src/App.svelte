@@ -38,7 +38,7 @@
   // **High Score State**
   let currentHighScore = 0;
   let highScorePlayer = 'No one yet';
-  let consecutiveWinsValue = 0; // Current consecutive wins count
+  let consecutiveWinsValue = 0;
 
   // **Store Subscriptions**
   let unsubscribePortfolio;
@@ -47,7 +47,7 @@
   let unsubscribeConsecutiveWins;
 
   // **Simulation Start Time Tracker**
-  let simulationStartTime = null; // **New Variable**
+  let simulationStartTime = null;
 
   // **Computed Props for Controls Component**
   $: canBuy = portfolio.cash > 0;
@@ -319,91 +319,69 @@
 </script>
 
 <style>
-    .app {
-      font-family: 'Press Start 2P', cursive;
-      text-align: center;
-      margin-top: -10px;
-      padding-top: 5px;
-      padding-left: 20px;
-      padding-right: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 0.9em;
-      padding-bottom: 0;
-    }
-  
-    .header-container {
-      position: relative;
-      justify-content: center;
-      margin-top: 12px;
-      margin-bottom: 15px;
-      padding-left: 12px;
-      padding-right: 12px;
-      padding-top: 0px;
-      padding-bottom: 0px;
-      background-color: #ccd0dcd9;
-      border: 2px solid black;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 2px 2px 0px black;
-      width: 88%;
-      max-width: 450px;
-      font-size: 0.6em;
-    }
-  
-    .header-card {
-      margin-top: 15px;
-      margin-bottom: 10px;
-      justify-content: center;
-      padding-left: 20px;
-      padding-right: 20px;
-      padding-top: 0px;
-      padding-bottom: 10px;
-      background-color: #F3F4F6;
-      border: 2px solid black;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 2px 2px 0px black;
-      max-width: auto;
-      font-size: 1em;
-    }
-  
-    .help-icon {
-      font-size: .6em;
-      padding: 8px;
-      margin-top: -2px;
-    }
-  
-    .help-description {
-      font-family: "Player Start 2P";
-      font-size: 7pt;
-      text-align: left;
-      max-width: 400px;
-      padding-left: 5px;
-      padding-right: 10px;
-    }
-  
-    .help-description-container {
-      margin-top: 10px;
-      padding: 0px;
-      background-color: #ffffff;
-      border: 1px solid #000000;
-      border-radius: 8px;
-      margin-bottom: 0;
-      display: flex;
-      margin-left: auto;
-      margin-right: auto;
-      justify-content: center;
-      box-shadow: 1px 1px 0px #000000;
-      font-size: 1em;
-    }
-  
-    .timer-container input {
-      font-size: 0.7em;
-      padding: 3px;
-      margin-left: 0px;
+
+  /* Specific Adjustments */
+  /* Header Card Specific Styles */
+  .header-card {
+    font-size: 1em;
+    padding-top: 5px;
+    width: 80%; /* max-width override */
+    max-width: 900px;
+  }
+
+  /* Help Icon Specific Styles */
+  .help-icon {
+    font-size: 0.5em;
+    padding: 8px;
+  }
+
+  /* Help Description Container Specific Styles */
+  .help-description-container {
+    background-color: white;
+    padding: 0px 15px;
+    font-size: .6em;;
+    border: 1px solid #000000;
+    box-shadow: var(--shadow-light);
+  }
+
+  /* Portfolio Specific Styles */
+  .portfolio {
+    font-size: 0.7em;
+    background-color: white;
+    margin-top: -4px;
+    max-width: 230px;
+  }
+
+  /* Results Specific Styles */
+  .results {
+    /* Additional specific styles can be added here if needed */
+    font-size: 0.7em;
+    background-color: white;
+    margin-top: 0px;
+    max-width: 230px;
+  }
+
+  /* Consectutive Wins Container Specific Styles */
+  .consecutive-wins-container {
+    font-size: 0.8em;
+    margin-top: 5px;
+  }
+
+  /* Chart Container Specific Styles */
+  .chart-container {
+    width: 90%;
+    max-width: 700px;
+    min-height: 300px;
+
+    padding-left: 10px;
+    padding-right: 0px;
+    padding-top: 7px;
+    padding-bottom: 0px;
+  }
+
+  .timer-container input {
+      padding: 2px;
+      margin-left: -10px;
       margin-right: -5px;
       margin-bottom: 0px;
       background-color: F3F4F6;
@@ -414,260 +392,93 @@
       border-radius: 5px;
       text-align: center;
     }
-    
-    .portfolio {
-      margin-top: -6px;
-      padding: 8px;
-      background-color: #ffffff;
-      border: 2px solid #000000;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      display: flex;
-      margin-left: auto;
-      margin-right: auto;
-      justify-content: center;
-      max-width: 250px;
-      box-shadow: 1px 1px 0px #000000;
-      font-size: 0.85em;
-    }
-  
-    .results {
-      margin-top: 0px;
-      padding: 8px;
-      background-color: #ffffff;
-      border: 2px solid #000000;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      display: flex;
-      margin-left: auto;
-      margin-right: auto;
-      justify-content: center;
-      max-width: 250px;
-      box-shadow: 1px 1px 0px #000000;
-      font-size: 0.85em;
-    }
-  
-    .consecutive-wins-container {
-      color: #545454;
-      margin-top: 0px;
-      margin-bottom: 0px;
-      padding-left: 20px;
-      padding-right: 20px;
-      padding-top: 5px;
-      padding-bottom: 0;
-      background-color: #F3F4F6;
-      border-radius: 10px;
-      display: inline-block;
-      font-size: 0.7em; 
-    }
-  
-    .chart-container {
-      position: relative;
-      background-color: #F3F4F6;
-      height: 290px;
-      width: 98%;
-      max-width: 800px;
-      margin-top: 0px;
-      margin-bottom: 0px;
-      padding-left: 10px;
-      padding-right: 0px;
-      padding-top: 5px;
-      padding-bottom: 10px;
-      border: 2px solid black;
-      border-radius: 15px;
-      box-shadow: 2px 2px 0px black;
-    }
-  
-    button {
-      font-family: 'Press Start 2P', cursive;
-      touch-action: manipulation;
-      background-color: #435b9f;
-      border: 2px solid black;
-      color: white;
-      padding-left: 20px;
-      padding-right: 20px;
-      padding-top: 10px;
-      padding-bottom: 10px;
-      text-align: center;
-      display: inline-block;
-      box-shadow: 2px 2px 0px black;
-      border-radius: 10px;
-      font-size: 1.2em;
-      cursor: pointer;
-    }
-  
-    button:hover {
-      background-color: #384d86;
+
+  /* Buttons Container Specific Styles */
+  .buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-    
-    .stop {
-      background-color: #878282ae;
-    }
-  
-    .buttons-container {
-      align-items: center;
-    }
-  
-    .buttons-container button {
-      margin: 0px 0;
-      padding-left: 20px;
-      padding-right: 20px;
-    }
-  
-    .footer-card {
-      bottom: 0px;
-      left: center;
-      margin-top: 5px;
-      margin-bottom: 10px;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 5px;
-      padding-bottom: 15px;
-      background-color: #F3F4F6;
-      border: 2px solid black;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 2px 2px 0px black;
-      font-size: 0.8em;
-      width: 65%;
-      max-width: 300px;
-      text-align: center;
+
+  /* Invalid Simulation Message Specific Styles */
+  .invalid-simulation-message {
+    font-size: 0.60em;
+    text-align: center;
+    color: red;
+  }
+
+  .coffee-button {
+    padding: 0;
+    margin-bottom: 15px;
+    touch-action: manipulation;
+    height: 50px;
+    width: 181px;
+    overflow:hidden;
     }
 
-        /* New class to hide the footer */
-    .hidden-footer {
-      transform: translateX(0%) translateY(200%); /* Pushes the footer down by 100% of its height */
-    }
-  
-    .coffee-button {
-      touch-action: manipulation;
-      height: 50px;
-      width: 181px;
-      border-radius: 10px;
-      overflow:hidden;
-      border: 1px solid black;
-      box-shadow: 2px 2px 0px black;
-      display: block;
-      margin: 0 auto;
-    }
-  
     .counter-container {
-      margin-top: 15px;
-    }
-  
-    .results-details-card {
-      background-color: #F3F4F6;
-      border: 2px solid black;
-      border-radius: 10px;
-      padding: 15px 20px;
-      margin-top: 30px;
-      margin-bottom: 10px;
-      max-width: 450px;
-      box-shadow: 2px 2px 0px black;
-      font-size: 0.8em;
-      text-align: left;
-    }
-  
-    .results-details-card h2 {
-      margin-top: 0px;
-      margin-bottom: 5px;
-      font-size: 1.2em;
-      text-align: center;
-      color: #3B518B;
-    }
-  
-    .results-details-card p {
-      font-size: 0.9em;
-      margin: 2px 0;
-      text-align: center;
-    }
-  
-    .high-score-container {
-      margin-top: 2px;
-      padding: 12px 20px;
-      background-color: #F3F4F6;
-      border: 2px solid #000000;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 2px 2px 0px black;
-      font-size: 0.7em;
-      width: 65%;
-      max-width: 300px;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-  
-    .high-score-container h2 {
-      margin-top: 0px;
-      margin-bottom: 5px;
-      color: #3B518B;
-    }
-  
-    .high-score-container p {
-      margin-top: 0px;
-      margin-bottom: 5px;
+    margin-bottom: 10px;
     }
 
-    .invalid-simulation-message {
-      color: #f44336;
-      margin-top: 10px;
-      text-align: center;
-    }
-  
-  </style>
-  
-  <!-- Link to Press Start 2P font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  
-  <div class="app">
-  
-    <div class="header-card">
-      <!-- Wrapped the header in a card-like container -->
-      <div class="header-container">
-        <h1>Can You Beat The Market?</h1>
-      </div>
-      {#if simulationRunning || !simulationEnded}
-        <div 
-        class="portfolio" 
+  /* Optional: Add any other specific styles that are unique to App.svelte */
+</style>
+
+<!-- Link to Press Start 2P font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<div class="app">
+
+  <!-- Header Card -->
+  <div class="card header-card">
+    <!-- Wrapped the header in a card-like container -->
+    <div class="header-container">
+      <h1>Can You Beat The Market?</h1>
+    </div>
+
+    {#if simulationRunning || !simulationEnded}
+      <div 
+        class="card portfolio" 
         style="
-        color: {portfolioColor};
-        margin-bottom: 72px;
-        
+          color: {portfolioColor};
+          margin-bottom: 72px;
         "
-        >
+      >
         Your Portfolio Value <br>
         ${portfolio.portfolioValue.toLocaleString(undefined, { 
           minimumFractionDigits: 2, 
           maximumFractionDigits: 2 
         })}
-        </div>
-        {:else}
-        <div 
-        class="portfolio" 
-        style="color: {portfolioColor};"
-        >
-        Your Portfolio Value <br>
-        ${portfolio.portfolioValue.toLocaleString(undefined, { 
-          minimumFractionDigits: 2, 
-          maximumFractionDigits: 2 
-        })}
-        </div>
-      {/if}
-      {#if simulationEnded}
-      <!-- finalComparison already includes the buyHoldColor -->
-        <div class="results">
-          {@html finalComparison}
-        </div>
-      {/if}
-      <div>
-        <button class="help-icon" on:click={toggleHelp} aria-label="Help">
-          {isHelpVisible ? "Hide Help" : "Show Help"}
-        </button>
       </div>
-      {#if isHelpVisible}
-      <div class="help-description-container">
+    {:else}
+      <div 
+        class="card portfolio" 
+        style="color: {portfolioColor};"
+      >
+        Your Portfolio Value <br>
+        ${portfolio.portfolioValue.toLocaleString(undefined, { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}
+      </div>
+    {/if}
+
+    {#if simulationEnded}
+      <!-- finalComparison already includes the buyHoldColor -->
+      <div class="card results">
+        {@html finalComparison}
+      </div>
+    {/if}
+
+    <div>
+      <button class="help-icon button start" on:click={toggleHelp} aria-label="Help">
+        {isHelpVisible ? "Hide Help" : "Show Help"}
+      </button>
+    </div>
+
+    {#if isHelpVisible}
+      <div class="card help-description-container">
         <div class="help-description">
           <p>Can you outperform a buy-and-hold investment strategy by timing your trades in a simulated market?</p>
           <ol>
@@ -681,92 +492,98 @@
         </div>
       </div>
     {/if}
+
+  </div>
+
+  <!-- Chart Container -->
+  <div class="chart-container card">
+    <div class="text-small timer-container">
+      {#if !simulationRunning && !simulationEnded}
+        <span class="text-small">Time Left:</span>
+        <input
+          type="number"
+          min="10"
+          bind:value={timerInput}
+        /> 
+        <span class="text-small">seconds</span>
+      {:else}
+        <span class="text-small">Time Left: {timer} seconds</span>
+      {/if}
     </div>
-    
-    <div class="chart-container">
-      <div class="timer-container">
-        {#if !simulationRunning && !simulationEnded}
-          <span style="font-size: 0.7em;">Time Left:</span>
-          <input
-            type="number"
-            min="10"
-            bind:value={timerInput}
-            /> 
-          <span style="font-size: 0.7em;">seconds</span>
-        {:else}
-           <span style="font-size: 0.7em" >Time Left: {timer} seconds</span>
-        {/if}
-      </div>
-      <div class="consecutive-wins-container">
-        Win Streak: {consecutiveWinsValue}
-      </div>
-      <MarketChart />
+    <div class="consecutive-wins-container">
+      Win Streak: {consecutiveWinsValue}
     </div>
-  
-    {#if !simulationRunning && !simulationEnded}
-      <div class="buttons-container" style="margin-top: 10px; margin-bottom: 10px">
-        <button class="start" on:click={startSimulationHandler}>
-          Start Simulation
-        </button>
-      </div>
-    {/if}
-    
-    {#if simulationRunning}
-      <Controls {canBuy} {canSell} on:buy={handleBuy} on:sell={handleSell} />
-      <div class="buttons-container">
-        <button class="stop" on:click={endSimulation}>Stop</button>
-      </div>
-    {/if}
-  
-    {#if simulationEnded}
-    <div class="buttons-container" style="margin-top: 10px">
-      <button on:click={restartSimulation}>Restart</button>
+    <MarketChart />
+  </div>
+
+  <!-- Start Simulation Button -->
+  {#if !simulationRunning && !simulationEnded}
+    <div class="buttons-container">
+      <button class="button start" on:click={startSimulationHandler}>
+        Start Simulation
+      </button>
     </div>
   {/if}
-  
-    {#if simulationEnded}
-    <!-- Results Details Card -->
-      <div class="results-details-card">
-        <h2>Simulation Results</h2>
-          <p>
-            Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
-          </p>
-          <p>
-            Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
-          </p>
-        <p>
-          <br>
-            {#if userAnnualReturn > buyHoldAnnualReturn}
-              <span style="color: #008b02;">You outperformed the buy-and-hold strategy</span>
-            {:else if userAnnualReturn < buyHoldAnnualReturn}
-            <span style="color: #f44336;">You underperformed compared to the buy-and-hold strategy</span>
-            {:else}
-              <span style="color: #008b02;">You matched the buy-and-hold strategy</span>
-            {/if}
-        </p>
-        {#if simulationEnded && !simulationValid}
+
+  <!-- Buy and Sell Controls -->
+  {#if simulationRunning}
+    <Controls {canBuy} {canSell} on:buy={handleBuy} on:sell={handleSell} />
+    <div class="buttons-container">
+      <button class="button stop" style="margin-top: 30px" on:click={endSimulation}>Stop</button>
+    </div>
+  {/if}
+
+  <!-- Restart Simulation Button -->
+  {#if simulationEnded}
+    <div class="buttons-container">
+      <button class="button restart" on:click={restartSimulation}>Restart</button>
+    </div>
+  {/if}
+
+  <!-- Simulation Results Details -->
+  {#if simulationEnded}
+    <div class="card results-details-card" style="margin-top: 10px;">
+      <h2>Simulation Results</h2>
+      <p style="font-size: 0.90em;">
+        Your Annual Return <br> {userAnnualReturn.toFixed(2)}%
+      </p>
+      <p style="font-size: 0.90em; margin-bottom: -15px">
+        Buy-and-Hold Annual Return <br> {buyHoldAnnualReturn.toFixed(2)}%
+      </p>
+      <p>
+        <br>
+        {#if userAnnualReturn > buyHoldAnnualReturn}
+          <span style="color: #008b02; margin-top: -20px; margin-bottom: 25px">You outperformed the buy-and-hold strategy</span>
+        {:else if userAnnualReturn < buyHoldAnnualReturn}
+          <span style="color: #f44336; margin-top: -20px; margin-bottom: 25px">You underperformed compared to the buy-and-hold strategy</span>
+        {:else}
+          <span style="color: #008b02; margin-top: -20x; margin-bottom: 25px">You matched the buy-and-hold strategy</span>
+        {/if}
+      </p>
+      {#if simulationEnded && !simulationValid}
         <!-- Optional: Invalid Simulation Message -->
         <div class="invalid-simulation-message">
-          Simulation did not run long enough to count towards win streak. Please run again for at least 30 seconds
+          Simulation did not run long enough to count towards win streak. Please run again for at least 30 seconds.
         </div>
-        {/if}
-      </div>
-    {/if}
-  
-    {#if simulationEnded}
-    <!-- High Score Display -->
-    <div class="high-score-container">
+      {/if}
+    </div>
+  {/if}
+
+  <!-- High Score Display -->
+  {#if simulationEnded}
+    <div class="card">
       <h2>High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
     </div>
-    {/if}
+  {/if}
 
-    <div
-    class="footer-card"
-    class:hidden-footer={simulationRunning || !simulationEnded}>
-    <div class="p">
+  <!-- Footer Card -->
+  <div
+    class="card footer-card {simulationRunning || !simulationEnded ? 'hidden-footer' : ''}"
+  >
+    <div>
       <p>Made by Collin</p>
     </div>
     {#if simulationEnded}
@@ -774,7 +591,7 @@
         href="https://www.buymeacoffee.com/B4Aaol3SrI"
         target="_blank"
         rel="noopener noreferrer"
-        class="coffee-button"
+        class="button coffee-button"
       >
         <img
           src={coffeeButton}
@@ -788,8 +605,9 @@
     </div>
   </div>
 
-    {#if showModal}
-      <UsernameModal on:submit={handleUsernameSubmit} />
-    {/if}
+  <!-- Username Modal for High Score Submission -->
+  {#if showModal}
+    <UsernameModal on:submit={handleUsernameSubmit} />
+  {/if}
 
-  </div>
+</div>
