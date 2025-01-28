@@ -39,11 +39,19 @@
   let highScorePlayer = 'No one yet';
   let consecutiveWinsValue = 0; // Current consecutive wins count
 
+  // **Store Subscriptions**
+  let unsubscribePortfolio;
+  let unsubscribeMarketData;
+  let unsubscribeHighScore;
+  let unsubscribeConsecutiveWins;
+
+  // **Simulation Start Time Tracker**
+  let simulationStartTime = null; // **New Variable**
+
   // **Computed Props for Controls Component**
   $: canBuy = portfolio.cash > 0;
   $: canSell = portfolio.shares > 0;
 
-  // **Store Subscriptions**
   // Reactive variables automatically subscribe to the stores
   $: portfolio = $userPortfolio;
   $: data = $marketData;
@@ -57,14 +65,29 @@
     // Fetch High Score when the app mounts
     const hs = await fetchHighScore();
     highScore.set({ score: hs.score, playerName: hs.playerName });
+
+    // Subscribe to stores and store the unsubscribe functions
+    unsubscribePortfolio = userPortfolio.subscribe(value => {
+      portfolio = value;
+    });
+    unsubscribeMarketData = marketData.subscribe(value => {
+      data = value;
+    });
+    unsubscribeHighScore = highScore.subscribe(value => {
+      currentHighScore = value.score;
+      highScorePlayer = value.playerName;
+    });
+    unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
+      consecutiveWinsValue = value;
+    });
   });
 
   onDestroy(() => {
     // Clean up subscriptions and stop simulation when the component is destroyed
-    unsubscribePortfolio();
-    unsubscribeMarketData();
-    unsubscribeHighScore();
-    unsubscribeConsecutiveWins();
+    if (unsubscribePortfolio) unsubscribePortfolio();
+    if (unsubscribeMarketData) unsubscribeMarketData();
+    if (unsubscribeHighScore) unsubscribeHighScore();
+    if (unsubscribeConsecutiveWins) unsubscribeConsecutiveWins();
     stopSimulation();
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -104,6 +127,9 @@
     simulationRunning = true;
     timer = timerInput;
 
+    // **Record the Start Time**
+    simulationStartTime = Date.now();
+
     // Reset text colors to black at the start of each new run
     portfolioColor = 'black';
     buyHoldColor = 'black';
@@ -132,60 +158,73 @@
       timerInterval = null;
     }
 
-    if (data.marketPrices.length > 0) {
-      // Calculate Buy-and-Hold final value
-      buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
-      const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+    // **Calculate Simulation Duration**
+    const simulationEndTime = Date.now();
+    const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
 
-      // Determine performance and update colors
-      if (portfolioVal > buyHoldFinal) {
-        portfolioColor = '#008b02'; // Green for outperforming
-        buyHoldColor = '#f44336';   // Red for underperforming
+    if (durationInSeconds >= 30) {
+      // Proceed only if simulation ran for at least 30 seconds
 
-        // Compute the new consecutive wins value
-        const newConsecutiveWins = consecutiveWinsValue + 1;
+      if (data.marketPrices.length > 0) {
+        // Calculate Buy-and-Hold final value
+        buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
+        const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
 
-        // Check if the new streak exceeds the current high score
-        if (newConsecutiveWins > currentHighScore) {
-          showModal = true; // Trigger the UsernameModal
+        // Determine performance and update colors
+        if (portfolioVal > buyHoldFinal) {
+          portfolioColor = '#008b02'; // Green for outperforming
+          buyHoldColor = '#f44336';   // Red for underperforming
+
+          // Compute the new consecutive wins value
+          const newConsecutiveWins = consecutiveWinsValue + 1;
+
+          // Check if the new streak exceeds the current high score
+          if (newConsecutiveWins > currentHighScore) {
+            showModal = true; // Trigger the UsernameModal
+          }
+
+          // Update the consecutiveWins store
+          consecutiveWins.set(newConsecutiveWins);
+          console.log(`Consecutive Wins: ${newConsecutiveWins}`);
+        } else if (portfolioVal < buyHoldFinal) {
+          portfolioColor = '#f44336'; // Red for underperforming
+          buyHoldColor = '#008b02';   // Green for outperforming
+          consecutiveWins.set(0);      // Reset streak
+          console.log('Consecutive Wins reset to 0');
+        } else {
+          // Equal performance
+          portfolioColor = '#008b02'; // Green
+          buyHoldColor = '#008b02';   // Green
+          consecutiveWins.set(0);      // Reset streak
+          console.log('Consecutive Wins reset to 0');
         }
 
-        // Update the consecutiveWins store
-        consecutiveWins.set(newConsecutiveWins);
-        console.log(`Consecutive Wins: ${newConsecutiveWins}`);
-      } else if (portfolioVal < buyHoldFinal) {
-        portfolioColor = '#f44336'; // Red for underperforming
-        buyHoldColor = '#008b02';   // Green for outperforming
-        consecutiveWins.set(0);      // Reset streak
-        console.log('Consecutive Wins reset to 0');
-      } else {
-        // Equal performance
-        portfolioColor = '#008b02'; // Green
-        buyHoldColor = '#008b02';   // Green
-        consecutiveWins.set(0);      // Reset streak
-        console.log('Consecutive Wins reset to 0');
+        // **Calculate Annualized Returns (CAGR)**
+        const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
+        const initialValue = 100; // Assumed initial portfolio value
+
+        // User's CAGR
+        userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+        // Buy-and-Hold CAGR
+        buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+        // **Update finalComparison HTML**
+        finalComparison = `
+          <span style="color:${buyHoldColor}">
+            Buy-and-Hold Value<br>
+            $${buyHoldFinal.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}
+          </span>
+        `;
       }
-
-      // **Calculate Annualized Returns (CAGR)**
-      const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
-      const initialValue = 100; // Assumed initial portfolio value
-
-      // User's CAGR
-      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // Buy-and-Hold CAGR
-      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // **Update finalComparison HTML**
-      finalComparison = `
-        <span style="color:${buyHoldColor}">
-          Buy-and-Hold Value<br>
-          $${buyHoldFinal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
-        </span>
-      `;
+    } else {
+      // **Simulation Ran for Less Than 30 Seconds**
+      console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
+      // Do not update high score or consecutiveWinsValue
+      // Optionally, you can reset colors or other states if needed
     }
   }
 
