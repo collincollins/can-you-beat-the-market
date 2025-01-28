@@ -22,3 +22,6 @@ export const highScore = writable({
 
 // **Consecutive Wins Store**
 export const consecutiveWins = writable(0);
+
+// Export writable to allow its usage in other files
+export { writable };
