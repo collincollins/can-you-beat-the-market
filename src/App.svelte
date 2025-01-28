@@ -1,8 +1,10 @@
+<!-- src/App.svelte -->
+
 <script>
   import { onDestroy, onMount } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
   import Controls from './components/Controls.svelte';
-  import { startSimulation, stopSimulation } from './logic/simulation';
+  import { startSimulation, stopSimulation, buyShares, sellShares } from './logic/simulation';
   import { userPortfolio, marketData, highScore, consecutiveWins } from './logic/store';
   import { fetchHighScore, updateHighScore } from './logic/highScoreService';
   import './bridges/RetroCounterWrapper.jsx';
@@ -121,72 +123,72 @@
   }
 
   async function endSimulation() {
-  // Terminate the simulation and process results
-  simulationEnded = true;
-  simulationRunning = false;
-  stopSimulation();
+    // Terminate the simulation and process results
+    simulationEnded = true;
+    simulationRunning = false;
+    stopSimulation();
 
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
-  if (data.marketPrices.length > 0) {
-    // Calculate Buy-and-Hold final value
-    buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
-    const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
-
-    // Determine performance and update colors
-    if (portfolioVal > buyHoldFinal) {
-      portfolioColor = '#008b02'; // Green for outperforming
-      buyHoldColor = '#f44336';   // Red for underperforming
-
-      // Compute the new consecutive wins value
-      const newConsecutiveWins = consecutiveWinsValue + 1;
-
-      // Check if the new streak exceeds the current high score
-      if (newConsecutiveWins > currentHighScore) {
-        showModal = true; // Trigger the UsernameModal
-      }
-
-      // Update the consecutiveWins store
-      consecutiveWins.set(newConsecutiveWins);
-      console.log(`Consecutive Wins: ${newConsecutiveWins}`);
-    } else if (portfolioVal < buyHoldFinal) {
-      portfolioColor = '#f44336'; // Red for underperforming
-      buyHoldColor = '#008b02';   // Green for outperforming
-      consecutiveWins.set(0);      // Reset streak
-      console.log('Consecutive Wins reset to 0');
-    } else {
-      // Equal performance
-      portfolioColor = '#008b02'; // Green
-      buyHoldColor = '#008b02';   // Green
-      consecutiveWins.set(0);      // Reset streak
-      console.log('Consecutive Wins reset to 0');
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
     }
 
-    // **Calculate Annualized Returns (CAGR)**
-    const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
-    const initialValue = 100; // Assumed initial portfolio value
+    if (data.marketPrices.length > 0) {
+      // Calculate Buy-and-Hold final value
+      buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
+      const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
 
-    // User's CAGR
-    userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+      // Determine performance and update colors
+      if (portfolioVal > buyHoldFinal) {
+        portfolioColor = '#008b02'; // Green for outperforming
+        buyHoldColor = '#f44336';   // Red for underperforming
 
-    // Buy-and-Hold CAGR
-    buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+        // Compute the new consecutive wins value
+        const newConsecutiveWins = consecutiveWinsValue + 1;
 
-    // **Update finalComparison HTML**
-    finalComparison = `
-      <span style="color:${buyHoldColor}">
-        Buy-and-Hold Value<br>
-        $${buyHoldFinal.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })}
-      </span>
-    `;
+        // Check if the new streak exceeds the current high score
+        if (newConsecutiveWins > currentHighScore) {
+          showModal = true; // Trigger the UsernameModal
+        }
+
+        // Update the consecutiveWins store
+        consecutiveWins.set(newConsecutiveWins);
+        console.log(`Consecutive Wins: ${newConsecutiveWins}`);
+      } else if (portfolioVal < buyHoldFinal) {
+        portfolioColor = '#f44336'; // Red for underperforming
+        buyHoldColor = '#008b02';   // Green for outperforming
+        consecutiveWins.set(0);      // Reset streak
+        console.log('Consecutive Wins reset to 0');
+      } else {
+        // Equal performance
+        portfolioColor = '#008b02'; // Green
+        buyHoldColor = '#008b02';   // Green
+        consecutiveWins.set(0);      // Reset streak
+        console.log('Consecutive Wins reset to 0');
+      }
+
+      // **Calculate Annualized Returns (CAGR)**
+      const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
+      const initialValue = 100; // Assumed initial portfolio value
+
+      // User's CAGR
+      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+      // Buy-and-Hold CAGR
+      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+      // **Update finalComparison HTML**
+      finalComparison = `
+        <span style="color:${buyHoldColor}">
+          Buy-and-Hold Value<br>
+          $${buyHoldFinal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}
+        </span>
+      `;
+    }
   }
-}
 
   function restartSimulation() {
     // Reset the simulation to its initial state
@@ -217,11 +219,11 @@
 
   // **Event Handlers for Buy/Sell Buttons**
   function handleBuy() {
-    // Optional: Implement additional logic after a buy action if needed
+    buyShares(); // Execute buy immediately
   }
 
   function handleSell() {
-    // Optional: Implement additional logic after a sell action if needed
+    sellShares(); // Execute sell immediately
   }
 </script>
 

@@ -16,7 +16,6 @@
    * - sell: Emitted when the "Sell" button is clicked.
    */
 
-  import { sendBuySignal, sendSellSignal } from '../logic/simulation';
   import { createEventDispatcher } from 'svelte';
 
   // Props passed from the parent component
@@ -27,19 +26,17 @@
 
   /**
    * Handles the "Buy" button click.
-   * Sends a buy signal and dispatches a 'buy' event.
+   * Dispatches a 'buy' event.
    */
   function handleBuy() {
-    sendBuySignal();
     dispatch('buy');
   }
 
   /**
    * Handles the "Sell" button click.
-   * Sends a sell signal and dispatches a 'sell' event.
+   * Dispatches a 'sell' event.
    */
   function handleSell() {
-    sendSellSignal();
     dispatch('sell');
   }
 </script>

@@ -21,10 +21,6 @@ let userShares = 1;
 let userCash = 0;
 let simulationInterval = null;
 
-// Signal flags
-let buySignal = false;
-let sellSignal = false;
-
 /**
  * Generates the next market price using Geometric Brownian Motion.
  * 
@@ -113,28 +109,13 @@ export function startSimulation() {
   // Start simulation loop
   simulationInterval = setInterval(() => {
     updateMarket();
-    handleSignals();
   }, 1000 / 7); // ~142ms interval
-}
-
-/**
- * Handles buy and sell signals by executing corresponding actions.
- */
-function handleSignals() {
-  if (buySignal) {
-    buyShares();
-    buySignal = false;
-  }
-  if (sellSignal) {
-    sellShares();
-    sellSignal = false;
-  }
 }
 
 /**
  * Executes a buy action if the user has available cash.
  */
-function buyShares() {
+export function buyShares() {
   if (userCash > 0) {
     marketData.update(data => {
       const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
@@ -151,13 +132,21 @@ function buyShares() {
 
       return data;
     });
+
+    // Update userPortfolio store immediately
+    userPortfolio.update(portfolio => ({
+      ...portfolio,
+      shares: userShares,
+      cash: userCash,
+      portfolioValue: parseFloat((userShares * currentPrice + userCash).toFixed(2)),
+    }));
   }
 }
 
 /**
  * Executes a sell action if the user holds shares.
  */
-function sellShares() {
+export function sellShares() {
   if (userShares > 0) {
     marketData.update(data => {
       const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
@@ -174,21 +163,15 @@ function sellShares() {
 
       return data;
     });
+
+    // Update userPortfolio store immediately
+    userPortfolio.update(portfolio => ({
+      ...portfolio,
+      shares: userShares,
+      cash: userCash,
+      portfolioValue: parseFloat((userShares * currentPrice + userCash).toFixed(2)),
+    }));
   }
-}
-
-/**
- * Sends a buy signal to trigger the buying of shares.
- */
-export function sendBuySignal() {
-  buySignal = true;
-}
-
-/**
- * Sends a sell signal to trigger the selling of shares.
- */
-export function sendSellSignal() {
-  sellSignal = true;
 }
 
 /**
