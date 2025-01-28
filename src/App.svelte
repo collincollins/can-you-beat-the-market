@@ -367,15 +367,15 @@
     .chart-container {
       position: relative;
       background-color: #F3F4F6;
-      height: 265px;
+      height: 290px;
       width: 98%;
       max-width: 800px;
       margin-top: 0px;
       margin-bottom: 0px;
-      padding-left: 18px;
+      padding-left: 10px;
       padding-right: 0px;
       padding-top: 5px;
-      padding-bottom: 30px;
+      padding-bottom: 10px;
       border: 2px solid black;
       border-radius: 15px;
       box-shadow: 2px 2px 0px black;
@@ -408,15 +408,11 @@
     }
   
     .buttons-container {
-      margin-top: 0px;
-      margin-bottom: 0px;
-      display: flex;
-      flex-direction: column;
       align-items: center;
     }
   
     .buttons-container button {
-      margin: 10px 0;
+      margin: 0px 0;
       padding-left: 20px;
       padding-right: 20px;
     }
@@ -467,7 +463,7 @@
       border: 2px solid black;
       border-radius: 10px;
       padding: 15px 20px;
-      margin-top: 10px;
+      margin-top: 30px;
       margin-bottom: 10px;
       max-width: 450px;
       box-shadow: 2px 2px 0px black;
