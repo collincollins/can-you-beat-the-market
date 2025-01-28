@@ -6,7 +6,8 @@
 
   function submitName() {
     if (playerName.trim() !== '') {
-      dispatch('submit', playerName.trim());
+      console.log("Dispatching 'submit' event with playerName:", playerName.trim());
+      dispatch('submit', playerName.trim()); // Dispatch as a string
     }
   }
 </script>

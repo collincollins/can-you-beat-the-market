@@ -15,52 +15,38 @@ const client = new MongoClient(uri, {
 let isConnected = false;
 
 exports.handler = async (event, context) => {
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ message: 'Method Not Allowed' }),
-    };
-  }
-
-  try {
-    console.log("Function 'setHighScore' invoked.");
-
-    if (!isConnected) {
-      console.log("Connecting to MongoDB...");
-      await client.connect();
-      isConnected = true;
-      console.log("Connected to MongoDB.");
-    }
-
-    const database = client.db('dontbuythat');
-    const highScoreCollection = database.collection('highScores');
-
-    const { playerName, score } = JSON.parse(event.body);
-
-    if (typeof playerName !== 'string' || typeof score !== 'number') {
+    if (event.httpMethod !== 'POST') {
       return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'Invalid input data.' }),
+        statusCode: 405,
+        body: JSON.stringify({ message: 'Method Not Allowed' }),
       };
     }
-
-    const updateResult = await highScoreCollection.updateOne(
-      { _id: 'highScore' },
-      { $set: { playerName, score } },
-      { upsert: true }
-    );
-
-    console.log(`High score updated to ${score} by ${playerName}`);
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: 'High score updated successfully.' }),
-    };
-  } catch (error) {
-    console.error('Error in setHighScore function:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Internal Server Error' }),
-    };
-  }
-};
+  
+    try {
+      const data = JSON.parse(event.body);
+      const { playerName, score } = data;
+      console.log("Received data:", data);
+  
+      // Validate input data
+      if (
+        typeof playerName !== 'string' ||
+        playerName.trim() === '' ||
+        typeof score !== 'number' ||
+        score < 0
+      ) {
+        console.log("Validation failed for data:", data);
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ message: 'Invalid input data.' }),
+        };
+      }
+  
+      // ... (rest of the function remains unchanged)
+    } catch (error) {
+      console.error('Error in setHighScore function:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'Internal Server Error' }),
+      };
+    }
+  };

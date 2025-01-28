@@ -44,22 +44,12 @@
   $: canSell = portfolio.shares > 0;
 
   // **Store Subscriptions**
-  const unsubscribePortfolio = userPortfolio.subscribe(value => {
-    portfolio = value;
-  });
-
-  const unsubscribeMarketData = marketData.subscribe(value => {
-    data = value;
-  });
-
-  const unsubscribeHighScore = highScore.subscribe(value => {
-    currentHighScore = value.score;
-    highScorePlayer = value.playerName;
-  });
-
-  const unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
-    consecutiveWinsValue = value;
-  });
+  // Reactive variables automatically subscribe to the stores
+  $: portfolio = $userPortfolio;
+  $: data = $marketData;
+  $: currentHighScore = $highScore.score;
+  $: highScorePlayer = $highScore.playerName;
+  $: consecutiveWinsValue = $consecutiveWins;
 
   // **Lifecycle Hooks**
 
@@ -88,16 +78,24 @@
     isHelpVisible = !isHelpVisible;
   }
 
-  async function handleUsernameSubmit(playerName) {
-    // Handle the submission of the username in the modal
-    const success = await updateHighScore(playerName, consecutiveWinsValue);
-    if (success) {
-      highScore.set({ score: consecutiveWinsValue, playerName });
-    } else {
-      alert('Failed to update high score. Please try again.');
-    }
-    showModal = false;
+  async function handleUsernameSubmit(event) {
+  const playerName = event.detail; // Extract the playerName from event.detail
+
+  // Ensure playerName is a valid string
+  if (typeof playerName !== 'string' || playerName.trim() === '') {
+    alert('Invalid player name. Please try again.');
+    return;
   }
+
+  // Handle the submission of the username in the modal
+  const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
+  if (success) {
+    highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
+  } else {
+    alert('Failed to update high score. Please try again.');
+  }
+  showModal = false;
+}
 
   async function startSimulationHandler() {
     // Initialize simulation state and start the simulation

@@ -15,6 +15,7 @@ export async function fetchHighScore() {
   }
   
   export async function updateHighScore(playerName, score) {
+    console.log("Updating high score with:", { playerName, score });
     try {
       const response = await fetch('/.netlify/functions/setHighScore', {
         method: 'POST',
