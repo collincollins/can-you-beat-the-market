@@ -326,7 +326,6 @@
   .header-card {
     font-size: 1em;
     padding-top: 5px;
-    margin-right: 8px;
     width: 80%; /* max-width override */
     max-width: 900px;
   }
@@ -373,9 +372,7 @@
   .chart-container {
     width: 90%;
     max-width: 700px;
-    min-height: 295px;
-
-    margin-right: 8px;
+    min-height: 300px;
 
     padding-left: 10px;
     padding-right: 0px;
@@ -402,11 +399,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-
-  .results-details-card {
-    max-width: 80%;
-    margin-right: 8px;
   }
 
   /* Invalid Simulation Message Specific Styles */
@@ -580,7 +572,7 @@
 
   <!-- High Score Display -->
   {#if simulationEnded}
-    <div class="card results-details-card">
+    <div class="card">
       <h2>High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
