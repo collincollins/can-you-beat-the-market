@@ -79,23 +79,24 @@
   }
 
   async function handleUsernameSubmit(event) {
-  const playerName = event.detail; // Extract the playerName from event.detail
+    const playerName = event.detail;
+    console.log("Received playerName:", playerName, "Type:", typeof playerName);
 
-  // Ensure playerName is a valid string
-  if (typeof playerName !== 'string' || playerName.trim() === '') {
-    alert('Invalid player name. Please try again.');
-    return;
-  }
+    // Ensure playerName is a valid string
+    if (typeof playerName !== 'string' || playerName.trim() === '') {
+      alert('Invalid player name. Please try again.');
+      return;
+    }
 
-  // Handle the submission of the username in the modal
-  const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
-  if (success) {
-    highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
-  } else {
-    alert('Failed to update high score. Please try again.');
+    // Handle the submission of the username in the modal
+    const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
+    if (success) {
+      highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
+    } else {
+      alert('Failed to update high score. Please try again.');
+    }
+    showModal = false;
   }
-  showModal = false;
-}
 
   async function startSimulationHandler() {
     // Initialize simulation state and start the simulation
