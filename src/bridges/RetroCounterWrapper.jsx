@@ -21,40 +21,35 @@ function RetroCounterWC(props) {
   const [visitorCount, setVisitorCount] = useState(parseNumber(visitors)); // initialize state for visitor count
 
   useEffect(() => {
-    // Function to increment the hit count by calling the Netlify incrementHit function
-    const incrementHitCount = async () => {
+    // Function to increment the hit count and retrieve the updated visitor count
+    const incrementVisitorAndUpdateCount = async () => {
       try {
-        const response = await fetch('/.netlify/functions/incrementHit', {
+        // Count the new visitor
+        const countVisitorResponse = await fetch('/.netlify/functions/countVisitor', {
           method: 'POST',
         });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!countVisitorResponse.ok) {
+          throw new Error(`HTTP error! status: ${countVisitorResponse.status}`);
         }
-        // Hits are reported but not displayed
-      } catch (error) {
-        console.error('Error incrementing hit count:', error);
-      }
-    };
   
-    // Fetch the current visitor count when the component mounts
-    const fetchVisitorAndUpdateState = async () => {
-      try {
-        const response = await fetch('/.netlify/functions/getVisitorCount', {
+        // Fetch the updated visitor count
+        const getVisitorResponse = await fetch('/.netlify/functions/getVisitorCount', {
           method: 'GET',
         });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!getVisitorResponse.ok) {
+          throw new Error(`HTTP error! status: ${getVisitorResponse.status}`);
         }
-        const data = await response.json();
-        setVisitorCount(data.count); // Update the state with the fetched visitor count
+  
+        // Update the state with the new visitor count
+        const data = await getVisitorResponse.json();
+        setVisitorCount(data.count);
       } catch (error) {
-        console.error('Error fetching visitor count:', error);
+        console.error('Error updating visitor count:', error);
       }
     };
   
-    fetchVisitorAndUpdateState(); // Call the visitor fetch and update function
-    incrementHitCount(); // Increment the hit count
-  }, []); // Empty dependency array ensures this runs once when the component mounts
+    incrementVisitorAndUpdateCount(); // Execute the function on component mount
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <RetroHitCounter
