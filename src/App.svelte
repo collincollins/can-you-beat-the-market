@@ -372,7 +372,7 @@
   .chart-container {
     width: 90%;
     max-width: 700px;
-    min-height: 300px;
+    min-height: 290px;
 
     padding-left: 10px;
     padding-right: 0px;
@@ -451,7 +451,7 @@
         class="card portfolio" 
         style="
           color: {portfolioColor};
-          margin-bottom: 72px;
+          margin-bottom: 74px;
         "
       >
         Your Portfolio Value <br>

@@ -68,7 +68,7 @@
   .sell {
     background-color: #f44336;
     border-radius: 10px;
-    font-size: 4em;
+    font-size: 3.5em;
     margin-top: -10px;
     margin-bottom: 10px;
   }
@@ -76,7 +76,7 @@
   .buy {
     background-color: #008b02;
     border-radius: 10px;
-    font-size: 4em;
+    font-size: 3.5em;
     margin-top: -10px;
     margin-bottom: 10px;
   }
