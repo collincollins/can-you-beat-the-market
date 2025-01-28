@@ -240,7 +240,7 @@
     .header-container {
       position: relative;
       justify-content: center;
-      margin-top: 20px;
+      margin-top: 12px;
       margin-bottom: 15px;
       padding-left: 12px;
       padding-right: 12px;
@@ -304,13 +304,14 @@
     }
   
     .timer-container input {
+      font-size: 0.7em;
       padding: 3px;
       margin-left: 0px;
       margin-right: -5px;
       margin-bottom: 0px;
       background-color: F3F4F6;
       font-family: 'Press Start 2P', cursive;
-      font-size: 0.9em;
+      font-size: 0.8em;
       width: 40px;
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -318,7 +319,7 @@
     }
     
     .portfolio {
-      margin-top: 0px;
+      margin-top: -8px;
       padding: 8px;
       background-color: #ffffff;
       border: 2px solid #000000;
@@ -360,21 +361,21 @@
       background-color: #F3F4F6;
       border-radius: 10px;
       display: inline-block;
-      font-size: 0.8em; 
+      font-size: 0.7em; 
     }
   
     .chart-container {
       position: relative;
       background-color: #F3F4F6;
-      height: 275px;
+      height: 265px;
       width: 98%;
       max-width: 800px;
       margin-top: 0px;
       margin-bottom: 0px;
       padding-left: 18px;
       padding-right: 0px;
-      padding-top: 15px;
-      padding-bottom: 33px;
+      padding-top: 5px;
+      padding-bottom: 30px;
       border: 2px solid black;
       border-radius: 15px;
       box-shadow: 2px 2px 0px black;
@@ -586,15 +587,15 @@
     <div class="chart-container">
       <div class="timer-container">
         {#if !simulationRunning && !simulationEnded}
-          <span>Time Left:</span>
+          <span style="font-size: 0.7em;">Time Left:</span>
           <input
             type="number"
             min="10"
             bind:value={timerInput}
             /> 
-          <span>seconds</span>
+          <span style="font-size: 0.7em;">seconds</span>
         {:else}
-           <span class="timer">Time Left: {timer} seconds</span>
+           <span style="font-size: 0.7em" >Time Left: {timer} seconds</span>
         {/if}
       </div>
       <div class="consecutive-wins-container">
