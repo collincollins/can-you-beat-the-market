@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
       console.log("Connected to MongoDB.");
     }
 
-    const database = client.db('dontbuythat');
+    const database = client.db('canyoubeatthemarket');
     const highScoreCollection = database.collection('highScores');
 
     const highScore = await highScoreCollection.findOne({ _id: 'highScore' });

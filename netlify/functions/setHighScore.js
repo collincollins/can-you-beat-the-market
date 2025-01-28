@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
       isConnected = true;
     }
 
-    const database = client.db('dontbuythat');
+    const database = client.db('canyoubeatthemarket');
     const highScoreCollection = database.collection('highScores');
 
     // Update high score if the new score is higher
