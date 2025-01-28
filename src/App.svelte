@@ -626,6 +626,7 @@
       </a>
     {/if}
     <div class="counter-container">
+      <p style="margin-top: 10px; margin-bottom: 2px; font-size: 0.5em;">Visitors</p>
       <retro-counter></retro-counter>
     </div>
   </div>
