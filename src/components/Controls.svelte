@@ -1,30 +1,43 @@
 <!-- src/components/Controls.svelte -->
+
 <script>
+  /**
+   * Controls Component
+   * 
+   * Provides "Buy" and "Sell" buttons for managing the user's portfolio.
+   * Buttons are conditionally rendered based on the `canBuy` and `canSell` props.
+   * 
+   * Props:
+   * - canBuy (boolean): Determines if the "Buy" button should be displayed.
+   * - canSell (boolean): Determines if the "Sell" button should be displayed.
+   * 
+   * Events:
+   * - buy: Emitted when the "Buy" button is clicked.
+   * - sell: Emitted when the "Sell" button is clicked.
+   */
+
   import { sendBuySignal, sendSellSignal } from '../logic/simulation';
   import { createEventDispatcher } from 'svelte';
-  import { userPortfolio } from '../logic/store';
-  import { onDestroy } from 'svelte';
-  
+
+  // Props passed from the parent component
+  export let canBuy = false;
+  export let canSell = false;
+
   const dispatch = createEventDispatcher();
-  
-  let canBuy = false;
-  let canSell = false;
-  
-  // subscribe to userPortfolio to determine if user can buy or sell
-  const unsubscribe = userPortfolio.subscribe(value => {
-    canBuy = value.cash > 0;
-    canSell = value.shares > 0;
-  });
-  
-  onDestroy(() => {
-    unsubscribe();
-  });
-  
+
+  /**
+   * Handles the "Buy" button click.
+   * Sends a buy signal and dispatches a 'buy' event.
+   */
   function handleBuy() {
     sendBuySignal();
     dispatch('buy');
   }
-  
+
+  /**
+   * Handles the "Sell" button click.
+   * Sends a sell signal and dispatches a 'sell' event.
+   */
   function handleSell() {
     sendSellSignal();
     dispatch('sell');

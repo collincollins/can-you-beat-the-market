@@ -37,6 +37,10 @@
   let highScorePlayer = 'No one yet';
   let consecutiveWinsValue = 0; // Current consecutive wins count
 
+  // **Computed Props for Controls Component**
+  $: canBuy = portfolio.cash > 0;
+  $: canSell = portfolio.shares > 0;
+
   // **Store Subscriptions**
   const unsubscribePortfolio = userPortfolio.subscribe(value => {
     portfolio = value;
@@ -319,7 +323,7 @@
     }
     
     .portfolio {
-      margin-top: -8px;
+      margin-top: -6px;
       padding: 8px;
       background-color: #ffffff;
       border: 2px solid #000000;
@@ -609,7 +613,8 @@
     {/if}
     
     {#if simulationRunning}
-      <Controls on:buy={handleBuy} on:sell={handleSell} />
+      <!-- Pass canBuy and canSell as props to Controls.svelte -->
+      <Controls {canBuy} {canSell} on:buy={handleBuy} on:sell={handleSell} />
       <div class="buttons-container">
         <button class="stop" on:click={endSimulation}>Stop</button>
       </div>
