@@ -227,8 +227,8 @@
       text-align: center;
       margin-top: -10px;
       padding-top: 5px;
-      padding-left: 15px;
-      padding-right: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
