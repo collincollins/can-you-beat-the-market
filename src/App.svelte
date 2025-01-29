@@ -507,7 +507,7 @@
         <div class="help-description">
           <p>Can you outperform a buy-and-hold investment strategy by timing your trades in a simulated market?</p>
           <ol>
-            <li>Simulation: Five years in 30 seconds using a rolling average of a positively biased geometric brownian motion.</li>
+            <li>Simulation: Three years in 30 seconds using a rolling average of a positively biased geometric brownian motion.</li>
             <li>Trade: Use the 'Buy' and 'Sell' buttons to manage an all-in position in the market.</li>
             <li>Results: See how your timed trades compare to a simple buy-and-hold position.</li>
           </ol>

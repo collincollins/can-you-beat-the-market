@@ -9,7 +9,7 @@
 
 export const SIMULATION_PARAMS = {
     daysPerStep: 5.3,        // Number of days advanced per simulation step
-    annualDrift: 0.08,       // Expected annual return of the market
-    annualVolatility: 0.12,  // Annual volatility of the market
+    annualDrift: 0.085,       // Expected annual return of the market
+    annualVolatility: 0.115,  // Annual volatility of the market
     windowSize: 2,            // Number of data points for rolling average
   };
