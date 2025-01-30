@@ -507,6 +507,7 @@ function restartSimulation() {
   }
 
   .toggle input {
+    -webkit-tap-highlight-color: transparent;
     opacity: 0;
     width: 0;
     height: 0;
