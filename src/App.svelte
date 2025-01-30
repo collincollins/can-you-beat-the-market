@@ -540,12 +540,20 @@ function restartSimulation() {
     border: 1.5px solid #000000;
   }
 
+  .toggle input {
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  outline: none; /* Remove default focus outline */
+}
+
   .toggle input:checked + .slider {
     background-color: var(--color-button-default);
   }
 
   .toggle input:focus + .slider {
-    box-shadow: 0 0 1px var(--color-button-default);
+    box-shadow: 0 0 0 transparent; /* Removes the shadow */
   }
 
   .toggle input:checked + .slider:before {
