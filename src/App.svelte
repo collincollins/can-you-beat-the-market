@@ -136,19 +136,21 @@
     // Insert a new doc for this winning streak
     // Because setHighScore.js now always does insertOne
     const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
-    if (success) {
-      // Update our local store’s "global high score" if this is truly the new global best
-      // But we won’t know for sure unless we re-fetch from the DB or trust consecutiveWinsValue > currentHighScore
-      // We'll do a quick approach: if it beats the old record, set it immediately
-      if (consecutiveWinsValue > currentHighScore) {
-        highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
+      if (success) {
+        // RIGHT AFTER we insert to the DB, fetch the new top doc:
+        const updatedHighScore = await fetchHighScore();
+        // Now update Svelte's store with the *actual* top doc
+        highScore.set({
+          score: updatedHighScore.score,
+          playerName: updatedHighScore.playerName,
+        });
+        console.log(`Updated local store with: ${updatedHighScore.playerName}, ${updatedHighScore.score}`);
+      } else {
+        alert('Failed to record your high score. Please try again.');
       }
-    } else {
-      alert('Failed to record your high score. Please try again.');
-    }
 
-    showModal = false;
-  }
+      showModal = false;
+    }
 
   async function startSimulationHandler() {
     // Initialize simulation state and start the simulation
