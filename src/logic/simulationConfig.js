@@ -8,17 +8,28 @@
 
 const DAYS_IN_YEAR = 365;
 
-export const SIMULATION_PARAMS = {
+// Initial Simulation Parameters
+let SIMULATION_PARAMS = {
   simulationDurationYears: 5,      // Total simulated years
   simulationRealTimeSeconds: 30,   // Total real-time duration of the simulation in seconds
   stepsPerSecond: 10,              // Number of simulation steps per second
-  annualDrift: 0.09,              // Expected annual return of the market
-  annualVolatility: 0.20,         // Annual volatility of the market
+  annualDrift: 0.09,               // Expected annual return of the market
+  annualVolatility: 0.20,          // Annual volatility of the market
   windowSize: 2,                    // Number of data points for rolling average
 };
 
+// Function to update simulation parameters
+export function setSimulationParams(newParams) {
+  SIMULATION_PARAMS = { ...SIMULATION_PARAMS, ...newParams };
+}
+
+// Function to retrieve current simulation parameters
+export function getSimulationParams() {
+  return SIMULATION_PARAMS;
+}
+
 // Derived Parameters
-export const DAYS_PER_STEP = (() => {
+export const getDaysPerStep = () => {
   const { simulationDurationYears, simulationRealTimeSeconds, stepsPerSecond } = SIMULATION_PARAMS;
   
   if (stepsPerSecond <= 0) {
@@ -26,6 +37,9 @@ export const DAYS_PER_STEP = (() => {
   }
 
   return (simulationDurationYears * DAYS_IN_YEAR) / (simulationRealTimeSeconds * stepsPerSecond);
-})();
+};
 
-export const SIMULATION_INTERVAL_MS = 1000 / SIMULATION_PARAMS.stepsPerSecond;
+export const getSimulationIntervalMs = () => {
+  const { stepsPerSecond } = SIMULATION_PARAMS;
+  return 1000 / stepsPerSecond;
+};

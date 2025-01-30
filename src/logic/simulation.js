@@ -1,6 +1,6 @@
 // src/logic/simulation.js
 import { marketData, userPortfolio } from './store';
-import { SIMULATION_PARAMS, DAYS_PER_STEP, SIMULATION_INTERVAL_MS } from './simulationConfig';
+import { getSimulationParams, getDaysPerStep, getSimulationIntervalMs } from './simulationConfig';
 
 /**
  * Simulation Class
@@ -9,7 +9,7 @@ import { SIMULATION_PARAMS, DAYS_PER_STEP, SIMULATION_INTERVAL_MS } from './simu
  */
 export class MarketSimulation { // Export the class for testing
   constructor() {
-    const { annualDrift, annualVolatility, windowSize } = SIMULATION_PARAMS;
+    const { annualDrift, annualVolatility, windowSize } = getSimulationParams();
     this.annualDrift = annualDrift;
     this.annualVolatility = annualVolatility;
     this.windowSize = windowSize;
@@ -73,8 +73,9 @@ export class MarketSimulation { // Export the class for testing
    */
   getNextPrice(price) {
     const z = this.generateStandardNormal();
-    const drift = (this.annualDrift - 0.5 * Math.pow(this.annualVolatility, 2)) * DAYS_PER_STEP / 365;
-    const diffusion = this.annualVolatility * Math.sqrt(DAYS_PER_STEP / 365) * z;
+    const { simulationDurationYears, simulationRealTimeSeconds, stepsPerSecond } = getSimulationParams();
+    const drift = (this.annualDrift - 0.5 * Math.pow(this.annualVolatility, 2)) * getDaysPerStep() / 365;
+    const diffusion = this.annualVolatility * Math.sqrt(getDaysPerStep() / 365) * z;
     return price * Math.exp(drift + diffusion);
   }
 
@@ -82,7 +83,7 @@ export class MarketSimulation { // Export the class for testing
    * Updates the market state by advancing the simulation.
    */
   updateMarket() {
-    this.currentDay += DAYS_PER_STEP;
+    this.currentDay += getDaysPerStep();
     this.currentPrice = this.getNextPrice(this.currentPrice);
     this.allPrices.push(this.currentPrice);
 
@@ -116,7 +117,7 @@ export class MarketSimulation { // Export the class for testing
   start() {
     this.resetState();
     if (this.simulationInterval) this.stop();
-    this.simulationInterval = setInterval(() => this.updateMarket(), SIMULATION_INTERVAL_MS);
+    this.simulationInterval = setInterval(() => this.updateMarket(), getSimulationIntervalMs());
   }
 
   /**
