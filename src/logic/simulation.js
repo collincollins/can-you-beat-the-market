@@ -1,183 +1,199 @@
 // src/logic/simulation.js
 import { marketData, userPortfolio } from './store';
-import { SIMULATION_PARAMS } from './simulationConfig';
+import { SIMULATION_PARAMS, DAYS_PER_STEP, SIMULATION_INTERVAL_MS } from './simulationConfig';
 
 /**
- * Simulation Module
+ * Simulation Class
  * 
- * This module handles the core simulation logic, including price generation,
- * market updates, and user portfolio management.
+ * Encapsulates the entire simulation logic and state.
  */
+export class MarketSimulation { // Export the class for testing
+  constructor() {
+    const { annualDrift, annualVolatility, windowSize } = SIMULATION_PARAMS;
+    this.annualDrift = annualDrift;
+    this.annualVolatility = annualVolatility;
+    this.windowSize = windowSize;
 
-// Destructure simulation parameters for easy access
-const { daysPerStep, annualDrift, annualVolatility, windowSize } = SIMULATION_PARAMS;
+    this.resetState();
+    this.simulationInterval = null;
 
-const dt = daysPerStep / 365; // Time increment in years
+    // For testing purposes, store all prices
+    this.allPrices = [100]; // Initial price
+  }
 
-// Simulation state variables
-let currentDay = 0;
-let currentPrice = 100;
-let userShares = 1;
-let userCash = 0;
-let simulationInterval = null;
+  /**
+   * Resets the simulation state to initial values.
+   */
+  resetState() {
+    this.currentDay = 0;
+    this.currentPrice = 100;
+    this.userShares = 1;
+    this.userCash = 0;
 
-/**
- * Generates the next market price using Geometric Brownian Motion.
- * 
- * @param {number} price - The current market price.
- * @returns {number} - The next simulated market price.
- */
-function getNextPrice(price) {
-  const random = Math.random();
-  const z = Math.sqrt(-2.0 * Math.log(random)) * Math.cos(2.0 * Math.PI * Math.random());
+    // Initialize marketData store
+    marketData.set({
+      days: [0],
+      marketPrices: [100],
+      rollingAverages: [100],
+      actions: [
+        {
+          type: 'buy',
+          day: 0,
+          executedPrice: 100,
+        },
+      ],
+    });
 
-  const driftComponent = (annualDrift - 0.5 * Math.pow(annualVolatility, 2)) * dt;
-  const diffusionComponent = annualVolatility * Math.sqrt(dt) * z;
+    // Initialize userPortfolio store
+    userPortfolio.set({
+      shares: this.userShares,
+      cash: this.userCash,
+      portfolioValue: this.currentPrice,
+    });
 
-  return price * Math.exp(driftComponent + diffusionComponent);
-}
+    // Reset allPrices
+    this.allPrices = [100];
+  }
 
-/**
- * Updates the market state by advancing the simulation and updating market data.
- */
-function updateMarket() {
-  currentDay += daysPerStep;
-  currentPrice = getNextPrice(currentPrice);
+  /**
+   * Generates a standard normally distributed random variable using Box-Muller transform.
+   * @returns {number} Standard normal random variable.
+   */
+  generateStandardNormal() {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random(); // Avoid log(0)
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
 
-  // Calculate user portfolio value
-  const userValue = userShares * currentPrice + userCash;
+  /**
+   * Calculates the next market price using Geometric Brownian Motion.
+   * @param {number} price - Current market price.
+   * @returns {number} Next simulated market price.
+   */
+  getNextPrice(price) {
+    const z = this.generateStandardNormal();
+    const drift = (this.annualDrift - 0.5 * Math.pow(this.annualVolatility, 2)) * DAYS_PER_STEP / 365;
+    const diffusion = this.annualVolatility * Math.sqrt(DAYS_PER_STEP / 365) * z;
+    return price * Math.exp(drift + diffusion);
+  }
 
-  // Update marketData store
-  marketData.update(data => {
-    data.days.push(currentDay);
-    data.marketPrices.push(parseFloat(currentPrice.toFixed(2)));
+  /**
+   * Updates the market state by advancing the simulation.
+   */
+  updateMarket() {
+    this.currentDay += DAYS_PER_STEP;
+    this.currentPrice = this.getNextPrice(this.currentPrice);
+    this.allPrices.push(this.currentPrice);
 
-    // Calculate rolling average
-    const len = data.marketPrices.length;
-    const subset = data.marketPrices.slice(Math.max(0, len - windowSize), len);
-    const sum = subset.reduce((a, b) => a + b, 0);
-    const avg = sum / subset.length;
-    data.rollingAverages.push(parseFloat(avg.toFixed(2)));
+    // Update user portfolio value
+    const userValue = this.userShares * this.currentPrice + this.userCash;
 
-    return data;
-  });
-
-  // Update userPortfolio store
-  userPortfolio.set({
-    shares: userShares,
-    cash: userCash,
-    portfolioValue: parseFloat(userValue.toFixed(2)),
-  });
-}
-
-/**
- * Starts the market simulation.
- * 
- * Initializes simulation state and begins the simulation interval.
- */
-export function startSimulation() {
-  // Reset simulation state
-  currentDay = 0;
-  currentPrice = 100;
-  userShares = 1;
-  userCash = 0;
-
-  // Reset marketData store with initial values
-  marketData.set({
-    days: [0],
-    marketPrices: [100],
-    rollingAverages: [100],
-    actions: [
-      {
-        type: 'buy',
-        day: 0,
-        executedPrice: 100
-      }
-    ]
-  });
-
-  // Reset userPortfolio store
-  userPortfolio.set({
-    shares: userShares,
-    cash: userCash,
-    portfolioValue: currentPrice,
-  });
-
-  // Clear any existing simulation interval
-  if (simulationInterval) clearInterval(simulationInterval);
-
-  // Start simulation loop
-  simulationInterval = setInterval(() => {
-    updateMarket();
-  }, 1000 / 7); // ~142ms interval
-}
-
-/**
- * Executes a buy action if the user has available cash.
- */
-export function buyShares() {
-  if (userCash > 0) {
+    // Update marketData store
     marketData.update(data => {
-      const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
+      data.days.push(this.currentDay);
+      data.marketPrices.push(parseFloat(this.currentPrice.toFixed(2)));
 
-      const sharesToBuy = userCash / avgPrice;
-      userShares += sharesToBuy;
-      userCash = 0;
-
-      data.actions.push({
-        type: 'buy',
-        day: currentDay,
-        executedPrice: avgPrice
-      });
+      // Optimize rolling average calculation for windowSize = 2
+      const len = data.marketPrices.length;
+      const avg = (data.marketPrices[len - 2] + data.marketPrices[len - 1]) / 2;
+      data.rollingAverages.push(parseFloat(avg.toFixed(2)));
 
       return data;
     });
 
-    // Update userPortfolio store immediately
-    userPortfolio.update(portfolio => ({
-      ...portfolio,
-      shares: userShares,
-      cash: userCash,
-      portfolioValue: parseFloat((userShares * currentPrice + userCash).toFixed(2)),
-    }));
+    // Update userPortfolio store
+    userPortfolio.set({
+      shares: this.userShares,
+      cash: this.userCash,
+      portfolioValue: parseFloat(userValue.toFixed(2)),
+    });
   }
-}
 
-/**
- * Executes a sell action if the user holds shares.
- */
-export function sellShares() {
-  if (userShares > 0) {
-    marketData.update(data => {
-      const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || currentPrice;
+  /**
+   * Starts the simulation loop.
+   */
+  start() {
+    this.resetState();
+    if (this.simulationInterval) this.stop();
+    this.simulationInterval = setInterval(() => this.updateMarket(), SIMULATION_INTERVAL_MS);
+  }
 
-      const cashGained = userShares * avgPrice;
-      userCash += cashGained;
-      userShares = 0;
+  /**
+   * Stops the simulation loop.
+   */
+  stop() {
+    if (this.simulationInterval) {
+      clearInterval(this.simulationInterval);
+      this.simulationInterval = null;
+    }
+  }
 
-      data.actions.push({
-        type: 'sell',
-        day: currentDay,
-        executedPrice: avgPrice
+  /**
+   * Executes a buy action.
+   */
+  buyShares() {
+    if (this.userCash > 0) {
+      marketData.update(data => {
+        const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || this.currentPrice;
+        const sharesToBuy = this.userCash / avgPrice;
+        this.userShares += sharesToBuy;
+        this.userCash = 0;
+
+        data.actions.push({
+          type: 'buy',
+          day: this.currentDay,
+          executedPrice: avgPrice,
+        });
+
+        return data;
       });
 
-      return data;
-    });
+      // Update userPortfolio store
+      userPortfolio.update(portfolio => ({
+        ...portfolio,
+        shares: this.userShares,
+        cash: this.userCash,
+        portfolioValue: parseFloat((this.userShares * this.currentPrice + this.userCash).toFixed(2)),
+      }));
+    }
+  }
 
-    // Update userPortfolio store immediately
-    userPortfolio.update(portfolio => ({
-      ...portfolio,
-      shares: userShares,
-      cash: userCash,
-      portfolioValue: parseFloat((userShares * currentPrice + userCash).toFixed(2)),
-    }));
+  /**
+   * Executes a sell action.
+   */
+  sellShares() {
+    if (this.userShares > 0) {
+      marketData.update(data => {
+        const avgPrice = data.rollingAverages[data.rollingAverages.length - 1] || this.currentPrice;
+        const cashGained = this.userShares * avgPrice;
+        this.userCash += cashGained;
+        this.userShares = 0;
+
+        data.actions.push({
+          type: 'sell',
+          day: this.currentDay,
+          executedPrice: avgPrice,
+        });
+
+        return data;
+      });
+
+      // Update userPortfolio store
+      userPortfolio.update(portfolio => ({
+        ...portfolio,
+        shares: this.userShares,
+        cash: this.userCash,
+        portfolioValue: parseFloat((this.userShares * this.currentPrice + this.userCash).toFixed(2)),
+      }));
+    }
   }
 }
 
-/**
- * Stops the market simulation by clearing the simulation interval.
- */
-export function stopSimulation() {
-  if (simulationInterval) clearInterval(simulationInterval);
-  simulationInterval = null;
-}
+// Instantiate a single simulation instance (Singleton Pattern)
+const simulationInstance = new MarketSimulation();
+
+export const startSimulation = simulationInstance.start.bind(simulationInstance);
+export const stopSimulation = simulationInstance.stop.bind(simulationInstance);
+export const buyShares = simulationInstance.buyShares.bind(simulationInstance);
+export const sellShares = simulationInstance.sellShares.bind(simulationInstance);
