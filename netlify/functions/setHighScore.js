@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
     }
 
     const database = client.db('canyoubeatthemarket');
-    const highScoreCollection = database.collection('highScoresv');
+    const highScoreCollection = database.collection('highScores');
 
     // Insert a new document for every new score submission
     await highScoreCollection.insertOne({
