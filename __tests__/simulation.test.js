@@ -1,20 +1,50 @@
 // __tests__/simulation.test.js
 
 import { MarketSimulation } from '../src/logic/simulation';
-import { SIMULATION_PARAMS, DAYS_PER_STEP } from '../src/logic/simulationConfig';
+import { setSimulationParams, getSimulationParams, getDaysPerStep } from '../src/logic/simulationConfig';
 
 describe('MarketSimulation Long-Term Behavior', () => {
   // **Test Configuration**
   const years = 100; // Simulation duration in years
   const numSimulations = 100; // Number of simulation runs for averaging
 
-  // **Theoretical Calculations**
-  const theoreticalCagr = (Math.exp(SIMULATION_PARAMS.annualDrift - 0.5 * Math.pow(SIMULATION_PARAMS.annualVolatility, 2)) - 1) * 100; // Corrected ~7.25%
-  const theoreticalVolatility = SIMULATION_PARAMS.annualVolatility * 100; // 20%
-
   // **Tolerance Levels**
   const cagrTolerance = 1.0; // Allow ±1%
   const volatilityTolerance = 2.0; // Allow ±2%
+
+  // **Constants**
+  const DAYS_IN_YEAR = 365;
+
+  // **Before All Tests, Set Simulation Parameters**
+  beforeAll(() => {
+    setSimulationParams({
+      simulationDurationYears: years,
+      simulationRealTimeSeconds: 30, // Total real-time duration (not directly used in tests)
+      stepsPerSecond: 1000, // High steps per second to speed up tests
+      annualDrift: 0.09, // 9% annual drift
+      annualVolatility: 0.20, // 20% annual volatility
+      windowSize: 2, // Rolling average window size
+    });
+  });
+
+  // **After All Tests, Reset Simulation Parameters to Default (Optional)**
+  afterAll(() => {
+    setSimulationParams({
+      simulationDurationYears: 5,
+      simulationRealTimeSeconds: 30,
+      stepsPerSecond: 10,
+      annualDrift: 0.09,
+      annualVolatility: 0.20,
+      windowSize: 2,
+    });
+  });
+
+  // **Retrieve Updated Simulation Parameters**
+  const simulationParams = getSimulationParams();
+
+  // **Theoretical Calculations Based on Updated Parameters**
+  const theoreticalCagr = (Math.exp(simulationParams.annualDrift - 0.5 * Math.pow(simulationParams.annualVolatility, 2)) - 1) * 100;
+  const theoreticalVolatility = simulationParams.annualVolatility * 100; // 20%
 
   test(`should have average annual drift approximately equal to ${theoreticalCagr.toFixed(2)}% over ${years} years across ${numSimulations} simulations`, () => {
     let totalCagr = 0;
@@ -24,8 +54,9 @@ describe('MarketSimulation Long-Term Behavior', () => {
       const simulation = new MarketSimulation();
       simulation.resetState();
 
-      // Calculate the number of steps
-      const steps = Math.floor((years * 365) / DAYS_PER_STEP);
+      // Calculate the number of steps based on updated simulation parameters
+      const daysPerStep = getDaysPerStep(); // Derived from simulation params
+      const steps = Math.floor((years * DAYS_IN_YEAR) / daysPerStep);
 
       // Run the simulation
       for (let step = 0; step < steps; step++) {
@@ -58,8 +89,9 @@ describe('MarketSimulation Long-Term Behavior', () => {
       const simulation = new MarketSimulation();
       simulation.resetState();
 
-      // Calculate the number of steps
-      const steps = Math.floor((years * 365) / DAYS_PER_STEP);
+      // Calculate the number of steps based on updated simulation parameters
+      const daysPerStep = getDaysPerStep();
+      const steps = Math.floor((years * DAYS_IN_YEAR) / daysPerStep);
 
       // Run the simulation
       for (let step = 0; step < steps; step++) {
@@ -85,7 +117,7 @@ describe('MarketSimulation Long-Term Behavior', () => {
       const stepStdDev = Math.sqrt(variance);
 
       // Annualize volatility
-      const stepsPerYear = 365 / DAYS_PER_STEP; // ~60 steps per year
+      const stepsPerYear = DAYS_IN_YEAR / daysPerStep;
       const annualVolatility = stepStdDev * Math.sqrt(stepsPerYear) * 100; // Convert to percentage
 
       totalVolatility += annualVolatility;

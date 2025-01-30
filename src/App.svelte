@@ -506,13 +506,6 @@ function restartSimulation() {
     height: 20px;
   }
 
-  .toggle input {
-    -webkit-tap-highlight-color: transparent;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
   .slider {
     position: absolute;
     cursor: pointer;
@@ -525,7 +518,15 @@ function restartSimulation() {
     border-radius: 8px;
     border: 1.1px solid #000000;
     box-shadow: var(--shadow-extra-light);
+    outline: none !important;
   }
+
+  .toggle, .slider {
+  -webkit-user-select: none; /* Prevent text selection on iOS */
+  -ms-user-select: none; /* Prevent text selection on IE/Edge */
+  user-select: none; /* Prevent text selection on other browsers */
+  -webkit-touch-callout: none; /* Disable callout (copy, etc.) on iOS */
+}
 
   .slider:before {
     position: absolute;
@@ -545,16 +546,21 @@ function restartSimulation() {
   opacity: 0;
   width: 0;
   height: 0;
-  outline: none; /* Remove default focus outline */
+  outline: none !important;
+  box-shadow: none !important;
 }
 
   .toggle input:checked + .slider {
     background-color: var(--color-button-default);
   }
 
-  .toggle input:focus + .slider {
-    box-shadow: 0 0 0 transparent; /* Removes the shadow */
-  }
+  .toggle input:focus + .slider,
+  .toggle input:active + .slider {
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  background-color: transparent;
+}
 
   .toggle input:checked + .slider:before {
     transform: translateX(15px);
