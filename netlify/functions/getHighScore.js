@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     }
 
     const database = client.db('canyoubeatthemarket');
-    const highScoreCollection = database.collection('highScores');
+    const highScoreCollection = database.collection('highScoresv');
 
     // Find the doc with the highest score
     const topScoreDoc = await highScoreCollection

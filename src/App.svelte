@@ -39,10 +39,10 @@
   let portfolioColor = 'black'; // Color for the portfolio value text
   let buyHoldColor = 'black';    // Color for the Buy-and-Hold value text
 
-  // **High Score State**
-  let currentHighScore = 0;
+  // **High Score State** (from the DB)
+  let currentHighScore = 0;     // The best streak found in the DB
   let highScorePlayer = 'No one yet';
-  let consecutiveWinsValue = 0;
+  let consecutiveWinsValue = 0; // The user's local streak this session
 
   // **Store Subscriptions**
   let unsubscribePortfolio;
@@ -67,7 +67,7 @@
   // **Lifecycle Hooks**
 
   onMount(async () => {
-    // Fetch High Score when the app mounts
+    // Fetch the highest streak in DB at startup
     const hs = await fetchHighScore();
     highScore.set({ score: hs.score, playerName: hs.playerName });
 
@@ -109,6 +109,7 @@
     if (unsubscribeMarketData) unsubscribeMarketData();
     if (unsubscribeHighScore) unsubscribeHighScore();
     if (unsubscribeConsecutiveWins) unsubscribeConsecutiveWins();
+
     stopSimulation();
     if (timerInterval) {
       clearInterval(timerInterval);
@@ -132,13 +133,20 @@
       return;
     }
 
-    // Handle the submission of the username in the modal
+    // Insert a new doc for this winning streak
+    // Because setHighScore.js now always does insertOne
     const success = await updateHighScore(playerName.trim(), consecutiveWinsValue);
     if (success) {
-      highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
+      // Update our local store’s "global high score" if this is truly the new global best
+      // But we won’t know for sure unless we re-fetch from the DB or trust consecutiveWinsValue > currentHighScore
+      // We'll do a quick approach: if it beats the old record, set it immediately
+      if (consecutiveWinsValue > currentHighScore) {
+        highScore.set({ score: consecutiveWinsValue, playerName: playerName.trim() });
+      }
     } else {
-      alert('Failed to update high score. Please try again.');
+      alert('Failed to record your high score. Please try again.');
     }
+
     showModal = false;
   }
 
@@ -236,15 +244,19 @@ async function endSimulation() {
 
         // Compute the new consecutive wins value
         const newConsecutiveWins = consecutiveWinsValue + 1;
-
-        // Check if the new streak exceeds the current high score
-        if (newConsecutiveWins > currentHighScore) {
-          showModal = true; // Trigger the UsernameModal
-        }
-
-        // Update the consecutiveWins store
         consecutiveWins.set(newConsecutiveWins);
         console.log(`Consecutive Wins: ${newConsecutiveWins}`);
+
+        // ** 1. Re-fetch the latest high score from the DB **
+        const newestDBRecord = await fetchHighScore();
+        console.log('Fetched current DB high score:', newestDBRecord);
+
+        // ** 2. Compare new local streak to the freshly fetched global record **
+        if (newConsecutiveWins > newestDBRecord.score) {
+          // Only now do we prompt for the name
+          showModal = true;
+        }
+
       } else if (portfolioVal < buyHoldFinal) {
         portfolioColor = '#f44336'; // Red for underperforming
         buyHoldColor = '#008b02';   // Green for outperforming
