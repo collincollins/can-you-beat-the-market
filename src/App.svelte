@@ -464,6 +464,11 @@ function restartSimulation() {
   max-width: 400px;
   font-size: 0.75em;
   padding-top: 5px;
+  padding-bottom: 10px;
+}
+
+.high-score-card {
+  padding-bottom: 0px;
 }
 
 /* Invalid Simulation Message Specific Styles */
@@ -749,10 +754,13 @@ function restartSimulation() {
 
   <!-- High Score Display -->
   {#if simulationEnded}
-    <div class="card results-details-card">
+    <div class="card results-details-card high-score-card">
       <h2>High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
+      </p>
+      <p style="font-size: 6px;">
+        Honorable mention to VladStopStalking with 6942069421 wins.
       </p>
     </div>
   {/if}

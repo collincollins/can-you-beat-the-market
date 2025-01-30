@@ -3,7 +3,6 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
-
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -26,22 +25,29 @@ exports.handler = async (event, context) => {
     console.log("Function 'getHighScore' invoked.");
 
     if (!isConnected) {
-      console.log("Connecting to MongoDB...");
       await client.connect();
       isConnected = true;
-      console.log("Connected to MongoDB.");
     }
 
     const database = client.db('canyoubeatthemarket');
     const highScoreCollection = database.collection('highScores');
 
-    const highScore = await highScoreCollection.findOne({ _id: 'highScore' });
+    // Find the doc with the highest score
+    const topScoreDoc = await highScoreCollection
+      .find({})
+      .sort({ score: -1 })      // Sort descending by score
+      .limit(1)                // Take only the top result
+      .toArray();
 
-    const score = highScore ? highScore.score : 0;
-    const playerName = highScore ? highScore.playerName : 'No one yet';
+    if (!topScoreDoc[0]) {
+      // No scores in DB
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ score: 0, playerName: 'No one yet' }),
+      };
+    }
 
-    console.log(`Retrieved high score: ${score} by ${playerName}`);
-
+    const { score, playerName } = topScoreDoc[0];
     return {
       statusCode: 200,
       body: JSON.stringify({ score, playerName }),
