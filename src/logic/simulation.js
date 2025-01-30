@@ -35,13 +35,7 @@ export class MarketSimulation { // Export the class for testing
       days: [0],
       marketPrices: [100],
       rollingAverages: [100],
-      actions: [
-        {
-          type: 'buy',
-          day: 0,
-          executedPrice: 100,
-        },
-      ],
+      actions: [],
     });
 
     // Initialize userPortfolio store
@@ -116,6 +110,15 @@ export class MarketSimulation { // Export the class for testing
    */
   start() {
     this.resetState();
+    // If you want an auto-buy at the moment the user starts
+    marketData.update(data => {
+      data.actions.push({
+        type: 'buy',
+        day: 0,
+        executedPrice: 100,
+    });
+    return data;
+  });
     if (this.simulationInterval) this.stop();
     this.simulationInterval = setInterval(() => this.updateMarket(), getSimulationIntervalMs());
   }
