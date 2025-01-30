@@ -429,7 +429,7 @@ function restartSimulation() {
 .chart-container {
   width: 90%;
   max-width: 700px;
-  min-height: 290px;
+  min-height: 293px;
 
   padding-left: 10px;
   padding-right: 0px;
@@ -636,18 +636,17 @@ function restartSimulation() {
   <!-- Chart Container -->
   <div class="chart-container card">
     <!-- Timer and Slowmo Toggle -->
-    <div class="timer-slowmo-container">
+    <div class="timer-slowmo-container" style="margin-top: 2px">
       <div class="text-small timer-container">
         {#if !simulationRunning && !simulationEnded}
-          <span class="text-small">Time Left:</span>
           <input
             type="number"
             min="10"
             bind:value={timerInput}
           /> 
-          <span class="text-small">seconds</span>
+          <span class="text-small">Seconds</span>
         {:else}
-          <span class="text-small">Time Left: {timer} seconds</span>
+          <span class="text-small">{timer} Seconds</span>
         {/if}
       </div>
     
