@@ -22,6 +22,7 @@
   /* Shadows */
   --shadow-default: 2px 2px 0px black;
   --shadow-light: 2px 2px 0px black;
+  --shadow-extra-light: 1px 1px 0px black;
 }
 
 /* Global Styles */

@@ -502,7 +502,7 @@ function restartSimulation() {
 
   .toggle {
     position: relative;
-    width: 40px;
+    width: 35px;
     height: 20px;
   }
 
@@ -521,19 +521,22 @@ function restartSimulation() {
     bottom: 0;
     background-color: var(--color-background-dark);
     transition: 0.4s;
-    border-radius: 10px;
+    border-radius: 8px;
+    border: 1.1px solid #000000;
+    box-shadow: var(--shadow-extra-light);
   }
 
   .slider:before {
     position: absolute;
     content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3.4px;
+    height: 12px;
+    width: 12px;
+    left: 1.3px;
+    bottom: 1.6px;
     background-color: white;
     transition: 0.4s;
-    border-radius: 50%;
+    border-radius: 6px;
+    border: 1.5px solid #000000;
   }
 
   .toggle input:checked + .slider {
@@ -545,7 +548,7 @@ function restartSimulation() {
   }
 
   .toggle input:checked + .slider:before {
-    transform: translateX(20px);
+    transform: translateX(15px);
   }
 
   .toggle input:disabled + .slider {
