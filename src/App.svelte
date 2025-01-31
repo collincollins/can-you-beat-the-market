@@ -737,7 +737,7 @@ function restartSimulation() {
         class="button restart"
         on:click={restartSimulation}
         disabled={restartDisabled}
-        style="opacity: {restartDisabled ? 0.5 : 1};">
+        style="opacity: {restartDisabled ? 0.5 : 1}; touch-action: manipulation;">
         Restart
       </button>
     </div>
