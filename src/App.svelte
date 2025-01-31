@@ -21,6 +21,7 @@
   let finalComparison = '';     // HTML string for Buy-and-Hold comparison
   let timerInterval;            // Reference to the simulation timer interval
   let showModal = false;        // Flag to control the visibility of the UsernameModal
+  let restartDisabled = false; //variable to control the restart button's disabled state
 
   // **Slowmo Toggle State**
   let slowMo = false;           // Flag to indicate if Slowmo is active
@@ -339,6 +340,11 @@ async function endSimulation() {
       `;
     }
   }
+    // **Start the Restart Cooldown Immediately When Simulation Ends**
+  restartDisabled = true;
+  setTimeout(() => {
+    restartDisabled = false;
+  }, 1000);
 }
 
 function restartSimulation() {
@@ -727,7 +733,13 @@ function restartSimulation() {
   <!-- Restart Simulation Button -->
   {#if simulationEnded}
     <div class="buttons-container">
-      <button class="button restart" on:click={restartSimulation}>Restart</button>
+      <button
+        class="button restart"
+        on:click={restartSimulation}
+        disabled={restartDisabled}
+        style="opacity: {restartDisabled ? 0.5 : 1};">
+        Restart
+      </button>
     </div>
   {/if}
 
