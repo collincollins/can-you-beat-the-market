@@ -447,7 +447,7 @@ function restartSimulation() {
 
 /* Chart Container Specific Styles */
 .chart-container {
-  width: 90%;
+  width: 93%;
   max-width: 700px;
   min-height: 293px;
 

@@ -78,13 +78,13 @@
           text: 'Days  ', // tactical spaces to make the text centered
           font: {
             family: "'Press Start 2P'",
-            size: 12,
+            size: 10,
           },
         },
         ticks: {
           font: {
             family: "'Press Start 2P'",
-            size: 9,
+            size: 8,
           },
         },
       },
@@ -96,13 +96,13 @@
           text: 'Price ($)',
           font: {
             family: "'Press Start 2P'",
-            size: 12,
+            size: 10,
           },
         },
         ticks: {
           font: {
             family: "'Press Start 2P'",
-            size: 9,
+            size: 8,
           },
         },
       },
