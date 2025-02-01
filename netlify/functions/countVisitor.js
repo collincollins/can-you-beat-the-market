@@ -42,7 +42,13 @@ exports.handler = async (event, context) => {
       isConnected = true;
     }
 
-    const database = client.db('canyoubeatthemarket');
+    // Determine the default DB name based on deploy context
+    const defaultDbName = process.env.CONTEXT === 'deploy-preview'
+      ? 'canyoubeatthemarket-test'
+      : 'canyoubeatthemarket';
+
+    const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
+    const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
     const visitorCounterCollection = database.collection('visitorCounter');
 

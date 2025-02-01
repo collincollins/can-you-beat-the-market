@@ -32,7 +32,12 @@ exports.handler = async (event, context) => {
       console.log("Connected to MongoDB.");
     }
 
-    const database = client.db('canyoubeatthemarket');
+    const defaultDbName = process.env.CONTEXT === 'deploy-preview'
+    ? 'canyoubeatthemarket-test'
+    : 'canyoubeatthemarket';
+  
+    const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
+    const database = client.db(dbName);
     const hitsCollection = database.collection('hits');
 
     const hit = await hitsCollection.findOne({ _id: 'hitCounter' });
