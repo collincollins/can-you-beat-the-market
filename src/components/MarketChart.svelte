@@ -102,7 +102,7 @@
         ticks: {
           font: {
             family: "'Press Start 2P'",
-            size: 8,
+            size: 7,
           },
         },
       },
