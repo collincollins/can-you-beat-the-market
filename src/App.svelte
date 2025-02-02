@@ -4,7 +4,7 @@
   // Import necessary Svelte lifecycle functions and components
   import { onMount, onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
-  import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
+  // import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
   import Controls from './components/Controls.svelte';
   import UsernameModal from './components/UsernameModal.svelte';
 
@@ -59,7 +59,6 @@
   // Visitor Document ID used to update the visitor record in MongoDB
   let visitorDocId = null;
 
-  let excessCagrCanvas;
   // Assume you have an array of visitor documents available as visitorData.
   // For example, this might be fetched from an API.
   let visitorData = []; // Replace with actual data retrieval
