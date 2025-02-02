@@ -59,6 +59,7 @@ exports.handler = async (event, context) => {
     const visitorDoc = {
       visitorFingerprint,    // The hashed IP, to later correlate multiple documents
       visitDate: now,        // The timestamp when the visitor loaded the site
+      preDataHaul: false,    // New field indicating that this is not old/preDataHaul data.
       // Pre-update defaults:
       hasStarted: false,         // Will be set to true when the user clicks "start simulation"
       durationOfGame: null,      // To be updated later with the game duration
