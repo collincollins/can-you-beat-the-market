@@ -345,7 +345,8 @@ async function endSimulation() {
 
     // Retrieve the visitor document id from localStorage or variable.
     const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
-    
+    // At simulation end, compute portfolio value and determine win status.
+    const portfolioVal = portfolio ? parseFloat(portfolio.portfolioValue.toFixed(2)) : 0;
     // A win might be defined as a valid simulation where the portfolio outperformed buy-and-hold.
     const win = simulationValidFlag && (portfolioVal > buyHoldFinal);
 
