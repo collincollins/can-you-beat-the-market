@@ -345,6 +345,9 @@ async function endSimulation() {
 
     // Retrieve the visitor document id from localStorage or variable.
     const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
+    
+    // A win might be defined as a valid simulation where the portfolio outperformed buy-and-hold.
+    const win = simulationValidFlag && (portfolioVal > buyHoldFinal);
 
     // Build the post-simulation payload for the visitor document update.
     const postUpdatePayload = {
@@ -353,6 +356,7 @@ async function endSimulation() {
       naturalEnd: simulationValidFlag,  // We'll treat a valid simulation as natural for now
       valid: simulationValidFlag,
       win, 
+      winStreak: consecutiveWinsValue,
       endGameDate: new Date(simulationEndTime),
       durationOfGame: durationInSeconds,
       portfolioValue: portfolio ? portfolio.portfolioValue : 0,
