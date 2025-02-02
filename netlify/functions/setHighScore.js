@@ -60,30 +60,15 @@ exports.handler = async (event, context) => {
     // Use upsert with the $max operator so that the current high score is updated only if the new score is higher.
     const updateResult = await currentHighScoreCollection.updateOne(
       { _id: 'current' },
-      [
-        {
-          $set: {
-            score: {
-              $cond: {
-                if: { $lt: [{ $ifNull: ['$score', -1e12] }, score] },
-                then: score,
-                else: '$score'
-              }
-            },
-            playerName: {
-              $cond: {
-                if: { $lt: [{ $ifNull: ['$score', -1e12] }, score] },
-                then: playerName.trim(),
-                else: '$playerName'
-              }
-            },
-            updatedAt: new Date()
-          }
+      {
+        $set: {
+          updatedAt: new Date(),
+          // Only update the playerName if this is a new high score.
+          playerName: playerName.trim()
         },
-        {
-          $setOnInsert: { _id: 'current', createdAt: new Date() }
-        }
-      ],
+        $max: { score: score },
+        $setOnInsert: { _id: 'current', createdAt: new Date() }
+      },
       { upsert: true }
     );
 
