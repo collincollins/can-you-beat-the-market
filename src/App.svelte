@@ -418,6 +418,21 @@ function restartSimulation() {
     portfolioValue: 0,
   });
   // Note: Do not reset consecutiveWins here to preserve streak
+  // Create a new visitor document for the new game session.
+  fetch('/.netlify/functions/createVisitorDocument', { method: 'POST' })
+    .then(response => response.json())
+    .then(result => {
+      if (result.documentId) {
+        visitorDocId = result.documentId;
+        localStorage.setItem('visitorDocId', visitorDocId);
+        console.log('New visitor document created with id:', visitorDocId);
+      } else {
+        console.error('Failed to create new visitor document.');
+      }
+    })
+    .catch(err => {
+      console.error('Error creating new visitor document:', err);
+    });
 }
 
   // **Event Handlers for Buy/Sell Buttons**
