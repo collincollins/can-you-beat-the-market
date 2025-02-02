@@ -1,16 +1,16 @@
 <!-- src/App.svelte -->
 
 <script>
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
   import Controls from './components/Controls.svelte';
+  import UsernameModal from './components/UsernameModal.svelte';
   import { startSimulation, stopSimulation, buyShares, sellShares } from './logic/simulation';
   import { userPortfolio, marketData, highScore, consecutiveWins } from './logic/store';
   import { fetchHighScore, updateHighScore } from './logic/highScoreService';
   import { setSimulationParams, getSimulationParams } from './logic/simulationConfig';
   import './bridges/RetroCounterWrapper.jsx';
   import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
-  import UsernameModal from './components/UsernameModal.svelte';
 
   // **Simulation Settings**
   let timerInput = 30;          // Initial timer input value (in seconds)
@@ -22,8 +22,6 @@
   let timerInterval;            // Reference to the simulation timer interval
   let showModal = false;        // Flag to control the visibility of the UsernameModal
   let restartDisabled = false; //variable to control the restart button's disabled state
-
-  // **Slowmo Toggle State**
   let slowMo = false;           // Flag to indicate if Slowmo is active
 
   // **User State**
@@ -45,6 +43,9 @@
   let highScorePlayer = 'No one yet';
   let consecutiveWinsValue = 0; // The user's local streak this session
 
+  // --- Visitor Document ID ---
+  let visitorDocId = null; // This will store the _id from our createVisitorDocument call
+
   // **Store Subscriptions**
   let unsubscribePortfolio;
   let unsubscribeMarketData;
@@ -65,20 +66,29 @@
   $: highScorePlayer = $highScore.playerName;
   $: consecutiveWinsValue = $consecutiveWins;
 
-  // **Lifecycle Hooks**
+  // --- onMount Lifecycle ---
 
   onMount(async () => {
-    // Fetch the highest streak in DB at startup
+    // 1. Create a new visitor document (pre update) on page load
+    try {
+      const response = await fetch('/.netlify/functions/createVisitorDocument', { method: 'POST' });
+      const result = await response.json();
+      if (result.documentId) {
+        visitorDocId = result.documentId;
+        localStorage.setItem('visitorDocId', visitorDocId);
+        console.log('Visitor document created with id:', visitorDocId);
+      }
+    } catch (error) {
+      console.error('Error creating visitor document:', error);
+    }
+
+    // 2. Fetch the current high score from the DB
     const hs = await fetchHighScore();
     highScore.set({ score: hs.score, playerName: hs.playerName });
 
-    // Subscribe to stores and store the unsubscribe functions
-    unsubscribePortfolio = userPortfolio.subscribe(value => {
-      portfolio = value;
-    });
-    unsubscribeMarketData = marketData.subscribe(value => {
-      data = value;
-    });
+    // 3. Set up store subscriptions
+    unsubscribePortfolio = userPortfolio.subscribe(value => {portfolio = value;});
+    unsubscribeMarketData = marketData.subscribe(value => {data = value;});
     unsubscribeHighScore = highScore.subscribe(value => {
       currentHighScore = value.score;
       highScorePlayer = value.playerName;
@@ -86,17 +96,6 @@
     unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
       consecutiveWinsValue = value;
     });
-
-    // **Visitor Counting Logic**
-    try {
-      const response = await fetch('/.netlify/functions/countVisitor', { method: 'POST' });
-      const result = await response.json();
-      console.log(result.isNewVisitor ? 'New visitor counted.' : 'Returning visitor.');
-      visitorId = result.visitorId;
-      localStorage.setItem('visitorId', visitorId);
-    } catch (error) {
-      console.error('Error counting visitor:', error);
-    }
   });
 
   onDestroy(() => {
@@ -105,7 +104,6 @@
     if (unsubscribeMarketData) unsubscribeMarketData();
     if (unsubscribeHighScore) unsubscribeHighScore();
     if (unsubscribeConsecutiveWins) unsubscribeConsecutiveWins();
-
     stopSimulation();
     if (timerInterval) clearInterval(timerInterval);
   });
@@ -142,21 +140,6 @@
       }
       showModal = false;
     }
-
-    // Function to log simulation details to the backend
-    async function logSimulation(simulationData) {
-      try {
-        const response = await fetch('/.netlify/functions/logSimulation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(simulationData)
-        });
-        const result = await response.json();
-        console.log(result.message);
-      } catch (error) {
-        console.error('Error logging simulation:', error);
-      }
-  }
 
   async function startSimulationHandler() {
     // Initialize simulation state and start the simulation
@@ -350,7 +333,7 @@ async function endSimulation() {
 
   // Always re-fetch the latest high score from the database**
   try {
-    const updatedHighScore = await fetchHighScore();
+      const updatedHighScore = await fetchHighScore();
       highScore.set({
         score: updatedHighScore.score,
         playerName: updatedHighScore.playerName,
@@ -360,55 +343,43 @@ async function endSimulation() {
       console.error('Error fetching updated high score:', error);
     }
 
-    // Retrieve the actual visitorId from local storage or variable.
-    const storedVisitorId = visitorId || localStorage.getItem('visitorId') || "visitor_placeholder";
-    // Prepare simulation data to log
-    const simulationData = {
-      visitorId: storedVisitorId,
-      startTime: simulationStartTime,
-      endTime: simulationEndTime,
-      duration: durationInSeconds,
+    // Retrieve the visitor document id from localStorage or variable.
+    const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
+
+    // Build the post-simulation payload for the visitor document update.
+    const postUpdatePayload = {
+      documentId: storedVisitorDocId,
+      hasStarted: true,
+      naturalEnd: simulationValidFlag,  // We'll treat a valid simulation as natural for now
       valid: simulationValidFlag,
+      endGameDate: new Date(simulationEndTime),
+      durationOfGame: durationInSeconds,
       portfolioValue: portfolio ? portfolio.portfolioValue : 0,
       buyHoldFinalValue: buyHoldFinal,
-      CAGR: userAnnualReturn,
-      win: portfolio.portfolioValue > buyHoldFinal,
-      winStreak: consecutiveWinsValue,
+      portfolioCAGR: userAnnualReturn,
+      buyHoldCAGR: buyHoldAnnualReturn,
       buys: data.actions.filter(action => action.type === 'buy').length,
-      sells: data.actions.filter(action => action.type === 'sell').length,
-      simulationParameters: getSimulationParams()
+      sells: data.actions.filter(action => action.type === 'sell').length
     };
-    await logSimulation(simulationData);
 
-    // Now update the visitor's aggregated stats using the new endpoint.
+    // Update the visitor document with the post-simulation data.
     try {
-      const visitorStatsPayload = {
-        visitorId: storedVisitorId,
-        simulationStartTime: simulationStartTime,
-        simulationValid: simulationValidFlag,
-        portfolioValue: portfolio ? portfolio.portfolioValue : 0,
-        currentDay: data.days[data.days.length - 1] || 0,
-        win: portfolio.portfolioValue > buyHoldFinal,
-        simulationDuration: durationInSeconds,
-        buys: data.actions.filter(action => action.type === 'buy').length,
-        sells: data.actions.filter(action => action.type === 'sell').length
-      };
-      const res = await fetch('/.netlify/functions/updateVisitorStats', {
+      const res = await fetch('/.netlify/functions/updateVisitorDocument', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(visitorStatsPayload)
+        body: JSON.stringify(postUpdatePayload)
       });
-      const statsResult = await res.json();
-      console.log(statsResult.message);
+      const updateResult = await res.json();
+      console.log(updateResult.message);
     } catch (error) {
-      console.error('Error updating visitor stats:', error);
+      console.error('Error updating visitor document:', error);
     }
 
-  restartDisabled = true;
-  setTimeout(() => {
-    restartDisabled = false;
-  }, 1000);
-}
+    restartDisabled = true;
+    setTimeout(() => {
+      restartDisabled = false;
+    }, 1000);
+  }
 
 function restartSimulation() {
   // Reset the simulation to its initial state
