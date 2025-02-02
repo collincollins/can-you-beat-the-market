@@ -245,13 +245,13 @@
 
   // Calculate Simulation Duration
   const simulationEndTime = Date.now();
-  const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
 
   // Determine if the simulation ended naturally (i.e. timer ran out)
   const endedNaturally = timer <= 0;
 
   // Determine Minimum Required Duration (for a valid simulation)
   const minimumRequiredSeconds = slowMo ? 15 : 30;
+  const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
   const simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
   simulationValid = simulationValidFlag;
 
@@ -265,16 +265,31 @@
     );
     portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
 
-    // Calculate Annualized Returns (CAGR) regardless of simulation validity
+    // Calculate Annualized Returns (CAGR), etc.
     const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
     const initialValue = 100; // Assumed initial portfolio value
 
     userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
     buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+    
+    // *** Set the colors based on performance ***
+    if (portfolioVal > buyHoldFinal) {
+      // Portfolio outperforms buy-and-hold:
+      portfolioColor = '#008b02';  // Green
+      buyHoldColor = '#f44336';    // Red
+    } else if (portfolioVal < buyHoldFinal) {
+      // Portfolio underperforms buy-and-hold:
+      portfolioColor = '#f44336';  // Red
+      buyHoldColor = '#008b02';    // Green
+    } else {
+      // Tie: use neutral color
+      portfolioColor = 'black';
+      buyHoldColor = 'black';
+    }
 
-    // Always update the finalComparison HTML so that the buy‑and‑hold card shows the result
+    // Update the finalComparison HTML to include buyHoldColor
     finalComparison = `
-      <span style="color:${buyHoldFinal < portfolioVal ? '#f44336' : '#008b02'}">
+      <span style="color: ${buyHoldColor};">
         Buy-and-Hold Value<br>
         $${buyHoldFinal.toLocaleString(undefined, {
           minimumFractionDigits: 2,
@@ -284,39 +299,38 @@
     `;
   }
 
-  // For valid simulations, update win streak and (if applicable) trigger the modal.
-  // For simulations that are too short, we calculate & display results but DO NOT update the win streak.
-  let streakForUpdate = consecutiveWinsValue; // default: leave it as is
+  // Set up a local variable to capture the win streak value to be sent to the DB.
+  let streakForUpdate = consecutiveWinsValue;
 
-  if (simulationValidFlag) {
+  // If the simulation is not valid, reset the win streak to 0.
+  if (!simulationValidFlag) {
+    streakForUpdate = 0;
+    consecutiveWins.set(0);
+    console.log(
+      `Simulation invalid (duration: ${durationInSeconds.toFixed(2)}s). Resetting consecutive wins to 0.`
+    );
+  } else {
+    // For valid simulations, update the win streak based on performance.
     if (portfolioVal > buyHoldFinal) {
-      // Valid simulation and the portfolio outperformed buy-and-hold: increment streak.
+      // Portfolio outperformed buy-and-hold: increment the win streak.
       streakForUpdate = consecutiveWinsValue + 1;
       consecutiveWins.set(streakForUpdate);
-      console.log(`Consecutive Wins: ${streakForUpdate}`);
+      console.log(`Consecutive Wins increased to: ${streakForUpdate}`);
 
-      // Fetch the latest high score from the DB
+      // Fetch the latest high score from the DB.
       const newestDBRecord = await fetchHighScore();
       console.log('Fetched current DB high score:', newestDBRecord);
 
-      // Trigger the modal only when the new streak beats the current high score.
+      // Trigger the modal if the new streak beats the current high score.
       if (streakForUpdate > newestDBRecord.score) {
         showModal = true;
       }
     } else {
-      // Valid simulation but underperformed or tied: reset win streak.
+      // Underperformed or tied: reset the win streak.
       streakForUpdate = 0;
       consecutiveWins.set(0);
-      console.log('Consecutive Wins reset to 0');
+      console.log('Consecutive Wins reset to 0 (performance not sufficient).');
     }
-  } else {
-    // Invalid simulation:
-    console.log(
-      `Simulation ended early after ${durationInSeconds.toFixed(
-        2
-      )} seconds. Stats are calculated and stored, but not used for the win streak.`
-    );
-    // Do not modify consecutiveWins; it remains as it was.
   }
 
   // Always re-fetch the latest high score from the database.
