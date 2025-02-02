@@ -284,34 +284,42 @@
     `;
   }
 
-  // Now, update consecutive wins and modal only if simulation is valid
+  // For valid simulations, update win streak and (if applicable) trigger the modal.
+  // For simulations that are too short, we calculate & display results but DO NOT update the win streak.
+  let streakForUpdate = consecutiveWinsValue; // default: leave it as is
+
   if (simulationValidFlag) {
     if (portfolioVal > buyHoldFinal) {
-      // If the simulation is valid and the portfolio outperforms buy-and-hold, update wins.
-      const newConsecutiveWins = consecutiveWinsValue + 1;
-      consecutiveWins.set(newConsecutiveWins);
-      console.log(`Consecutive Wins: ${newConsecutiveWins}`);
+      // Valid simulation and the portfolio outperformed buy-and-hold: increment streak.
+      streakForUpdate = consecutiveWinsValue + 1;
+      consecutiveWins.set(streakForUpdate);
+      console.log(`Consecutive Wins: ${streakForUpdate}`);
 
       // Fetch the latest high score from the DB
       const newestDBRecord = await fetchHighScore();
       console.log('Fetched current DB high score:', newestDBRecord);
 
-      // If the new streak beats the current high score, show the modal
-      if (newConsecutiveWins > newestDBRecord.score) {
+      // Trigger the modal only when the new streak beats the current high score.
+      if (streakForUpdate > newestDBRecord.score) {
         showModal = true;
       }
     } else {
-      // Underperform or equal performance: reset win streak
+      // Valid simulation but underperformed or tied: reset win streak.
+      streakForUpdate = 0;
       consecutiveWins.set(0);
       console.log('Consecutive Wins reset to 0');
     }
   } else {
-    // If the simulation did not run long enough
-    console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. Stats are calculated and stored, but not counted towards your win streak.`);
-    consecutiveWins.set(0);
+    // Invalid simulation:
+    console.log(
+      `Simulation ended early after ${durationInSeconds.toFixed(
+        2
+      )} seconds. Stats are calculated and stored, but not used for the win streak.`
+    );
+    // Do not modify consecutiveWins; it remains as it was.
   }
 
-  // Always re-fetch the latest high score from the database
+  // Always re-fetch the latest high score from the database.
   try {
     const updatedHighScore = await fetchHighScore();
     highScore.set({
@@ -336,7 +344,7 @@
     naturalEnd: endedNaturally,
     valid: simulationValidFlag,
     win, 
-    winStreak: consecutiveWinsValue,
+    winStreak: streakForUpdate,
     endGameDate: new Date(simulationEndTime),
     durationOfGame: durationInSeconds,
     portfolioValue: portfolio ? portfolio.portfolioValue : 0,
