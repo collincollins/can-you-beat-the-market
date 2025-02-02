@@ -89,16 +89,9 @@
 
     // **Visitor Counting Logic**
     try {
-      const response = await fetch('/.netlify/functions/countVisitor', {
-        method: 'POST',
-      });
-
+      const response = await fetch('/.netlify/functions/countVisitor', { method: 'POST' });
       const data = await response.json();
-      if (data.isNewVisitor) {
-        console.log('New visitor counted.');
-      } else {
-        console.log('Returning visitor.');
-      }
+      console.log(data.isNewVisitor ? 'New visitor counted.' : 'Returning visitor.');
     } catch (error) {
       console.error('Error counting visitor:', error);
     }
@@ -112,9 +105,7 @@
     if (unsubscribeConsecutiveWins) unsubscribeConsecutiveWins();
 
     stopSimulation();
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
+    if (timerInterval) clearInterval(timerInterval);
   });
 
   // **Helper Functions**
@@ -126,8 +117,6 @@
 
   async function handleUsernameSubmit(event) {
     const playerName = event.detail;
-    console.log("Received playerName:", playerName, "Type:", typeof playerName);
-
     // Ensure playerName is a valid string
     if (typeof playerName !== 'string' || playerName.trim() === '') {
       alert('Invalid player name. Please try again.');
@@ -341,6 +330,19 @@ async function endSimulation() {
     }
   }
     // **Start the Restart Cooldown Immediately When Simulation Ends**
+
+  // Always re-fetch the latest high score from the database**
+  try {
+    const updatedHighScore = await fetchHighScore();
+      highScore.set({
+        score: updatedHighScore.score,
+        playerName: updatedHighScore.playerName,
+      });
+      console.log('Updated high score store with:', updatedHighScore);
+    } catch (error) {
+      console.error('Error fetching updated high score:', error);
+    }
+    
   restartDisabled = true;
   setTimeout(() => {
     restartDisabled = false;
