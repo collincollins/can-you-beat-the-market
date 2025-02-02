@@ -33,7 +33,7 @@
   let chart;
   let canvasElement;
 
-  // Compute linear regression parameters from arrays of x and y values.
+  // Helper: compute linear regression parameters from arrays of x and y values.
   function linearRegression(x, y) {
     const n = x.length;
     if (n === 0) return { slope: 0, intercept: 0 };
@@ -54,7 +54,7 @@
   }
 
   function createChart() {
-    // Process the visitorData to compute totalTrades and excessCAGR.
+    // Process visitorData to compute totalTrades and excessCAGR.
     const cleanedData = visitorData
       .map(doc => {
         const totalTrades = (doc.buys || 0) + (doc.sells || 0);
@@ -70,11 +70,23 @@
       return;
     }
 
-    // Prepare arrays of x and y values.
+    // Compute the mean excess CAGR per totalTrades value.
+    const groups = {};
+    cleanedData.forEach(d => {
+      if (!groups[d.x]) {
+        groups[d.x] = [];
+      }
+      groups[d.x].push(d.y);
+    });
+    const meanData = Object.entries(groups).map(([trade, outcomes]) => {
+      const sum = outcomes.reduce((a, b) => a + b, 0);
+      const mean = sum / outcomes.length;
+      return { x: Number(trade), y: mean };
+    });
+
+    // Prepare arrays of x and y values for regression.
     const xValues = cleanedData.map(d => d.x);
     const yValues = cleanedData.map(d => d.y);
-
-    // Compute regression parameters.
     const { slope, intercept } = linearRegression(xValues, yValues);
 
     // Generate regression line data over the span of totalTrades.
@@ -90,14 +102,27 @@
 
     // Define the datasets.
     const datasets = [
+      // User outcomes: scatter points with 50% opacity.
       {
         label: 'User Outcomes',
         data: cleanedData,
-        backgroundColor: 'blue',
+        backgroundColor: 'rgba(0, 0, 255, 0.5)', // blue with 0.5 opacity
         pointRadius: 4,
         showLine: false,
         type: 'scatter'
       },
+      // Mean outcomes: red points with a black border.
+      {
+        label: 'Mean Excess CAGR',
+        data: meanData,
+        backgroundColor: 'red',
+        borderColor: 'black',
+        borderWidth: 0.5,
+        pointRadius: 6,
+        showLine: false,
+        type: 'scatter'
+      },
+      // Regression line (optional, remove if not needed).
       {
         label: `Fit: ${slope.toFixed(2)} %/trade + ${intercept.toFixed(2)} %`,
         data: regressionPoints,
@@ -108,8 +133,7 @@
         pointRadius: 0,
         type: 'line',
         borderDash: [4, 4],
-        // Ensure the regression line is drawn behind the scatter points.
-        order: 0
+        order: 0 // draw behind the scatter points
       }
     ];
 
@@ -180,13 +204,16 @@
 </script>
 
 <style>
+  /* Updated container style to match the main chart container */
   .chart-container {
     position: relative;
-    height: 250px;
-    width: 100%;
+    width: 93%;
+    max-width: 700px;
+    min-height: 293px;
+    margin: 0 auto;
   }
 </style>
 
-<div class="chart-container">
+<div class="chart-container card">
   <canvas bind:this={canvasElement}></canvas>
 </div>
