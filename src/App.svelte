@@ -335,34 +335,38 @@
         consecutiveWins.set(streakForUpdate);
         console.log(`Consecutive Wins increased to: ${streakForUpdate}`);
 
-        // Fetch current high score to potentially trigger high score modal
+        // Fetch current high score to determine if we need to show the modal.
         const newestDBRecord = await fetchHighScore();
         console.log('Fetched current DB high score:', newestDBRecord);
 
+        // If the user's new streak exceeds the current high score,
+        // show the modal and do NOT update the high score store here.
         if (streakForUpdate > newestDBRecord.score) {
           showModal = true;
         }
       } else {
-        // Underperformance resets win streak
+        // Underperformance resets win streak.
         streakForUpdate = 0;
         consecutiveWins.set(0);
         console.log('Consecutive Wins reset to 0 (performance not sufficient).');
       }
     }
 
-    // Re-fetch the latest high score from the database and update the store.
-    try {
-      const updatedHighScore = await fetchHighScore();
-      highScore.set({
-        score: updatedHighScore.score,
-        playerName: updatedHighScore.playerName,
-      });
-      // Only log detailed high score info if the current user's streak exceeds the stored record.
-      if (streakForUpdate > updatedHighScore.score) {
-        console.log('Updated high score store with:', updatedHighScore);
+    // Only re-fetch and update the high score store if the modal is NOT shown.
+    // If the modal is shown, we want to delay the update until after the user submits.
+    if (!showModal) {
+      try {
+        const updatedHighScore = await fetchHighScore();
+        highScore.set({
+          score: updatedHighScore.score,
+          playerName: updatedHighScore.playerName,
+        });
+        if (streakForUpdate > updatedHighScore.score) {
+          console.log('Updated high score store with:', updatedHighScore);
+        }
+      } catch (error) {
+        console.error('Error fetching updated high score:', error);
       }
-    } catch (error) {
-      console.error('Error fetching updated high score:', error);
     }
 
     // Retrieve the visitor document ID (from variable or localStorage) for updating the session data.
