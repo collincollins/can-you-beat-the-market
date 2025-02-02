@@ -28,7 +28,7 @@
 
   // **User State**
   let portfolio = { shares: 1, cash: 0, portfolioValue: 0 };
-  let data = { days: [], marketPrices: [], actions: [] };
+  let data = { days: [], marketPrices: [], rollingAverages: [], actions: [] };
   let isHelpVisible = false;    // Flag to control the visibility of the help section
 
   // **Annualized Returns**
@@ -90,8 +90,8 @@
     // **Visitor Counting Logic**
     try {
       const response = await fetch('/.netlify/functions/countVisitor', { method: 'POST' });
-      const data = await response.json();
-      console.log(data.isNewVisitor ? 'New visitor counted.' : 'Returning visitor.');
+      const result = await response.json();
+      console.log(result.isNewVisitor ? 'New visitor counted.' : 'Returning visitor.');
     } catch (error) {
       console.error('Error counting visitor:', error);
     }
@@ -110,10 +110,10 @@
 
   // **Helper Functions**
 
-  function toggleHelp() {
-    // Toggle the visibility of the help section
-    isHelpVisible = !isHelpVisible;
-  }
+  // function toggleHelp() {
+  //   // Toggle the visibility of the help section
+  //   isHelpVisible = !isHelpVisible;
+  // }
 
   async function handleUsernameSubmit(event) {
     const playerName = event.detail;
@@ -138,9 +138,23 @@
       } else {
         alert('Failed to record your high score. Please try again.');
       }
-
       showModal = false;
     }
+
+    // Function to log simulation details to the backend
+    async function logSimulation(simulationData) {
+      try {
+        const response = await fetch('/.netlify/functions/logSimulation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(simulationData)
+        });
+        const result = await response.json();
+        console.log(result.message);
+      } catch (error) {
+        console.error('Error logging simulation:', error);
+      }
+  }
 
   async function startSimulationHandler() {
     // Initialize simulation state and start the simulation
@@ -220,8 +234,9 @@ async function endSimulation() {
   // **Determine Minimum Required Duration**
   const minimumRequiredSeconds = simulationRealTimeSeconds / 2; // Original 30 seconds
 
-  if (durationInSeconds >= minimumRequiredSeconds) { // Adjusted based on Slowmo
-    // **Valid Simulation**
+  let simulationValidFlag = false;
+  if (durationInSeconds >= minimumRequiredSeconds) {
+    simulationValidFlag = true;
     simulationValid = true;
 
     if (data.marketPrices.length > 0) {
@@ -342,6 +357,24 @@ async function endSimulation() {
     } catch (error) {
       console.error('Error fetching updated high score:', error);
     }
+
+    // Prepare simulation data to log
+    const simulationData = {
+      visitorId: "visitor_placeholder", // Replace with actual visitor id when available
+      startTime: simulationStartTime,
+      endTime: simulationEndTime,
+      duration: durationInSeconds,
+      valid: simulationValidFlag,
+      portfolioValue: portfolio ? portfolio.portfolioValue : 0,
+      buyHoldFinalValue: buyHoldFinal,
+      CAGR: userAnnualReturn,
+      win: portfolio.portfolioValue > buyHoldFinal,
+      winStreak: consecutiveWinsValue,
+      buys: data.actions.filter(action => action.type === 'buy').length,
+      sells: data.actions.filter(action => action.type === 'sell').length,
+      simulationParameters: getSimulationParams()
+    };
+    await logSimulation(simulationData);
     
   restartDisabled = true;
   setTimeout(() => {

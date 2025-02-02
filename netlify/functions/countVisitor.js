@@ -55,16 +55,37 @@ exports.handler = async (event, context) => {
     // Get and hash the user's IP address
     const userIP = getUserIP(event);
     const hashedIP = hashIP(userIP);
+    const now = new Date();
 
-    // Attempt to insert the hashed IP into the 'visitors' collection
-    const insertResult = await visitorsCollection.insertOne({
+    // Define the initial visitor document structure
+    const initialVisitorDoc = {
       _id: hashedIP,
-      firstVisit: new Date(),
-    });
+      firstVisit: now,
+      lastVisit: now,
+      hasPlayed: false,
+      firstGame: null,
+      mostRecentGame: null,
+      totalGames: 0,
+      invalidGames: 0,
+      validGames: 0,
+      wins: 0,
+      losses: 0,
+      highestWinStreak: 0,
+      averageCAGR: 0,
+      highestCAGR: 0,
+      avgBuysPerGame: 0,
+      avgSellsPerGame: 0,
+      totalTimePlaying: 0,
+      avgTimePlaying: 0,
+      username: null
+    };
+
+    // Attempt to insert a new document for this visitor
+    const insertResult = await visitorsCollection.insertOne(initialVisitorDoc);
 
     if (insertResult.acknowledged) {
       // If insertion is successful, increment the visitor counter
-      const updateResult = await visitorCounterCollection.updateOne(
+      await visitorCounterCollection.updateOne(
         { _id: 'visitorCounter' },
         { $inc: { count: 1 } },
         { upsert: true }
@@ -76,12 +97,33 @@ exports.handler = async (event, context) => {
       };
     }
   } catch (error) {
+    // Check for duplicate key error (visitor already exists)
     if (error.code === 11000) {
-      // Duplicate key error, IP already exists
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Visitor already exists.', isNewVisitor: false }),
-      };
+      // Update the existing visitor document's lastVisit field
+      try {
+        const defaultDbName = process.env.CONTEXT === 'deploy-preview'
+          ? 'canyoubeatthemarket-test'
+          : 'canyoubeatthemarket';
+        const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
+        const database = client.db(dbName);
+        const visitorsCollection = database.collection('visitors');
+
+        await visitorsCollection.updateOne(
+          { _id: hashIP(getUserIP(event)) },
+          { $set: { lastVisit: new Date() } }
+        );
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: 'Visitor already exists.', isNewVisitor: false }),
+        };
+      } catch (updateError) {
+        console.error('Error updating visitor document:', updateError);
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ message: 'Internal Server Error' }),
+        };
+      }
     } else {
       console.error('Error in countVisitor function:', error);
       return {
