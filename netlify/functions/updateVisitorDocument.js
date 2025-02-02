@@ -40,6 +40,7 @@ exports.handler = async (event, context) => {
       naturalEnd,
       valid,
       win,
+      winStreak,
       endGameDate,
       durationOfGame,
       portfolioValue,
