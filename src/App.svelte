@@ -213,6 +213,8 @@ async function endSimulation() {
   const simulationEndTime = Date.now();
   const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
 
+  let portfolioVal = 0;
+
   // **Retrieve Current Simulation Parameters**
   const { simulationRealTimeSeconds } = getSimulationParams();
 
@@ -227,7 +229,7 @@ async function endSimulation() {
     if (data.marketPrices.length > 0) {
       // Calculate Buy-and-Hold final value
       buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
-      const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+      portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
 
       // Determine performance and update colors
       if (portfolioVal > buyHoldFinal) {
@@ -345,8 +347,7 @@ async function endSimulation() {
 
     // Retrieve the visitor document id from localStorage or variable.
     const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
-    // At simulation end, compute portfolio value and determine win status.
-    const portfolioVal = portfolio ? parseFloat(portfolio.portfolioValue.toFixed(2)) : 0;
+    
     // A win might be defined as a valid simulation where the portfolio outperformed buy-and-hold.
     const win = simulationValidFlag && (portfolioVal > buyHoldFinal);
 
