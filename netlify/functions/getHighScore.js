@@ -6,7 +6,6 @@ const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
-    strict: true,
     deprecationErrors: true,
   },
 });
@@ -32,7 +31,7 @@ exports.handler = async (event, context) => {
     const defaultDbName = process.env.CONTEXT === 'deploy-preview'
       ? 'canyoubeatthemarket-test'
       : 'canyoubeatthemarket';
-      
+
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
 
