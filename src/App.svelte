@@ -352,6 +352,7 @@ async function endSimulation() {
       hasStarted: true,
       naturalEnd: simulationValidFlag,  // We'll treat a valid simulation as natural for now
       valid: simulationValidFlag,
+      win, 
       endGameDate: new Date(simulationEndTime),
       durationOfGame: durationInSeconds,
       portfolioValue: portfolio ? portfolio.portfolioValue : 0,

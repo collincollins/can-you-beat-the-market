@@ -1,6 +1,7 @@
 // netlify/functions/setHighScore.js
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const crypto = require('crypto');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -12,6 +13,17 @@ const client = new MongoClient(uri, {
 
 let isConnected = false;
 
+// Function to extract the user's IP from request headers.
+const getUserIP = (event) => {
+  const headers = event.headers;
+  return headers['x-nf-client-connection-ip'] || headers['x-real-ip'] || '0.0.0.0';
+};
+
+// Function to hash the IP address using SHA-256.
+const hashIP = (ip) => {
+  return crypto.createHash('sha256').update(ip).digest('hex');
+};
+
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return {
@@ -21,12 +33,13 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Parse the incoming data.
     const data = JSON.parse(event.body);
     const { playerName, score } = data;
 
     console.log('Received high score submission:', data);
 
-    // Validate input data
+    // Validate input.
     if (
       typeof playerName !== 'string' ||
       playerName.trim() === '' ||
@@ -40,31 +53,33 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Connect to MongoDB if not already connected
+    // Connect to MongoDB if not already connected.
     if (!isConnected) {
       await client.connect();
       isConnected = true;
     }
 
-    // Determine the database name based on deploy context
+    // Determine the database name based on deploy context.
     const defaultDbName = process.env.CONTEXT === 'deploy-preview'
       ? 'canyoubeatthemarket-test'
       : 'canyoubeatthemarket';
-      
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
 
-    // 1. Atomic High Score Update in the "currentHighScore" collection
+    // Get and hash the user's IP address.
+    const visitorIP = getUserIP(event);
+    const visitorFingerprint = hashIP(visitorIP);
+
+    // 1. Update the current high score document in the "currentHighScore" collection.
     const currentHighScoreCollection = database.collection('currentHighScore');
 
-    // Use upsert with the $max operator so that the current high score is updated only if the new score is higher.
     const updateResult = await currentHighScoreCollection.updateOne(
       { _id: 'current' },
       {
         $set: {
           updatedAt: new Date(),
-          // Only update the playerName if this is a new high score.
-          playerName: playerName.trim()
+          playerName: playerName.trim(),
+          visitorFingerprint: visitorFingerprint  // Save hashed IP here.
         },
         $max: { score: score },
         $setOnInsert: { _id: 'current', createdAt: new Date() }
@@ -72,11 +87,12 @@ exports.handler = async (event, context) => {
       { upsert: true }
     );
 
-    // 2. Append-Only History Log in the "highScoreHistory" collection
+    // 2. Append a history log in the "highScoreHistory" collection.
     const highScoreHistoryCollection = database.collection('highScoreHistory');
     await highScoreHistoryCollection.insertOne({
       playerName: playerName.trim(),
       score,
+      visitorFingerprint: visitorFingerprint,  // Save hashed IP for history as well.
       submittedAt: new Date()
     });
 
