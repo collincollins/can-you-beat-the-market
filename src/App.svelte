@@ -4,7 +4,7 @@
   // Import necessary Svelte lifecycle functions and components
   import { onMount, onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
-  import { createExcessCagrChart } from './excessCagrVsTradingActivity.js';
+  import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
   import Controls from './components/Controls.svelte';
   import UsernameModal from './components/UsernameModal.svelte';
 
@@ -153,11 +153,9 @@
       consecutiveWinsValue = value;
     });
 
+    // Now create the chart
     const res = await fetch('/.netlify/functions/getVisitorDocuments');
     visitorData = await res.json();
-
-    // Now create the chart
-    createExcessCagrChart(excessCagrCanvas, visitorData);
   });
   
 
@@ -889,10 +887,9 @@
       </p>
     </div>
 
-      <!-- Container for the Excess CAGR vs. Trading Activity Chart -->
-    <div class="card" style="width: 90%; max-width: 500px; height: 250px; margin: 20px auto;">
-      <canvas bind:this={excessCagrCanvas}></canvas>
-    </div>
+      <!-- Render the chart component, passing in visitorData -->
+    <ExcessCagrVsTradingActivity {visitorData} />
+
   {/if}
 
   <!-- Footer Card -->
