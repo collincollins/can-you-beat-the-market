@@ -232,7 +232,7 @@
     }, intervalDuration);
   }
 
-async function endSimulation() {
+  async function endSimulation() {
   // Terminate the simulation and process results
   simulationEnded = true;
   simulationRunning = false;
@@ -243,84 +243,71 @@ async function endSimulation() {
     timerInterval = null;
   }
 
-  // **Calculate Simulation Duration**
+  // Calculate Simulation Duration
   const simulationEndTime = Date.now();
   const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
-
-  // Initialize portfolio value for visitor document population at simulatio end
-  let portfolioVal = 0;
 
   // Determine if the simulation ended naturally (i.e. timer ran out)
   const endedNaturally = timer <= 0;
 
-  // **Determine Minimum Required Duration**
-  let minimumRequiredSeconds = slowMo ? 15 : 30;
-  let simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
+  // Determine Minimum Required Duration (for a valid simulation)
+  const minimumRequiredSeconds = slowMo ? 15 : 30;
+  const simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
   simulationValid = simulationValidFlag;
 
+  // Initialize variables that will be used regardless of simulation validity
+  let portfolioVal = 0;
+
+  if (data.marketPrices.length > 0) {
+    // Always calculate the buy-and-hold final value
+    buyHoldFinal = parseFloat(
+      data.marketPrices[data.marketPrices.length - 1].toFixed(2)
+    );
+    portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+
+    // Calculate Annualized Returns (CAGR) regardless of simulation validity
+    const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
+    const initialValue = 100; // Assumed initial portfolio value
+
+    userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+    buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+    // Always update the finalComparison HTML so that the buy‑and‑hold card shows the result
+    finalComparison = `
+      <span style="color:${buyHoldFinal < portfolioVal ? '#f44336' : '#008b02'}">
+        Buy-and-Hold Value<br>
+        $${buyHoldFinal.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
+      </span>
+    `;
+  }
+
+  // Now, update consecutive wins and modal only if simulation is valid
   if (simulationValidFlag) {
-    if (data.marketPrices.length > 0) {
-      // Calculate Buy-and-Hold final value from the last market price
-      buyHoldFinal = parseFloat(
-        data.marketPrices[data.marketPrices.length - 1].toFixed(2)
-      );
-      portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+    if (portfolioVal > buyHoldFinal) {
+      // If the simulation is valid and the portfolio outperforms buy-and-hold, update wins.
+      const newConsecutiveWins = consecutiveWinsValue + 1;
+      consecutiveWins.set(newConsecutiveWins);
+      console.log(`Consecutive Wins: ${newConsecutiveWins}`);
 
-      // Determine performance and update colors
-      if (portfolioVal > buyHoldFinal) {
-        portfolioColor = '#008b02'; // Green for outperforming
-        buyHoldColor = '#f44336';   // Red for underperforming
+      // Fetch the latest high score from the DB
+      const newestDBRecord = await fetchHighScore();
+      console.log('Fetched current DB high score:', newestDBRecord);
 
-        // Update consecutive wins
-        const newConsecutiveWins = consecutiveWinsValue + 1;
-        consecutiveWins.set(newConsecutiveWins);
-        console.log(`Consecutive Wins: ${newConsecutiveWins}`);
-
-        // Fetch the latest high score from the DB
-        const newestDBRecord = await fetchHighScore();
-        console.log('Fetched current DB high score:', newestDBRecord);
-
-        // If the new streak beats the current high score, show the modal
-        if (newConsecutiveWins > newestDBRecord.score) {
-          showModal = true;
-        }
-      } else if (portfolioVal < buyHoldFinal) {
-        portfolioColor = '#f44336'; // Red for underperforming
-        buyHoldColor = '#008b02';   // Green for outperforming
-        consecutiveWins.set(0);      // Reset streak
-        console.log('Consecutive Wins reset to 0');
-      } else {
-        // Equal performance: update colors and reset streak
-        portfolioColor = '#008b02';
-        buyHoldColor = '#008b02';
-        consecutiveWins.set(0);
-        console.log('Consecutive Wins reset to 0');
+      // If the new streak beats the current high score, show the modal
+      if (newConsecutiveWins > newestDBRecord.score) {
+        showModal = true;
       }
-
-      // Calculate Annualized Returns (CAGR)
-      const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
-      const initialValue = 100; // Assumed initial portfolio value
-
-      // User's CAGR
-      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // Buy-and-Hold CAGR
-      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // Update the final comparison HTML for the buy-and-hold card
-      finalComparison = `
-        <span style="color:${buyHoldColor}">
-          Buy-and-Hold Value<br>
-          $${buyHoldFinal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
-        </span>
-      `;
+    } else {
+      // Underperform or equal performance: reset win streak
+      consecutiveWins.set(0);
+      console.log('Consecutive Wins reset to 0');
     }
   } else {
-    // If the simulation did not run long enough, mark it as invalid
-    console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
+    // If the simulation did not run long enough
+    console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. Stats are calculated and stored, but not counted towards your win streak.`);
     consecutiveWins.set(0);
   }
 
