@@ -66,14 +66,14 @@ exports.handler = async (event, context) => {
           $set: {
             score: {
               $cond: {
-                if: { $lt: [{ $ifNull: ['$score', -Infinity] }, score] },
+                if: { $lt: [{ $ifNull: ['$score', -1e12] }, score] },
                 then: score,
                 else: '$score'
               }
             },
             playerName: {
               $cond: {
-                if: { $lt: [{ $ifNull: ['$score', -Infinity] }, score] },
+                if: { $lt: [{ $ifNull: ['$score', -1e12] }, score] },
                 then: playerName.trim(),
                 else: '$playerName'
               }
