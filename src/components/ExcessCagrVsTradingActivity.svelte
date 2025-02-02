@@ -92,6 +92,8 @@
     // Generate regression line data over the span of totalTrades.
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
+    const yMin = Math.min(...yValues);
+    const yMax = Math.max(...yValues);
     const regressionPoints = [];
     const numLinePoints = 100;
     const step = (xMax - xMin) / (numLinePoints - 1);
@@ -114,7 +116,7 @@
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
-        label: `Fit: ${slope.toFixed(2)} %/trade + ${intercept.toFixed(2)} %`,
+        label: `Fit: m: ${slope.toFixed(2)}, b: ${intercept.toFixed(2)}`,
         data: regressionPoints,
         borderColor: 'red',
         borderWidth: 2, // increased line width
@@ -158,7 +160,7 @@
           legend: {
             labels: {
               usePointStyle: true, // makes the legend icon match the dataset's marker style
-              font: { size: 10, family: "'Press Start 2P'" }
+              font: { size: 8, family: "'Press Start 2P'" }
             }
           },
           tooltip: {
@@ -204,7 +206,7 @@
               }
             },
             min: -28,
-            max: 25
+            max: 28
           }
         }
       }

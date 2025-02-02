@@ -555,6 +555,17 @@
   padding-bottom: 0px;
 }
 
+.chart-container-excess {
+  width: 93%;
+  max-width: 700px;
+  min-height: 293px;
+
+  padding-left: 10px;
+  padding-right: 0px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 .timer-container input {
     padding: 2px;
     margin-left: -10px;
@@ -888,7 +899,7 @@
       </p>
     </div>
 
-    <div class="chart-container card">
+    <div class="chart-container-excess card">
     <!-- Render the chart component, passing in visitorData -->
     <ExcessCagrVsTradingActivity {visitorData} />
     </div>
