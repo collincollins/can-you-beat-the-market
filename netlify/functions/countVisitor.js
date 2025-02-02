@@ -107,7 +107,8 @@ exports.handler = async (event, context) => {
         const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
         const database = client.db(dbName);
         const visitorsCollection = database.collection('visitors');
-
+        const userIP = getUserIP(event);
+        const hashedIP = hashIP(userIP);
         await visitorsCollection.updateOne(
           { _id: hashIP(getUserIP(event)) },
           { $set: { lastVisit: new Date() } }
@@ -115,7 +116,7 @@ exports.handler = async (event, context) => {
 
         return {
           statusCode: 200,
-          body: JSON.stringify({ message: 'Visitor already exists.', isNewVisitor: false }),
+          body: JSON.stringify({ message: 'Visitor already exists.', isNewVisitor: false, visitorId: hashedIP }),
         };
       } catch (updateError) {
         console.error('Error updating visitor document:', updateError);

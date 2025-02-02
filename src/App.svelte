@@ -92,6 +92,8 @@
       const response = await fetch('/.netlify/functions/countVisitor', { method: 'POST' });
       const result = await response.json();
       console.log(result.isNewVisitor ? 'New visitor counted.' : 'Returning visitor.');
+      visitorId = result.visitorId;
+      localStorage.setItem('visitorId', visitorId);
     } catch (error) {
       console.error('Error counting visitor:', error);
     }
@@ -358,9 +360,11 @@ async function endSimulation() {
       console.error('Error fetching updated high score:', error);
     }
 
+    // Retrieve the actual visitorId from local storage or variable.
+    const storedVisitorId = visitorId || localStorage.getItem('visitorId') || "visitor_placeholder";
     // Prepare simulation data to log
     const simulationData = {
-      visitorId: "visitor_placeholder", // Replace with actual visitor id when available
+      visitorId: storedVisitorId,
       startTime: simulationStartTime,
       endTime: simulationEndTime,
       duration: durationInSeconds,
@@ -375,6 +379,30 @@ async function endSimulation() {
       simulationParameters: getSimulationParams()
     };
     await logSimulation(simulationData);
+
+    // Now update the visitor's aggregated stats using the new endpoint.
+    try {
+      const visitorStatsPayload = {
+        visitorId: storedVisitorId,
+        simulationStartTime: simulationStartTime,
+        simulationValid: simulationValidFlag,
+        portfolioValue: portfolio ? portfolio.portfolioValue : 0,
+        currentDay: data.days[data.days.length - 1] || 0,
+        win: portfolio.portfolioValue > buyHoldFinal,
+        simulationDuration: durationInSeconds,
+        buys: data.actions.filter(action => action.type === 'buy').length,
+        sells: data.actions.filter(action => action.type === 'sell').length
+      };
+      const res = await fetch('/.netlify/functions/updateVisitorStats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(visitorStatsPayload)
+      });
+      const statsResult = await res.json();
+      console.log(statsResult.message);
+    } catch (error) {
+      console.error('Error updating visitor stats:', error);
+    }
 
   restartDisabled = true;
   setTimeout(() => {
