@@ -152,7 +152,8 @@
           title: {
             display: true,
             text: 'Excess CAGR vs. Trading Activity',
-            font: { size: 10, family: "'Press Start 2P'" }
+            font: { size: 10, family: "'Press Start 2P'" },
+            color: "#353535",
           },
           legend: {
             labels: {
@@ -225,12 +226,12 @@
   /* Updated container style to match the main chart container */
   .chart-container {
     position: relative;
-    width: 93%;
-    max-width: 700px;
-    min-height: 293px;
+    height: 300px;
+    width: 95%;
+    max-width: 800px;
   }
 </style>
 
-<div class="chart-container card">
+<div class="chart-container">
   <canvas bind:this={canvasElement}></canvas>
 </div>

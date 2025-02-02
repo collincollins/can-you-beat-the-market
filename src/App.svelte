@@ -888,8 +888,10 @@
       </p>
     </div>
 
-      <!-- Render the chart component, passing in visitorData -->
+    <div class="chart-container card">
+    <!-- Render the chart component, passing in visitorData -->
     <ExcessCagrVsTradingActivity {visitorData} />
+    </div>
 
   {/if}
 
