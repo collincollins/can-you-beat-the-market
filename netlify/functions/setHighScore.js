@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
     const data = JSON.parse(event.body);
     const { playerName, score } = data;
 
-    console.log('Received data:', data);
+    console.log('Received high score submission:', data);
 
     // Validate input data
     if (
@@ -41,25 +41,47 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Connect once
+    // Connect to MongoDB if not already connected
     if (!isConnected) {
       await client.connect();
       isConnected = true;
     }
 
-    const database = client.db('canyoubeatthemarket');
-    const highScoreCollection = database.collection('highScores');
+    // Determine the database name based on deploy context
+    const defaultDbName = process.env.CONTEXT === 'deploy-preview'
+      ? 'canyoubeatthemarket-test'
+      : 'canyoubeatthemarket';
+      
+    const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
+    const database = client.db(dbName);
 
-    // Insert a new document for every new score submission
-    await highScoreCollection.insertOne({
+    // 1. Atomic High Score Update in the "currentHighScore" collection
+    const currentHighScoreCollection = database.collection('currentHighScore');
+
+    // Use upsert with the $max operator so that the current high score is updated only if the new score is higher.
+    const updateResult = await currentHighScoreCollection.updateOne(
+      { _id: 'current' },
+      {
+        $max: { score: score },
+        // If inserting, set the playerName and a timestamp
+        $setOnInsert: { playerName: playerName.trim(), createdAt: new Date() },
+        // Always update the timestamp
+        $set: { updatedAt: new Date() }
+      },
+      { upsert: true }
+    );
+
+    // 2. Append-Only History Log in the "highScoreHistory" collection
+    const highScoreHistoryCollection = database.collection('highScoreHistory');
+    await highScoreHistoryCollection.insertOne({
       playerName: playerName.trim(),
       score,
-      submittedAt: new Date(),
+      submittedAt: new Date()
     });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'High score entry recorded successfully.' }),
+      body: JSON.stringify({ message: 'High score updated and history recorded successfully.' }),
     };
   } catch (error) {
     console.error('Error in setHighScore function:', error);
