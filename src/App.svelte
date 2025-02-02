@@ -59,6 +59,8 @@
   // Visitor Document ID used to update the visitor record in MongoDB
   let visitorDocId = null;
 
+  let excessCagrCanvas;
+  
   // Assume you have an array of visitor documents available as visitorData.
   // For example, this might be fetched from an API.
   let visitorData = []; // Replace with actual data retrieval
