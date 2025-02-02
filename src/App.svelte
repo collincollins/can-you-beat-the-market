@@ -4,7 +4,7 @@
   // Import necessary Svelte lifecycle functions and components
   import { onMount, onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
-  // import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
+  import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
   import Controls from './components/Controls.svelte';
   import UsernameModal from './components/UsernameModal.svelte';
 
