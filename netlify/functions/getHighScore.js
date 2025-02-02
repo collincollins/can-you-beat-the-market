@@ -32,7 +32,9 @@ exports.handler = async (event, context) => {
     const defaultDbName = process.env.CONTEXT === 'deploy-preview'
       ? 'canyoubeatthemarket-test'
       : 'canyoubeatthemarket';
+      
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
+    const database = client.db(dbName);
 
     // Query the "currentHighScore" collection for the current high score.
     const currentHighScoreCollection = database.collection('currentHighScore');
