@@ -110,10 +110,10 @@
 
   // **Helper Functions**
 
-  // function toggleHelp() {
-  //   // Toggle the visibility of the help section
-  //   isHelpVisible = !isHelpVisible;
-  // }
+  function toggleHelp() {
+    // Toggle the visibility of the help section
+    isHelpVisible = !isHelpVisible;
+  }
 
   async function handleUsernameSubmit(event) {
     const playerName = event.detail;
@@ -375,7 +375,7 @@ async function endSimulation() {
       simulationParameters: getSimulationParams()
     };
     await logSimulation(simulationData);
-    
+
   restartDisabled = true;
   setTimeout(() => {
     restartDisabled = false;
