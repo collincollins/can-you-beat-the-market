@@ -66,6 +66,41 @@
   $: highScorePlayer = $highScore.playerName;
   $: consecutiveWinsValue = $consecutiveWins;
 
+  // --- Coffee Click Logging Functions ---
+  async function logCoffeeClick() {
+    const payload = JSON.stringify({
+      winStreak: consecutiveWinsValue, // any extra session data you'd like to include
+      timestamp: new Date().toISOString()
+    });
+
+    const url = '/.netlify/functions/logCoffeeClick';
+
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon(url, blob);
+    } else {
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true // ensures the request completes even if the page is unloading
+        });
+      } catch (error) {
+        console.error('Error logging coffee click:', error);
+      }
+    }
+  }
+
+  function handleCoffeeClick(event) {
+    event.preventDefault();
+    logCoffeeClick();
+    // Give a short delay to ensure the log is sent before redirecting.
+    setTimeout(() => {
+      window.location.href = 'https://www.buymeacoffee.com/B4Aaol3SrI';
+    }, 100);
+  }
+
   // --- onMount Lifecycle ---
 
   onMount(async () => {
@@ -213,7 +248,11 @@ async function endSimulation() {
   const simulationEndTime = Date.now();
   const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
 
+  // Initialize portfolio value for visitor document population at simulatio end
   let portfolioVal = 0;
+
+  // Determine if the simulation ended naturally (i.e. timer ran out)
+  const endedNaturally = timer <= 0;
 
   // **Retrieve Current Simulation Parameters**
   const { simulationRealTimeSeconds } = getSimulationParams();
@@ -290,48 +329,8 @@ async function endSimulation() {
     simulationValid = false;
     console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
     consecutiveWins.set(0)
-
-    if (data.marketPrices.length > 0) {
-      // Calculate Buy-and-Hold final value
-      buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
-      const portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
-
-      // Determine performance and update colors
-      if (portfolioVal > buyHoldFinal) {
-        portfolioColor = '#008b02'; // Green for outperforming
-        buyHoldColor = '#f44336';   // Red for underperforming
-      } else if (portfolioVal < buyHoldFinal) {
-        portfolioColor = '#f44336'; // Red for underperforming
-        buyHoldColor = '#008b02';   // Green for outperforming
-      } else {
-        // Equal performance
-        portfolioColor = '#008b02'; // Green
-        buyHoldColor = '#008b02';   // Green
-      }
-
-      // **Calculate Annualized Returns (CAGR)**
-      const totalDays = data.days[data.days.length - 1] || 1; // Avoid division by zero
-      const initialValue = 100; // Assumed initial portfolio value
-
-      // User's CAGR
-      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // Buy-and-Hold CAGR
-      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
-
-      // **Update finalComparison HTML**
-      finalComparison = `
-        <span style="color:${buyHoldColor}">
-          Buy-and-Hold Value<br>
-          $${buyHoldFinal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
-        </span>
-      `;
-    }
   }
-    // **Start the Restart Cooldown Immediately When Simulation Ends**
+  // **Start the Restart Cooldown Immediately When Simulation Ends**
 
   // Always re-fetch the latest high score from the database**
   try {
@@ -347,7 +346,7 @@ async function endSimulation() {
 
     // Retrieve the visitor document id from localStorage or variable.
     const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
-    
+
     // A win might be defined as a valid simulation where the portfolio outperformed buy-and-hold.
     const win = simulationValidFlag && (portfolioVal > buyHoldFinal);
 
@@ -355,7 +354,7 @@ async function endSimulation() {
     const postUpdatePayload = {
       documentId: storedVisitorDocId,
       hasStarted: true,
-      naturalEnd: simulationValidFlag,  // We'll treat a valid simulation as natural for now
+      naturalEnd: endedNaturally,  // We'll treat a valid simulation as natural for now
       valid: simulationValidFlag,
       win, 
       winStreak: consecutiveWinsValue,
@@ -860,6 +859,7 @@ function restartSimulation() {
         target="_blank"
         rel="noopener noreferrer"
         class="button coffee-button"
+        on:click|preventDefault={handleCoffeeClick}
       >
         <img
           src={coffeeButton}
