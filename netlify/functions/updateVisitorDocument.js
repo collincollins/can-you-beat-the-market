@@ -1,6 +1,6 @@
 // netlify/functions/updateVisitorDocument.js
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -13,7 +13,6 @@ const client = new MongoClient(uri, {
 let isConnected = false;
 
 exports.handler = async (event, context) => {
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -22,13 +21,11 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Ensure we are connected
     if (!isConnected) {
       await client.connect();
       isConnected = true;
     }
 
-    // Determine the database name based on deploy context
     const defaultDbName =
       process.env.CONTEXT === 'deploy-preview'
         ? 'canyoubeatthemarket-test'
@@ -37,20 +34,19 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
-    // Parse the incoming POST payload
     const {
-      documentId,          // The _id of the visitor document (string)
-      hasStarted,          // Boolean: whether the user started a simulation
-      naturalEnd,          // Boolean: true if the simulation ended naturally
-      valid,               // Boolean: true if the simulation is valid (met required duration)
-      endGameDate,         // Date/time when the simulation ended
-      durationOfGame,      // Duration of the game (in seconds)
-      portfolioValue,      // Ending portfolio value
-      buyHoldFinalValue,   // Ending buy-and-hold value
-      portfolioCAGR,       // Portfolio's CAGR computed from simulation
-      buyHoldCAGR,         // Buy-and-hold CAGR computed from simulation
-      buys,                // Number of buy actions
-      sells                // Number of sell actions
+      documentId,
+      hasStarted,
+      naturalEnd,
+      valid,
+      endGameDate,
+      durationOfGame,
+      portfolioValue,
+      buyHoldFinalValue,
+      portfolioCAGR,
+      buyHoldCAGR,
+      buys,
+      sells
     } = JSON.parse(event.body);
 
     if (!documentId) {
@@ -60,12 +56,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Build the update object for the post update
+    // Convert documentId string to an ObjectId
+    const filter = { _id: new ObjectId(documentId) };
+
     const updateData = {
       hasStarted,
       naturalEnd,
       valid,
-      endGameDate: new Date(endGameDate), // ensure it's a Date
+      endGameDate: new Date(endGameDate),
       durationOfGame,
       portfolioValue,
       buyHoldFinalValue,
@@ -75,9 +73,8 @@ exports.handler = async (event, context) => {
       sells
     };
 
-    // Update the visitor document with the post simulation fields
     const result = await visitorsCollection.updateOne(
-      { _id: documentId },
+      filter,
       { $set: updateData }
     );
 
