@@ -6,7 +6,6 @@ const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
-    strict: true,
     deprecationErrors: true,
   },
 });
@@ -29,25 +28,26 @@ exports.handler = async (event, context) => {
       isConnected = true;
     }
 
-    const database = client.db('canyoubeatthemarket');
-    const highScoreCollection = database.collection('highScores');
+    const defaultDbName = process.env.CONTEXT === 'deploy-preview'
+      ? 'canyoubeatthemarket-test'
+      : 'canyoubeatthemarket';
 
-    // Find the doc with the highest score
-    const topScoreDoc = await highScoreCollection
-      .find({})
-      .sort({ score: -1 })      // Sort descending by score
-      .limit(1)                // Take only the top result
-      .toArray();
+    const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
+    const database = client.db(dbName);
 
-    if (!topScoreDoc[0]) {
-      // No scores in DB
+    // Query the "currentHighScore" collection for the current high score.
+    const currentHighScoreCollection = database.collection('currentHighScore');
+    const currentScoreDoc = await currentHighScoreCollection.findOne({ _id: 'current' });
+
+    if (!currentScoreDoc) {
       return {
         statusCode: 200,
         body: JSON.stringify({ score: 0, playerName: 'No one yet' }),
       };
     }
 
-    const { score, playerName } = topScoreDoc[0];
+    // Return the high score and the player name.
+    const { score, playerName } = currentScoreDoc;
     return {
       statusCode: 200,
       body: JSON.stringify({ score, playerName }),

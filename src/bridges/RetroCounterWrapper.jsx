@@ -17,19 +17,18 @@ function parseNumber(val, fallback = 0) {
 
 function RetroCounterWC(props) {
   const { visitors = 0 } = props; // destructure 'visitors' from props with a default value
-
   const [visitorCount, setVisitorCount] = useState(parseNumber(visitors)); // initialize state for visitor count
 
   useEffect(() => {
     // Function to increment the hit count and retrieve the updated visitor count
-    const incrementVisitorAndUpdateCount = async () => {
+    const updateVisitorCount = async () => {
       try {
-        // Count the new visitor
-        const countVisitorResponse = await fetch('/.netlify/functions/countVisitor', {
-          method: 'POST',
+        // Simply fetch the count of unique visitors
+        const response = await fetch('/.netlify/functions/getVisitorCount', {
+          method: 'GET',
         });
-        if (!countVisitorResponse.ok) {
-          throw new Error(`HTTP error! status: ${countVisitorResponse.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
   
         // Fetch the updated visitor count
@@ -39,24 +38,14 @@ function RetroCounterWC(props) {
         if (!getVisitorResponse.ok) {
           throw new Error(`HTTP error! status: ${getVisitorResponse.status}`);
         }
-  
-        // Update the state with the new visitor count
-        const data = await getVisitorResponse.json();
+        const data = await response.json();
         setVisitorCount(data.count);
-  
-        // Increment the hit count in the database
-        const incrementHitResponse = await fetch('/.netlify/functions/incrementHit', {
-          method: 'POST',
-        });
-        if (!incrementHitResponse.ok) {
-          throw new Error(`HTTP error! status: ${incrementHitResponse.status}`);
+        } catch (error) {
+        console.error('Error fetching visitor count:', error);
         }
-      } catch (error) {
-        console.error('Error updating visitor count or incrementing hits:', error);
-      }
     };
   
-    incrementVisitorAndUpdateCount(); // Execute the function on component mount
+    updateVisitorCount(); // Execute the function on component mount
   }, []); // Empty dependency array ensures this runs only once on mount
 
   return (

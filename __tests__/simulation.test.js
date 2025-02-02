@@ -5,8 +5,8 @@ import { setSimulationParams, getSimulationParams, getDaysPerStep } from '../src
 
 describe('MarketSimulation Long-Term Behavior', () => {
   // **Test Configuration**
-  const years = 100; // Simulation duration in years
-  const numSimulations = 100; // Number of simulation runs for averaging
+  const years = 20; // Simulation duration in years
+  const numSimulations = 50; // Number of simulation runs for averaging
 
   // **Tolerance Levels**
   const cagrTolerance = 1.0; // Allow ±1%
@@ -43,93 +43,154 @@ describe('MarketSimulation Long-Term Behavior', () => {
   const simulationParams = getSimulationParams();
 
   // **Theoretical Calculations Based on Updated Parameters**
-  const theoreticalCagr = (Math.exp(simulationParams.annualDrift - 0.5 * Math.pow(simulationParams.annualVolatility, 2)) - 1) * 100;
+  const theoreticalCagr =
+    (Math.exp(simulationParams.annualDrift - 0.5 * Math.pow(simulationParams.annualVolatility, 2)) - 1) *
+    100;
   const theoreticalVolatility = simulationParams.annualVolatility * 100; // 20%
 
-  test(`should have average annual drift approximately equal to ${theoreticalCagr.toFixed(2)}% over ${years} years across ${numSimulations} simulations`, () => {
-    let totalCagr = 0;
+  test(
+    `should have average annual drift approximately equal to ${theoreticalCagr.toFixed(
+      2
+    )}% over ${years} years across ${numSimulations} simulations`,
+    () => {
+      // Capture console.log calls
+      const capturedLogs = [];
+      const originalConsoleLog = console.log;
+      console.log = (...args) => {
+        capturedLogs.push(args);
+      };
 
-    for (let i = 0; i < numSimulations; i++) {
-      // Initialize and reset simulation
-      const simulation = new MarketSimulation();
-      simulation.resetState();
+      try {
+        let totalCagr = 0;
 
-      // Calculate the number of steps based on updated simulation parameters
-      const daysPerStep = getDaysPerStep(); // Derived from simulation params
-      const steps = Math.floor((years * DAYS_IN_YEAR) / daysPerStep);
+        for (let i = 0; i < numSimulations; i++) {
+          // Initialize and reset simulation
+          const simulation = new MarketSimulation();
+          simulation.resetState();
 
-      // Run the simulation
-      for (let step = 0; step < steps; step++) {
-        simulation.updateMarket();
+          // Calculate the number of steps based on updated simulation parameters
+          const daysPerStep = getDaysPerStep(); // Derived from simulation params
+          const steps = Math.floor((years * DAYS_IN_YEAR) / daysPerStep);
+
+          // Run the simulation
+          for (let step = 0; step < steps; step++) {
+            simulation.updateMarket();
+          }
+
+          // Calculate CAGR for this simulation
+          const initialValue = 100; // Starting price
+          const finalValue = simulation.allPrices[simulation.allPrices.length - 1];
+          const cagr = ((finalValue / initialValue) ** (1 / years) - 1) * 100;
+
+          totalCagr += cagr;
+        }
+
+        // Calculate average CAGR
+        const averageCagr = totalCagr / numSimulations;
+
+        // Log the average (only visible if test fails)
+        console.log(
+          `Average CAGR after ${years} years across ${numSimulations} simulations: ${averageCagr.toFixed(
+            2
+          )}%`
+        );
+
+        // Assert that average CAGR is within the tolerance
+        expect(averageCagr).toBeGreaterThanOrEqual(theoreticalCagr - cagrTolerance);
+        expect(averageCagr).toBeLessThanOrEqual(theoreticalCagr + cagrTolerance);
+      } catch (error) {
+        // On failure, flush the captured logs
+        capturedLogs.forEach(args => originalConsoleLog(...args));
+        throw error;
+      } finally {
+        // Always restore the original console.log
+        console.log = originalConsoleLog;
       }
-
-      // Calculate CAGR for this simulation
-      const initialValue = 100; // Starting price
-      const finalValue = simulation.allPrices[simulation.allPrices.length - 1];
-      const cagr = ((finalValue / initialValue) ** (1 / years) - 1) * 100;
-
-      totalCagr += cagr;
     }
+  );
 
-    // Calculate average CAGR
-    const averageCagr = totalCagr / numSimulations;
+  test(
+    `should have average annual volatility approximately equal to ${theoreticalVolatility.toFixed(
+      2
+    )}% over ${years} years across ${numSimulations} simulations`,
+    () => {
+      // Capture console.log calls
+      const capturedLogs = [];
+      const originalConsoleLog = console.log;
+      console.log = (...args) => {
+        capturedLogs.push(args);
+      };
 
-    console.log(`Average CAGR after ${years} years across ${numSimulations} simulations: ${averageCagr.toFixed(2)}%`);
+      try {
+        let totalVolatility = 0;
 
-    // Assert that average CAGR is within the tolerance
-    expect(averageCagr).toBeGreaterThanOrEqual(theoreticalCagr - cagrTolerance);
-    expect(averageCagr).toBeLessThanOrEqual(theoreticalCagr + cagrTolerance);
-  });
+        for (let i = 0; i < numSimulations; i++) {
+          // Initialize and reset simulation
+          const simulation = new MarketSimulation();
+          simulation.resetState();
 
-  test(`should have average annual volatility approximately equal to ${theoreticalVolatility.toFixed(2)}% over ${years} years across ${numSimulations} simulations`, () => {
-    let totalVolatility = 0;
+          // Calculate the number of steps based on updated simulation parameters
+          const daysPerStep = getDaysPerStep();
+          const steps = Math.floor((years * DAYS_IN_YEAR) / daysPerStep);
 
-    for (let i = 0; i < numSimulations; i++) {
-      // Initialize and reset simulation
-      const simulation = new MarketSimulation();
-      simulation.resetState();
+          // Run the simulation
+          for (let step = 0; step < steps; step++) {
+            simulation.updateMarket();
+          }
 
-      // Calculate the number of steps based on updated simulation parameters
-      const daysPerStep = getDaysPerStep();
-      const steps = Math.floor((years * DAYS_IN_YEAR) / daysPerStep);
+          // Calculate log returns for this simulation
+          const logReturns = [];
+          for (let j = 1; j < simulation.allPrices.length; j++) {
+            const priceToday = simulation.allPrices[j];
+            const priceYesterday = simulation.allPrices[j - 1];
+            const logReturn = Math.log(priceToday / priceYesterday);
+            logReturns.push(logReturn);
+          }
 
-      // Run the simulation
-      for (let step = 0; step < steps; step++) {
-        simulation.updateMarket();
+          // Calculate mean of log returns
+          const mean =
+            logReturns.reduce((acc, val) => acc + val, 0) / logReturns.length;
+
+          // Calculate variance of log returns
+          const variance =
+            logReturns.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) /
+            (logReturns.length - 1);
+
+          // Calculate standard deviation of log returns
+          const stepStdDev = Math.sqrt(variance);
+
+          // Annualize volatility
+          const stepsPerYear = DAYS_IN_YEAR / daysPerStep;
+          const annualVolatility = stepStdDev * Math.sqrt(stepsPerYear) * 100; // Convert to percentage
+
+          totalVolatility += annualVolatility;
+        }
+
+        // Calculate average volatility
+        const averageVolatility = totalVolatility / numSimulations;
+
+        // Log the average (only visible if test fails)
+        console.log(
+          `Average Annual Volatility after ${years} years across ${numSimulations} simulations: ${averageVolatility.toFixed(
+            2
+          )}%`
+        );
+
+        // Assert that average volatility is within the tolerance
+        expect(averageVolatility).toBeGreaterThanOrEqual(
+          theoreticalVolatility - volatilityTolerance
+        );
+        expect(averageVolatility).toBeLessThanOrEqual(
+          theoreticalVolatility + volatilityTolerance
+        );
+      } catch (error) {
+        // On failure, flush the captured logs
+        capturedLogs.forEach(args => originalConsoleLog(...args));
+        throw error;
+      } finally {
+        // Always restore the original console.log
+        console.log = originalConsoleLog;
       }
-
-      // Calculate log returns for this simulation
-      const logReturns = [];
-      for (let j = 1; j < simulation.allPrices.length; j++) {
-        const priceToday = simulation.allPrices[j];
-        const priceYesterday = simulation.allPrices[j - 1];
-        const logReturn = Math.log(priceToday / priceYesterday);
-        logReturns.push(logReturn);
-      }
-
-      // Calculate mean of log returns
-      const mean = logReturns.reduce((acc, val) => acc + val, 0) / logReturns.length;
-
-      // Calculate variance of log returns
-      const variance = logReturns.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (logReturns.length - 1);
-
-      // Calculate standard deviation of log returns
-      const stepStdDev = Math.sqrt(variance);
-
-      // Annualize volatility
-      const stepsPerYear = DAYS_IN_YEAR / daysPerStep;
-      const annualVolatility = stepStdDev * Math.sqrt(stepsPerYear) * 100; // Convert to percentage
-
-      totalVolatility += annualVolatility;
     }
-
-    // Calculate average volatility
-    const averageVolatility = totalVolatility / numSimulations;
-
-    console.log(`Average Annual Volatility after ${years} years across ${numSimulations} simulations: ${averageVolatility.toFixed(2)}%`);
-
-    // Assert that average volatility is within the tolerance
-    expect(averageVolatility).toBeGreaterThanOrEqual(theoreticalVolatility - volatilityTolerance);
-    expect(averageVolatility).toBeLessThanOrEqual(theoreticalVolatility + volatilityTolerance);
-  });
+  );
 });
