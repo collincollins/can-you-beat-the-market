@@ -37,7 +37,7 @@ exports.handler = async (event, context) => {
     const data = JSON.parse(event.body);
     const { playerName, score } = data;
 
-    console.log('Received high score submission:', data);
+    console.log('Received high score submission.');
 
     // Validate input.
     if (
@@ -46,7 +46,7 @@ exports.handler = async (event, context) => {
       typeof score !== 'number' ||
       score < 0
     ) {
-      console.log('Validation failed for data:', data);
+      console.log('Validation failed for data.');
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Invalid input data.' }),
