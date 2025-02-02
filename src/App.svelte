@@ -69,7 +69,6 @@
   // --- Coffee Click Logging Functions ---
   async function logCoffeeClick() {
     const payload = JSON.stringify({
-      winStreak: consecutiveWinsValue, // any extra session data you'd like to include
       timestamp: new Date().toISOString()
     });
 
@@ -254,11 +253,13 @@ async function endSimulation() {
   // Determine if the simulation ended naturally (i.e. timer ran out)
   const endedNaturally = timer <= 0;
 
-  // **Retrieve Current Simulation Parameters**
-  const { simulationRealTimeSeconds } = getSimulationParams();
-
   // **Determine Minimum Required Duration**
-  const minimumRequiredSeconds = simulationRealTimeSeconds / 2; // Original 30 seconds
+  let minimumRequiredSeconds;
+  if (slowMo) {
+    minimumRequiredSeconds = 15; // 15 seconds if timerInput is 30
+  } else {
+    minimumRequiredSeconds = 30;     // 30 seconds in regular mode
+  }
 
   let simulationValidFlag = false;
   if (durationInSeconds >= minimumRequiredSeconds) {
@@ -325,11 +326,10 @@ async function endSimulation() {
       `;
     }
   } else {
-    // **Invalid Simulation**
-    simulationValid = false;
-    console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
-    consecutiveWins.set(0)
-  }
+  simulationValid = false;
+  console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
+  consecutiveWins.set(0);
+}
   // **Start the Restart Cooldown Immediately When Simulation Ends**
 
   // Always re-fetch the latest high score from the database**
