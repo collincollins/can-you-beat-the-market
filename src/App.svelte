@@ -254,17 +254,13 @@ async function endSimulation() {
   const endedNaturally = timer <= 0;
 
   // **Determine Minimum Required Duration**
-  let minimumRequiredSeconds;
-  if (slowMo) {
-    minimumRequiredSeconds = 15; // 15 seconds if timerInput is 30
-  } else {
-    minimumRequiredSeconds = 30;     // 30 seconds in regular mode
-  }
+  let minimumRequiredSeconds = slowMo ? 15 : 30;
 
-  let simulationValidFlag = false;
-  if (durationInSeconds >= minimumRequiredSeconds) {
-    simulationValidFlag = true;
-    simulationValid = true;
+  let simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
+  simulationValid = simulationValidFlag;
+  if (!simulationValidFlag) {
+    console.log(`Simulation ended early after ${durationInSeconds.toFixed(2)} seconds. High score not updated.`);
+    consecutiveWins.set(0);
 
     if (data.marketPrices.length > 0) {
       // Calculate Buy-and-Hold final value
