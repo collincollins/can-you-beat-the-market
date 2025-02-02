@@ -82,7 +82,7 @@ exports.handler = async (event, context) => {
           }
         },
         {
-          $setOnInsert: { createdAt: new Date() }
+          $setOnInsert: { _id: 'current', createdAt: new Date() }
         }
       ],
       { upsert: true }
