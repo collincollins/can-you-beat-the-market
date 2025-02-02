@@ -268,7 +268,7 @@ async function endSimulation() {
       portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
 
       // Determine performance and update colors
-      if (portfolioVal > buyHoldFinal) {
+      if (simulationValidFlag && portfolioVal > buyHoldFinal) {
         portfolioColor = '#008b02'; // Green for outperforming
         buyHoldColor = '#f44336';   // Red for underperforming
 
