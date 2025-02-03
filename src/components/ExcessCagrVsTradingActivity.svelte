@@ -71,7 +71,7 @@
         const excessCAGR = portfolioCAGR - buyHoldCAGR;
         return { x: totalTrades, y: excessCAGR };
       })
-      .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 30
+      .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 25
 
     if (cleanedData.length === 0) {
       console.warn('No valid data available for the chart.');
@@ -200,7 +200,7 @@
           title: {
             display: true,
             text: ['Excess Return vs. Trading Activity',
-                  `(n=${dataCount})`],
+                  '\n(n=' + dataCount + ')'],
             font: { size: 10, family: "'Press Start 2P'" },
             color: "#353535",
           },
