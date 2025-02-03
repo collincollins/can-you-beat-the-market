@@ -73,13 +73,17 @@
       })
       .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 25
 
+    // Calculate the number of data points.
+    // If the user's game is valid, include it in the count.
+    let dataCount = cleanedData.length;
+    if (userGame) {
+      dataCount++;
+    }
+
     if (cleanedData.length === 0) {
       console.warn('No valid data available for the chart.');
       return;
     }
-
-    // Calculate the number of data points
-    const dataCount = cleanedData.length;
 
     // Compute the mean excess CAGR per totalTrades value.
     const groups = {};
