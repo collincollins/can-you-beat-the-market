@@ -183,9 +183,9 @@ function createChart() {
     const datasets = [{
             label: 'User',
             data: userBarData,
-            backgroundColor: 'rgb(67, 91, 159, 0.5)',
+            backgroundColor: 'rgb(244, 67, 54, 0.2)',
             borderWidth: 0,
-            barPercentage: 100,
+            barPercentage: 90,
             categoryPercentage: 1,
             order: 1
         },
@@ -193,7 +193,7 @@ function createChart() {
             label: `User Fit (μ=${userStats.mu.toFixed(2)})`,
             data: userGaussian,
             type: 'line',
-            borderColor: 'rgb(244, 67, 54, 50)',
+            borderColor: '#435b9f',
             borderDash: [5, 5],
             borderWidth: 3,
             fill: false,
@@ -204,9 +204,9 @@ function createChart() {
         {
             label: 'B&H',
             data: bhBarData,
-            backgroundColor: 'rgb(0, 139, 2, 50)',
+            backgroundColor: 'rgb(0, 139, 2, 0.2)',
             borderWidth: 0,
-            barPercentage: 100,
+            barPercentage: 120,
             categoryPercentage: 1,
             order: 3
         },
