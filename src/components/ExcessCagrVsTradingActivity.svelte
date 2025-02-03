@@ -124,11 +124,10 @@
 
     // Define the datasets with explicit drawing order.
     const datasets = [
-      // User outcomes: scatter points with 50% opacity.
       {
         label: 'Games',
         data: cleanedData,
-        backgroundColor: 'rgba(184,190,206,0.1)', // blue like background
+        backgroundColor: 'rgba(184,190,206,0.5)', // blue like background
         pointRadius: 3,
         showLine: false,
         type: 'scatter',

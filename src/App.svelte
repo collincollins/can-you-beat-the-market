@@ -61,6 +61,7 @@
   let visitorDocId = null;
 
   let resultNote = ''; // Local variable that will be bound to the chart's resultNote;
+  let distributionNote = ''; // Local variable that will be bound to the chart's resultNote;
   
   let visitorData = [];
   let userGame = null;
@@ -914,9 +915,9 @@
     </div>
 
     <div class="chart-container-excess card">
-      <DistributionChart {visitorData} {userGame} bind:resultNote />
+      <DistributionChart {visitorData} {userGame} bind:distributionNote />
        <div>   
-         {#if resultNote}
+         {#if distributionNote}
            <p class="result-note" style="font-size: 0.8em">{distributionNote}</p>
          {/if}
        </div>

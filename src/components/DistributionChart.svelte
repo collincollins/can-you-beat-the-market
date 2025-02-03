@@ -32,7 +32,8 @@
     export let visitorData = [];
     export let userGame = null;
     // Allow binding for a note (distinct from the excess returns note).
-    export let resultNote;
+     // We'll use a local variable for the distribution note.
+    let distributionNote = '';
   
     let chart;
     let canvasElement;
@@ -93,9 +94,6 @@
       return points;
     }
   
-    // This note explains the relationship between the average returns.
-    let distributionNote = '';
-  
     function createChart() {
       // Extract valid numbers from the visitorData.
       const userData = visitorData
@@ -118,8 +116,8 @@
       const bhScale = bhData.length * bhHist.binWidth;
   
       // Compute Gaussian line data for each dataset.
-      const userGaussian = computeGaussianLine(userStats, userHist.min, userHist.max, 100, userScale);
-      const bhGaussian = computeGaussianLine(bhStats, bhHist.min, bhHist.max, 100, bhScale);
+      const userGaussian = computeGaussianLine(userStats, userHist.min, userHist.max, 50, userScale);
+      const bhGaussian = computeGaussianLine(bhStats, bhHist.min, bhHist.max, 50, bhScale);
   
       // Prepare bar data for histograms.
       const userBarData = userHist.binCenters.map((center, i) => ({
@@ -138,7 +136,7 @@
       // Define the datasets.
       const datasets = [
         {
-          label: 'User Return',
+          label: 'User',
           data: userBarData,
           backgroundColor: '#435b9f',
           borderWidth: 0,
@@ -155,10 +153,11 @@
           borderWidth: 2,
           fill: false,
           pointRadius: 0,
-          order: 2
+          order: 2,
+          pointStyle: 'line'
         },
         {
-          label: 'B&H Return',
+          label: 'B&H',
           data: bhBarData,
           backgroundColor: '#B8BECE',
           borderWidth: 0,
@@ -221,7 +220,7 @@
               title: {
                 display: true,
                 text: 'Compound Annual Growth Rate (CAGR) [%]',
-                font: { size: 12, family: "'Press Start 2P'" }
+                font: { size: 12, family: "'Press Start 2P'" },
               },
               ticks: {
                 font: { size: 8.5, family: "'Press Start 2P'" }
@@ -242,7 +241,8 @@
             title: {
               display: true,
               text: 'Distribution of Annual Returns',
-              font: { size: 10, family: "'Press Start 2P'" }
+              font: { size: 10, family: "'Press Start 2P'" },
+              color: "#353535",
             },
             legend: {
               labels: {
