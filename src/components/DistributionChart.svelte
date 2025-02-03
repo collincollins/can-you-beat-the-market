@@ -183,7 +183,7 @@ function createChart() {
     const datasets = [{
             label: 'User',
             data: userBarData,
-            backgroundColor: '#435b9f',
+            backgroundColor: 'rgb(67, 91, 159, 0.5)',
             borderWidth: 0,
             barPercentage: 100,
             order: 1
@@ -196,14 +196,14 @@ function createChart() {
             borderDash: [5, 5],
             borderWidth: 3,
             fill: false,
-            pointRadius: 0,
+            pointRadius: 1,
             order: 2,
             pointStyle: 'line'
         },
         {
             label: 'B&H',
             data: bhBarData,
-            backgroundColor: '#B8BECE',
+            backgroundColor: 'rgb(184, 190, 206)',
             borderWidth: 0,
             barPercentage: 100,
             order: 3
@@ -216,7 +216,7 @@ function createChart() {
             borderDash: [5, 5],
             borderWidth: 3,
             fill: false,
-            pointRadius: 0,
+            pointRadius: 1,
             order: 4
         }
     ];
