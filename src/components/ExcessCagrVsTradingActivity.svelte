@@ -290,8 +290,8 @@
   flex-direction: column;
   width: 97%;
   max-width: 800px;
-  padding: 10px; /* Adjust padding as needed */
-  height: auto;  /* Let the container expand */
+  padding-bottom: 10px; /* Adjust padding as needed */
+  height: 350px;  /* Let the container expand */
 }
 
   /* .result-note {
@@ -304,17 +304,17 @@
 
   .result-note {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.75em;
   text-align: center;
-  margin-top: 10px;
   color: #353535;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 </style>
 
 <div class="chart-container">
   <canvas bind:this={canvasElement}></canvas>
-  {#if resultNote}
+    {#if resultNote}
     <p class="result-note">{resultNote}</p>
   {/if}
 </div>

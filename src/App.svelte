@@ -558,7 +558,7 @@
 .chart-container-excess {
   width: 93%;
   max-width: 700px;
-  min-height: 400px;
+  height: auto;
 
   padding-left: 10px;
   padding-right: 0px;
