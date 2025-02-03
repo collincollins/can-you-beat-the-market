@@ -890,7 +890,7 @@
       {#if simulationEnded && !simulationValid}
         <!-- Optional: Invalid Simulation Message -->
         <div class="invalid-simulation-message">
-          Timer too short to count towards statistics.<br>Please run again for at least 30 seconds.
+          Timer too short to count towards statistics.<br><br>Please run again for at least 30 seconds.
         </div>
       {/if}
     </div>
