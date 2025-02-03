@@ -288,7 +288,7 @@
   const simulationEndTime = Date.now();
   const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
   const endedNaturally = timer <= 0;
-  const minimumRequiredSeconds = slowMo ? 15 : 30;
+  const minimumRequiredSeconds = slowMo ? 5 : 10;
   const simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
   simulationValid = simulationValidFlag;
 
@@ -434,7 +434,7 @@
     simulationRunning = false;
 
     // Reset timer and slow-motion state to defaults
-    timerInput = 30;
+    timerInput =30;
     timer = timerInput;
     slowMo = false;
 
@@ -890,7 +890,7 @@
       {#if simulationEnded && !simulationValid}
         <!-- Optional: Invalid Simulation Message -->
         <div class="invalid-simulation-message">
-          Timer too short to count towards statistics.<br><br>Please run again for at least 30 seconds.
+          Timer too short to count towards statistics.<br><br>Please play again for at least 10 seconds.
         </div>
       {/if}
     </div>
