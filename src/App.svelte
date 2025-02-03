@@ -563,7 +563,7 @@
   padding-left: 10px;
   padding-right: 0px;
   padding-top: 5px;
-  padding-bottom: 7px;
+  padding-bottom: 10px;
 }
 
 .timer-container input {

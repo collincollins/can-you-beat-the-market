@@ -275,22 +275,40 @@
 
 <style>
   /* Updated container style to match the main chart container */
-  .chart-container {
+  /* .chart-container {
     position: relative;
     height: auto;
     max-height: 350px;
     width: 97%;
     max-width: 800px;
     padding-bottom: 10px;
-  }
+  } */
 
-  .result-note {
+  .chart-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 97%;
+  max-width: 800px;
+  padding: 10px; /* Adjust padding as needed */
+  height: auto;  /* Let the container expand */
+}
+
+  /* .result-note {
     font-family: 'Press Start 2P', cursive;
     font-size: 0.75em;
     text-align: center;
     margin-top: 10px;
     color: #353535;
-  }
+  } */
+
+  .result-note {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.75em;
+  text-align: center;
+  margin-top: 10px;
+  color: #353535;
+}
 
 </style>
 
