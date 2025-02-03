@@ -185,8 +185,8 @@ function createChart() {
             data: userBarData,
             backgroundColor: 'rgb(67, 91, 159, 0.5)',
             borderWidth: 0,
-            barPercentage: 100,
-            categoryPercentage: 100,
+            barPercentage: 1,
+            categoryPercentage: 1,
             order: 1
         },
         {
@@ -206,8 +206,8 @@ function createChart() {
             data: bhBarData,
             backgroundColor: 'rgb(0, 139, 2, 50)',
             borderWidth: 0,
-            barPercentage: 100,
-            categoryPercentage: 100,
+            barPercentage: 1,
+            categoryPercentage: 1,
             order: 3
         },
         {
