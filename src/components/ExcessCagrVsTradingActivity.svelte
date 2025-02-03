@@ -106,17 +106,17 @@
     const datasets = [
       // User outcomes: scatter points with 50% opacity.
       {
-        label: 'Games',
+        label: 'Games ',
         data: cleanedData,
         backgroundColor: 'rgba(0, 0, 255, 0.5)', // blue with 0.5 opacity
         pointRadius: 4,
         showLine: false,
         type: 'scatter',
-        order: 1
+        order: 3
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
-        label: `Fit: m=${slope.toFixed(2)}, b=${intercept.toFixed(2)}`,
+        label: `Fit: m=${slope.toFixed(2)}, b=${intercept.toFixed(2)} `,
         data: regressionPoints,
         borderColor: 'red',
         borderWidth: 2, // increased line width
@@ -139,8 +139,7 @@
         pointRadius: 6,
         showLine: false,
         type: 'scatter',
-        order: 3,
-        z: 10
+        order: 1,
       }
     ];
 
@@ -161,7 +160,7 @@
           legend: {
             labels: {
               usePointStyle: true, // makes the legend icon match the dataset's marker style
-              font: { size: 7, family: "'Press Start 2P'" }
+              font: { size: 8.5, family: "'Press Start 2P'" }
             }
           },
           tooltip: {
@@ -177,14 +176,14 @@
               display: true,
               text: 'Total Trades (Buys + Sells)',
               font: { 
-                size: 10.5,
+                size: 11,
                 family: "Press Start 2P"  
               }
             },
             ticks: {
               stepSize: 2,
               font: { 
-                size: 8,
+                size: 8.5,
                 family: "Press Start 2P"
               }
             },
@@ -196,18 +195,18 @@
               display: true,
               text: 'Excess CAGR (%)',
               font: { 
-                 size: 10.5,
+                 size: 11,
                  family: "Press Start 2P"
               }
             },
             ticks: {
               font: { 
-                size: 8,
+                size: 8.5,
                 family: "Press Start 2P"
               }
             },
-            min: -28,
-            max: 28
+            min: yMin - 8,
+            max: yMax + 8
           }
         }
       }
