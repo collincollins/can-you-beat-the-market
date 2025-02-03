@@ -558,12 +558,12 @@
 .chart-container-excess {
   width: 93%;
   max-width: 700px;
-  min-height: 293px;
+  min-height: 300px;
 
   padding-left: 10px;
   padding-right: 0px;
   padding-top: 5px;
-  padding-bottom: 5px;
+  padding-bottom: 7px;
 }
 
 .timer-container input {

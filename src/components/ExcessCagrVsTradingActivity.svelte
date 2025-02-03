@@ -106,7 +106,7 @@
     const datasets = [
       // User outcomes: scatter points with 50% opacity.
       {
-        label: 'User Outcomes',
+        label: 'Games',
         data: cleanedData,
         backgroundColor: 'rgba(0, 0, 255, 0.5)', // blue with 0.5 opacity
         pointRadius: 4,
@@ -116,7 +116,7 @@
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
-        label: `Fit: m: ${slope.toFixed(2)}, b: ${intercept.toFixed(2)}`,
+        label: `Fit: m=${slope.toFixed(2)}, b=${intercept.toFixed(2)}`,
         data: regressionPoints,
         borderColor: 'red',
         borderWidth: 2, // increased line width
@@ -131,7 +131,7 @@
       },
       // Mean outcomes: red points with a black border drawn on top.
       {
-        label: 'Mean Excess CAGR',
+        label: 'Avg. Excess CAGR',
         data: meanData,
         backgroundColor: 'red',
         borderColor: 'black',
@@ -139,7 +139,8 @@
         pointRadius: 6,
         showLine: false,
         type: 'scatter',
-        order: 3
+        order: 3,
+        z: 10
       }
     ];
 
@@ -160,7 +161,7 @@
           legend: {
             labels: {
               usePointStyle: true, // makes the legend icon match the dataset's marker style
-              font: { size: 8, family: "'Press Start 2P'" }
+              font: { size: 7, family: "'Press Start 2P'" }
             }
           },
           tooltip: {
@@ -176,7 +177,7 @@
               display: true,
               text: 'Total Trades (Buys + Sells)',
               font: { 
-                size: 10,
+                size: 10.5,
                 family: "Press Start 2P"  
               }
             },
@@ -195,7 +196,7 @@
               display: true,
               text: 'Excess CAGR (%)',
               font: { 
-                 size: 10,
+                 size: 10.5,
                  family: "Press Start 2P"
               }
             },
