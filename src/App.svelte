@@ -716,7 +716,7 @@
 
 .result-note {
   font-family: 'Press Start 2P', cursive;
-  text-align: justify;
+  text-align: center;
   color: #353535;
   padding-left: 25px;
   padding-right: 40px;
