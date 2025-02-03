@@ -272,7 +272,7 @@
   setTimeout(() => {
     restartDisabled = false;
   }, 1000);
-  
+
   // 1. Stop the simulation.
   simulationEnded = true;
   simulationRunning = false;
@@ -897,6 +897,10 @@
       <p style="font-size: 6px;">
         Honorable mention to VladStopStalking with 6942069421 wins.
       </p>
+    </div>
+
+    <div class="card" style="max-width: 200px; align-items: center; padding-bottom: 0px;">
+      <h2>Statistics</h2>
     </div>
 
     {#if simulationEnded}

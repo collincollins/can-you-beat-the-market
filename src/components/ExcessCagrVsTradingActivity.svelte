@@ -68,7 +68,7 @@
         const excessCAGR = portfolioCAGR - buyHoldCAGR;
         return { x: totalTrades, y: excessCAGR };
       })
-      .filter(d => d.x > 2 && d.x <= 30); // only include games with totalTrades > 2 and <= 30
+      .filter(d => d.x > 2 && d.x <= 35); // only include games with totalTrades > 2 and <= 30
 
     if (cleanedData.length === 0) {
       console.warn('No valid data available for the chart.');
@@ -106,6 +106,11 @@
       const xVal = xMin + i * step;
       regressionPoints.push({ x: xVal, y: slope * xVal + intercept });
     }
+    const xTickMin = ((xMin - 1) % 2 === 0) ? (xMin - 1) : (xMin - 1) + 1;
+    const xTickMax = ((xMax + 1) % 2 === 0) ? (xMax + 1) : (xMax + 1) + 1;
+
+    const yTickMin = Math.floor((yMin - 5) / 5) * 5;
+    const yTickMax = Math.ceil((yMax + 5) / 5) * 5;
 
     // Define the datasets with explicit drawing order.
     const datasets = [
@@ -136,7 +141,7 @@
       },
       // Mean outcomes: red points with a black border drawn on top.
       {
-        label: 'Mean ',
+        label: 'Avg ',
         data: meanData,
         backgroundColor: '#435b9f', // blue like button
         borderColor: 'black',
@@ -165,8 +170,8 @@
         backgroundColor: '#008b02', // green
         borderColor: 'black', // darker green
         borderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 7,
+        pointRadius: 7,
+        pointHoverRadius: 8,
         pointStyle: 'rectRounded',
         type: 'scatter',
         order: 1, // draw this on top
@@ -220,8 +225,8 @@
                 family: "Press Start 2P"
               }
             },
-            min: xMin - 1,
-            max: xMax + 1
+            min: xTickMin,
+            max: xTickMax,
           },
           y: {
             title: {
@@ -238,8 +243,8 @@
                 family: "Press Start 2P"
               }
             },
-            min: Math.round(yMin - 4),
-            max: Math.round(yMax + 4)
+            min: yTickMin,
+            max: yTickMax,
           }
         }
       }
