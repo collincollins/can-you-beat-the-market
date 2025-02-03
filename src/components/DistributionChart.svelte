@@ -162,8 +162,8 @@ function createChart() {
     const bhScale = bhData.length * bhHist.binWidth;
 
     // Compute Gaussian line data for each dataset.
-    const userGaussian = computeGaussianLine(userStats, userHist.min, userHist.max, 20, userScale);
-    const bhGaussian = computeGaussianLine(bhStats, bhHist.min, bhHist.max, 20, bhScale);
+    const userGaussian = computeGaussianLine(userStats, userHist.min, userHist.max, 1, userScale);
+    const bhGaussian = computeGaussianLine(bhStats, bhHist.min, bhHist.max, 1, bhScale);
 
     // Prepare bar data for histograms.
     const userBarData = userHist.binCenters.map((center, i) => ({
@@ -184,7 +184,7 @@ function createChart() {
             label: 'User',
             data: userBarData,
             backgroundColor: '#435b9f',
-            borderWidth: 2,
+            borderWidth: 0,
             barPercentage: 100,
             order: 1
         },
@@ -194,7 +194,7 @@ function createChart() {
             type: 'line',
             borderColor: '#435b9f',
             borderDash: [5, 5],
-            borderWidth: 0,
+            borderWidth: 3,
             fill: false,
             pointRadius: 0,
             order: 2,
@@ -214,7 +214,7 @@ function createChart() {
             type: 'line',
             borderColor: '#B8BECE',
             borderDash: [5, 5],
-            borderWidth: 2,
+            borderWidth: 3,
             fill: false,
             pointRadius: 0,
             order: 4
