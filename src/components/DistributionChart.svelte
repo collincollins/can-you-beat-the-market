@@ -245,15 +245,15 @@
 
 <style>
   /* Ensure the container matches the excess returns chart container */
-  .chart-container-excess {
-    width: 93%;
-    max-width: 700px;
-    height: auto;
-    padding-left: 10px;
-    padding-right: 0px;
-    padding-top: 5px;
-    padding-bottom: 10px;
-  }
+  .chart-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 97%;
+    max-width: 1000px;
+    padding-bottom: 10px; /* Adjust padding as needed */
+    height: 350px;  /* Let the container expand */
+}
   /* The canvas will take up all available space in the container */
   /* canvas {
     width: 100% !important;
@@ -261,6 +261,6 @@
   } */
 </style>
 
-<div class="chart-container-excess card">
+<div class="chart-container">
   <canvas bind:this={canvasElement}></canvas>
 </div>
