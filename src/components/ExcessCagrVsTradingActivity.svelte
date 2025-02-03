@@ -119,7 +119,7 @@
         label: 'Games',
         data: cleanedData,
         backgroundColor: '#B8BECE', // blue like background
-        pointRadius: 2,
+        pointRadius: 3,
         showLine: false,
         type: 'scatter',
         order: 4
