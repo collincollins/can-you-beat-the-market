@@ -713,6 +713,7 @@
   width: 100%;
   position: relative;
 }
+
 </style>
 
 <div class="app">
@@ -889,6 +890,15 @@
 
   <!-- High Score Display -->
   {#if simulationEnded}
+
+    <div class="card" style="max-width: 200px; align-items: center; padding-bottom: 0px;">
+      <h2>Statistics</h2>
+    </div>
+
+    <div class="chart-container-excess card">
+     <ExcessCagrVsTradingActivity {visitorData} {userGame} />
+    </div>
+
     <div class="card results-details-card high-score-card">
       <h2>High Score</h2>
       <p>
@@ -898,16 +908,6 @@
         Honorable mention to VladStopStalking with 6942069421 wins.
       </p>
     </div>
-
-    <div class="card" style="max-width: 200px; align-items: center; padding-bottom: 0px;">
-      <h2>Statistics</h2>
-    </div>
-
-    {#if simulationEnded}
-      <div class="chart-container-excess card">
-        <ExcessCagrVsTradingActivity {visitorData} {userGame} />
-      </div>
-    {/if}
 
   {/if}
 

@@ -38,6 +38,9 @@
   let chart;
   let canvasElement;
 
+  // This will hold the summary note
+  let resultNote = '';
+
   // Helper: compute linear regression parameters from arrays of x and y values.
   function linearRegression(x, y) {
     const n = x.length;
@@ -249,6 +252,14 @@
         }
       }
     });
+    // Set the result note based on the slope.
+    if (slope < 0) {
+      resultNote = `Slope ${slope.toFixed(2)}: More frequent trading is linked to underperforming a buy-and-hold strategy.`;
+    } else if (slope > 0) {
+      resultNote = `Slope ${slope.toFixed(2)}: More frequent trading may boost performance relative to a buy-and-hold strategy.`;
+    } else {
+      resultNote = `Slope ${slope.toFixed(2)}: Trading frequency has little effect on performance.`;
+    }
   }
 
   onMount(() => {
@@ -270,8 +281,20 @@
     width: 97%;
     max-width: 800px;
   }
+
+  .result-note {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.75em;
+    text-align: center;
+    margin-top: 10px;
+    color: #353535;
+  }
+
 </style>
 
 <div class="chart-container">
   <canvas bind:this={canvasElement}></canvas>
+  {#if resultNote}
+    <p class="result-note">{resultNote}</p>
+  {/if}
 </div>
