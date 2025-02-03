@@ -4,6 +4,7 @@
   // Import necessary Svelte lifecycle functions and components
   import { onMount, onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
+  import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
   import Controls from './components/Controls.svelte';
   import UsernameModal from './components/UsernameModal.svelte';
 
@@ -57,6 +58,11 @@
 
   // Visitor Document ID used to update the visitor record in MongoDB
   let visitorDocId = null;
+
+  let resultNote = ''; // Local variable that will be bound to the chart's resultNote;
+  
+  let visitorData = [];
+  let userGame = null;
 
   /* -------------------------------------------------------------------------
      STORE SUBSCRIPTIONS
@@ -146,7 +152,12 @@
     unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
       consecutiveWinsValue = value;
     });
+
+    // Now create the chart
+    const res = await fetch('/.netlify/functions/getVisitorDocuments');
+    visitorData = await res.json();
   });
+  
 
   /* -------------------------------------------------------------------------
      LIFECYCLE: onDestroy
@@ -254,164 +265,164 @@
   /* -------------------------------------------------------------------------
      SIMULATION END HANDLER
      ------------------------------------------------------------------------- */
-  async function endSimulation() {
-    // Mark simulation as ended and stop the simulation logic
-    simulationEnded = true;
-    simulationRunning = false;
-    stopSimulation();
+     async function endSimulation() {
 
-    // Clear the countdown timer
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
+  // 9. Temporarily disable the restart button to prevent rapid re-clicks.
+  restartDisabled = true;
+  setTimeout(() => {
+    restartDisabled = false;
+  }, 1000);
+
+  // 1. Stop the simulation.
+  simulationEnded = true;
+  simulationRunning = false;
+  stopSimulation();
+
+  // Clear the countdown timer.
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  // 2. Compute simulation duration and validity.
+  const simulationEndTime = Date.now();
+  const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
+  const endedNaturally = timer <= 0;
+  const minimumRequiredSeconds = slowMo ? 15 : 30;
+  const simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
+  simulationValid = simulationValidFlag;
+
+  // 3. Compute final portfolio values and returns if market data is available.
+  let portfolioVal = 0;
+  if (data.marketPrices.length > 0) {
+    buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
+    portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+
+    const totalDays = data.days[data.days.length - 1] || 1; // safeguard division by zero
+    const initialValue = 100; // assumed starting value
+
+    userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
+    buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
+
+    // Set colors based on performance.
+    if (portfolioVal > buyHoldFinal) {
+      portfolioColor = '#008b02'; // green
+      buyHoldColor = '#f44336';   // red
+    } else if (portfolioVal < buyHoldFinal) {
+      portfolioColor = '#f44336'; // red
+      buyHoldColor = '#008b02';   // green
+    } else {
+      portfolioColor = 'black';
+      buyHoldColor = 'black';
     }
 
-    // Capture the simulation end time and compute duration
-    const simulationEndTime = Date.now();
-    const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
+    // Prepare the final comparison HTML.
+    finalComparison = `
+      <span style="color: ${buyHoldColor};">
+        Buy-and-Hold Value<br>
+        $${buyHoldFinal.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
+      </span>
+    `;
+  }
 
-    // Determine if the simulation ended naturally (timer reached 0)
-    const endedNaturally = timer <= 0;
+  // 4. If the simulation is valid, build the userGame object.
+  if (simulationValid) {
+    userGame = {
+      buys: data.actions.filter(action => action.type === 'buy').length,
+      sells: data.actions.filter(action => action.type === 'sell').length,
+      portfolioCAGR: userAnnualReturn,
+      buyHoldCAGR: buyHoldAnnualReturn
+    };
+  } else {
+    userGame = null;
+  }
 
-    // Check if simulation duration meets minimum criteria (30 sec or 15 sec in slowmo)
-    const minimumRequiredSeconds = slowMo ? 15 : 30;
-    const simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
-    simulationValid = simulationValidFlag;
+  // 5. Build the payload and send the POST update.
+  const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
+  const postUpdatePayload = {
+    documentId: storedVisitorDocId,
+    hasStarted: true,
+    naturalEnd: endedNaturally,
+    valid: simulationValidFlag,
+    win: simulationValidFlag && (portfolioVal > buyHoldFinal),
+    winStreak: simulationValidFlag ? (consecutiveWinsValue + (portfolioVal > buyHoldFinal ? 1 : 0)) : 0,
+    endGameDate: new Date(simulationEndTime),
+    durationOfGame: durationInSeconds,
+    portfolioValue: portfolio ? portfolio.portfolioValue : 0,
+    buyHoldFinalValue: buyHoldFinal,
+    portfolioCAGR: userAnnualReturn,
+    buyHoldCAGR: buyHoldAnnualReturn,
+    buys: data.actions.filter(action => action.type === 'buy').length,
+    sells: data.actions.filter(action => action.type === 'sell').length
+  };
 
-    // Initialize portfolio value for calculations
-    let portfolioVal = 0;
+  try {
+    const resUpdate = await fetch('/.netlify/functions/updateVisitorDocument', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postUpdatePayload)
+    });
+    const updateResult = await resUpdate.json();
+    console.log(updateResult.message);
+  } catch (error) {
+    console.error('Error updating visitor document:', error);
+  }
 
-    // If market data is available, compute final values and returns
-    if (data.marketPrices.length > 0) {
-      // Calculate final buy-and-hold value using the last market price
-      buyHoldFinal = parseFloat(data.marketPrices[data.marketPrices.length - 1].toFixed(2));
-      portfolioVal = parseFloat(portfolio.portfolioValue.toFixed(2));
+  // 6. Fetch the visitor documents once (to include the user’s data indirectly via the update).
+  try {
+    const res = await fetch('/.netlify/functions/getVisitorDocuments');
+    visitorData = await res.json();
+  } catch (error) {
+    console.error('Error fetching visitor documents:', error);
+  }
 
-      // Calculate Compound Annual Growth Rate (CAGR) for both strategies
-      const totalDays = data.days[data.days.length - 1] || 1; // safeguard against division by zero
-      const initialValue = 100; // assumed starting portfolio value
+  // 7. Update win streak logic.
+  let streakForUpdate = consecutiveWinsValue;
+  if (!simulationValidFlag) {
+    streakForUpdate = 0;
+    consecutiveWins.set(0);
+    console.log(`Simulation invalid (duration: ${durationInSeconds.toFixed(2)}s). Resetting consecutive wins to 0.`);
+  } else {
+    // Only update the streak if the portfolio outperformed buy-and-hold.
+    if (portfolioVal > buyHoldFinal) {
+      streakForUpdate = consecutiveWinsValue + 1;
+      consecutiveWins.set(streakForUpdate);
+      console.log(`Consecutive Wins increased to: ${streakForUpdate}`);
 
-      userAnnualReturn = ((portfolioVal / initialValue) ** (365 / totalDays) - 1) * 100;
-      buyHoldAnnualReturn = ((buyHoldFinal / initialValue) ** (365 / totalDays) - 1) * 100;
-      
-      // Set display colors based on performance:
-      // - Portfolio value higher than buy-and-hold: portfolio green, buy-and-hold red
-      // - Portfolio value lower: portfolio red, buy-and-hold green
-      if (portfolioVal > buyHoldFinal) {
-        portfolioColor = '#008b02';  // green
-        buyHoldColor = '#f44336';    // red
-      } else if (portfolioVal < buyHoldFinal) {
-        portfolioColor = '#f44336';  // red
-        buyHoldColor = '#008b02';    // green
-      } else {
-        portfolioColor = 'black';
-        buyHoldColor = 'black';
+      // Fetch the current high score.
+      const newestDBRecord = await fetchHighScore();
+      console.log('Fetched current DB high score:', newestDBRecord);
+
+      if (streakForUpdate > newestDBRecord.score) {
+        showModal = true;
       }
-
-      // Update HTML for the final comparison card using the buyHoldColor
-      finalComparison = `
-        <span style="color: ${buyHoldColor};">
-          Buy-and-Hold Value<br>
-          $${buyHoldFinal.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
-        </span>
-      `;
-    }
-
-    // Prepare win streak update:
-    // - For valid simulations, update win streak based on performance.
-    // - For invalid simulations (duration too short), reset win streak.
-    let streakForUpdate = consecutiveWinsValue;
-    if (!simulationValidFlag) {
+    } else {
       streakForUpdate = 0;
       consecutiveWins.set(0);
-      console.log(`Simulation invalid (duration: ${durationInSeconds.toFixed(2)}s). Resetting consecutive wins to 0.`);
-    } else {
-      // For valid simulations, update streak only if portfolio outperformed buy-and-hold
-      if (portfolioVal > buyHoldFinal) {
-        streakForUpdate = consecutiveWinsValue + 1;
-        consecutiveWins.set(streakForUpdate);
-        console.log(`Consecutive Wins increased to: ${streakForUpdate}`);
-
-        // Fetch current high score to determine if we need to show the modal.
-        const newestDBRecord = await fetchHighScore();
-        console.log('Fetched current DB high score:', newestDBRecord);
-
-        // If the user's new streak exceeds the current high score,
-        // show the modal and do NOT update the high score store here.
-        if (streakForUpdate > newestDBRecord.score) {
-          showModal = true;
-        }
-      } else {
-        // Underperformance resets win streak.
-        streakForUpdate = 0;
-        consecutiveWins.set(0);
-        console.log('Consecutive Wins reset to 0 (performance not sufficient).');
-      }
+      console.log('Consecutive Wins reset to 0 (performance not sufficient).');
     }
-
-    // Only re-fetch and update the high score store if the modal is NOT shown.
-    // If the modal is shown, we want to delay the update until after the user submits.
-    if (!showModal) {
-      try {
-        const updatedHighScore = await fetchHighScore();
-        highScore.set({
-          score: updatedHighScore.score,
-          playerName: updatedHighScore.playerName,
-        });
-        if (streakForUpdate > updatedHighScore.score) {
-          console.log('Updated high score store with:', updatedHighScore);
-        }
-      } catch (error) {
-        console.error('Error fetching updated high score:', error);
-      }
-    }
-
-    // Retrieve the visitor document ID (from variable or localStorage) for updating the session data.
-    const storedVisitorDocId = visitorDocId || localStorage.getItem('visitorDocId') || "visitor_placeholder";
-
-    // Define a win as a valid simulation where the portfolio outperformed buy-and-hold.
-    const win = simulationValidFlag && (portfolioVal > buyHoldFinal);
-
-    // Construct payload for updating the visitor document in the database.
-    const postUpdatePayload = {
-      documentId: storedVisitorDocId,
-      hasStarted: true,
-      naturalEnd: endedNaturally,
-      valid: simulationValidFlag,
-      win,
-      winStreak: streakForUpdate,
-      endGameDate: new Date(simulationEndTime),
-      durationOfGame: durationInSeconds,
-      portfolioValue: portfolio ? portfolio.portfolioValue : 0,
-      buyHoldFinalValue: buyHoldFinal,
-      portfolioCAGR: userAnnualReturn,
-      buyHoldCAGR: buyHoldAnnualReturn,
-      buys: data.actions.filter(action => action.type === 'buy').length,
-      sells: data.actions.filter(action => action.type === 'sell').length
-    };
-
-    // Send update payload to the server to update the visitor document
-    try {
-      const res = await fetch('/.netlify/functions/updateVisitorDocument', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(postUpdatePayload)
-      });
-      const updateResult = await res.json();
-      console.log(updateResult.message);
-    } catch (error) {
-      console.error('Error updating visitor document:', error);
-    }
-
-    // Temporarily disable the restart button to prevent rapid re-clicks
-    restartDisabled = true;
-    setTimeout(() => {
-      restartDisabled = false;
-    }, 1000);
   }
+
+  // Only update the high score store if the modal is not shown.
+  if (!showModal) {
+    try {
+      const updatedHighScore = await fetchHighScore();
+      highScore.set({
+        score: updatedHighScore.score,
+        playerName: updatedHighScore.playerName,
+      });
+      if (streakForUpdate > updatedHighScore.score) {
+        console.log('Updated high score store with:', updatedHighScore);
+      }
+    } catch (error) {
+      console.error('Error fetching updated high score:', error);
+    }
+  }
+
+}
 
   /* -------------------------------------------------------------------------
      SIMULATION RESTART HANDLER
@@ -436,6 +447,7 @@
     userAnnualReturn = 0;
     buyHoldAnnualReturn = 0;
     buyHoldFinal = 0;
+    userGame = null;
 
     // Reset market data and user portfolio to their initial states
     marketData.set({
@@ -541,6 +553,17 @@
   padding-right: 0px;
   padding-top: 7px;
   padding-bottom: 0px;
+}
+
+.chart-container-excess {
+  width: 93%;
+  max-width: 700px;
+  height: auto;
+
+  padding-left: 10px;
+  padding-right: 0px;
+  padding-top: 5px;
+  padding-bottom: 10px;
 }
 
 .timer-container input {
@@ -690,6 +713,15 @@
   width: 100%;
   position: relative;
 }
+
+.result-note {
+  font-family: 'Press Start 2P', cursive;
+  text-align: center;
+  color: #353535;
+  padding-left: 10px;
+  padding-right: 25px;
+}
+
 </style>
 
 <div class="app">
@@ -858,7 +890,7 @@
       {#if simulationEnded && !simulationValid}
         <!-- Optional: Invalid Simulation Message -->
         <div class="invalid-simulation-message">
-          Simulation did not run long enough to count towards win streak. Please run again for at least 30 seconds.
+          Timer too short to count towards statistics.<br><br>Please run again for at least 30 seconds.
         </div>
       {/if}
     </div>
@@ -866,15 +898,30 @@
 
   <!-- High Score Display -->
   {#if simulationEnded}
+
+    <div class="card" style="max-width: 200px; align-items: center; padding-bottom: 0px;">
+      <h2>Statistics</h2>
+    </div>
+
+    <div class="chart-container-excess card">
+     <ExcessCagrVsTradingActivity {visitorData} {userGame} bind:resultNote />
+     <div>   
+       {#if resultNote}
+        <p class="result-note" style="font-size: 0.8em">{resultNote}</p>
+      {/if}
+    </div>
+    </div>
+
     <div class="card results-details-card high-score-card">
       <h2>High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
       <p style="font-size: 6px;">
-        Honorable mention to VladStopStalking with 6942069421 wins.
+        Honorable mention to VladStopStalking with 6,942,069,421 wins
       </p>
     </div>
+
   {/if}
 
   <!-- Footer Card -->
