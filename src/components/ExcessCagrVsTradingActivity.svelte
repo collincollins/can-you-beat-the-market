@@ -121,7 +121,7 @@
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
-        label: `Fit:m=${slope.toFixed(2)},b=${intercept.toFixed(2)} `,
+        label: `Fit`,
         data: regressionPoints,
         borderColor: '#f44336', // red
         borderWidth: 3, // increased line width
@@ -136,7 +136,7 @@
       },
       // Mean outcomes: red points with a black border drawn on top.
       {
-        label: 'Avg. Excess CAGR',
+        label: 'Mean',
         data: meanData,
         backgroundColor: '#435b9f', // blue like button
         borderColor: 'black',
@@ -162,9 +162,9 @@
         label: 'You',
         data: [userPoint],
         backgroundColor: '#008b02', // green
-        borderColor: 'black',
+        borderColor: '#027504', // darker green
         pointRadius: 8,
-        pointStyle: 'star',
+        pointStyle: 'rectRounded',
         type: 'scatter',
         order: 1, // draw this on top
       });
