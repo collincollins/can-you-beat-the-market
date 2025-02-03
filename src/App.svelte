@@ -59,7 +59,7 @@
   // Visitor Document ID used to update the visitor record in MongoDB
   let visitorDocId = null;
 
-  let excessCagrCanvas;
+  let resultNote = ''; // Local variable that will be bound to the chart's resultNote;
   
   let visitorData = [];
   let userGame = null;
@@ -714,6 +714,14 @@
   position: relative;
 }
 
+.result-note {
+  font-family: 'Press Start 2P', cursive;
+  text-align: center;
+  color: #353535;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 </style>
 
 <div class="app">
@@ -897,6 +905,11 @@
 
     <div class="chart-container-excess card">
      <ExcessCagrVsTradingActivity {visitorData} {userGame} />
+     <div>   
+       {#if resultNote}
+        <p class="result-note" style="font-size: 0.8em">{resultNote}</p>
+      {/if}
+    </div>
     </div>
 
     <div class="card results-details-card high-score-card">
@@ -905,7 +918,7 @@
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
       <p style="font-size: 6px;">
-        Honorable mention to VladStopStalking with 6942069421 wins.
+        Honorable mention to VladStopStalking with 6,942,069,421 wins
       </p>
     </div>
 

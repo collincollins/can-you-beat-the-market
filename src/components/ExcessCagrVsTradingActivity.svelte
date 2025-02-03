@@ -38,8 +38,8 @@
   let chart;
   let canvasElement;
 
-  // This will hold the summary note
-  let resultNote = '';
+  // Export the result note so that App.svelte can bind to it.
+  export let resultNote = '';
 
   // Helper: compute linear regression parameters from arrays of x and y values.
   function linearRegression(x, y) {
@@ -196,7 +196,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Excess CAGR vs. Trading Activity',
+            text: '(Excess Return vs. Trading Activity',
             font: { size: 10, family: "'Press Start 2P'" },
             color: "#353535",
           },
@@ -234,7 +234,7 @@
           y: {
             title: {
               display: true,
-              text: 'Excess CAGR (%)',
+              text: 'Excess Return (Your Return - B&H Return) [%]',
               font: { 
                 size: 11,
                 family: "Press Start 2P"
@@ -302,19 +302,8 @@
     color: #353535;
   } */
 
-  .result-note {
-  font-family: 'Press Start 2P', cursive;
-  text-align: center;
-  color: #353535;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
 </style>
 
 <div class="chart-container">
   <canvas bind:this={canvasElement}></canvas>
-    {#if resultNote}
-    <p class="result-note">{resultNote}</p>
-  {/if}
 </div>
