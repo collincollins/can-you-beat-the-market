@@ -716,10 +716,10 @@
 
 .result-note {
   font-family: 'Press Start 2P', cursive;
-  text-align: center;
+  text-align: justify;
   color: #353535;
   padding-left: 10px;
-  padding-right: 10px;
+  padding-right: 20px;
 }
 
 </style>

@@ -217,7 +217,7 @@
               display: true,
               text: 'Total Trades (Buys + Sells)',
               font: { 
-                size: 11,
+                size: 12,
                 family: "Press Start 2P"  
               }
             },
@@ -234,9 +234,9 @@
           y: {
             title: {
               display: true,
-              text: 'Excess Return (You-B%H) [%]',
+              text: 'Excess Return (You-B&H) [%]',
               font: { 
-                size: 11,
+                size: 12,
                 family: "Press Start 2P"
               }
             },
