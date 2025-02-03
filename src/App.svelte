@@ -917,7 +917,7 @@
       <DistributionChart {visitorData} {userGame} bind:resultNote />
        <div>   
          {#if resultNote}
-           <p class="result-note" style="font-size: 0.8em">{resultNote}</p>
+           <p class="result-note" style="font-size: 0.8em">{distributionNote}</p>
          {/if}
        </div>
      </div>
