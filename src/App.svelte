@@ -890,7 +890,7 @@
       {#if simulationEnded && !simulationValid}
         <!-- Optional: Invalid Simulation Message -->
         <div class="invalid-simulation-message">
-          Simulation did not run long enough to count towards win streak. Please run again for at least 30 seconds.
+          Timer length too short to count towards win streak or statistics.<br>Please run again for at least 30 seconds.
         </div>
       {/if}
     </div>
