@@ -200,7 +200,8 @@
           title: {
             display: true,
             text: ['Excess Return vs. Trading Activity',
-                  '\n\n(n=' + dataCount + ')'],
+                  '\n',
+                  '(n=' + dataCount + ')'],
             font: { size: 10, family: "'Press Start 2P'" },
             color: "#353535",
           },
