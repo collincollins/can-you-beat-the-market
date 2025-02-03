@@ -162,8 +162,8 @@ function createChart() {
     const bhScale = bhData.length * bhHist.binWidth;
 
     // Compute Gaussian line data for each dataset.
-    const userGaussian = computeGaussianLine(userStats, userHist.min, userHist.max, 1, userScale);
-    const bhGaussian = computeGaussianLine(bhStats, bhHist.min, bhHist.max, 1, bhScale);
+    const userGaussian = computeGaussianLine(userStats, userHist.min, userHist.max, 100, userScale);
+    const bhGaussian = computeGaussianLine(bhStats, bhHist.min, bhHist.max, 100, bhScale);
 
     // Prepare bar data for histograms.
     const userBarData = userHist.binCenters.map((center, i) => ({
@@ -183,7 +183,7 @@ function createChart() {
     const datasets = [{
             label: 'User',
             data: userBarData,
-            backgroundColor: 'rgb(244, 67, 54, 0.2)',
+            backgroundColor: 'rgb(244, 67, 54, 0.5)',
             borderWidth: 0,
             barPercentage: 90,
             categoryPercentage: 1,
@@ -193,7 +193,7 @@ function createChart() {
             label: `User Fit (μ=${userStats.mu.toFixed(2)})`,
             data: userGaussian,
             type: 'line',
-            borderColor: '#435b9f',
+            borderColor: 'rgba(244, 67, 54, 1)',
             borderDash: [5, 5],
             borderWidth: 3,
             fill: false,
@@ -204,7 +204,7 @@ function createChart() {
         {
             label: 'B&H',
             data: bhBarData,
-            backgroundColor: 'rgb(0, 139, 2, 0.2)',
+            backgroundColor: 'rgb(0, 139, 2, 0.5)',
             borderWidth: 0,
             barPercentage: 120,
             categoryPercentage: 1,
@@ -214,7 +214,7 @@ function createChart() {
             label: `Fit (μ=${bhStats.mu.toFixed(2)})`,
             data: bhGaussian,
             type: 'line',
-            borderColor: '#B8BECE',
+            borderColor: 'rgba(244, 67, 54, 1)',
             borderDash: [5, 5],
             borderWidth: 3,
             fill: false,
