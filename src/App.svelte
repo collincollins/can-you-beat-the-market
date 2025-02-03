@@ -61,9 +61,8 @@
 
   let excessCagrCanvas;
   
-  // Assume you have an array of visitor documents available as visitorData.
-  // For example, this might be fetched from an API.
-  let visitorData = []; // Replace with actual data retrieval
+  let visitorData = [];
+  let userGame = null;
 
   /* -------------------------------------------------------------------------
      STORE SUBSCRIPTIONS
@@ -330,7 +329,16 @@
           })}
         </span>
       `;
+
+    if (simulationValid) {
+    userGame = {
+      buys: data.actions.filter(action => action.type === 'buy').length,
+      sells: data.actions.filter(action => action.type === 'sell').length,
+      portfolioCAGR: userAnnualReturn,
+      buyHoldCAGR: buyHoldAnnualReturn
+    };
     }
+  }
 
     // Prepare win streak update:
     // - For valid simulations, update win streak based on performance.
@@ -901,7 +909,7 @@
 
     <div class="chart-container-excess card">
     <!-- Render the chart component, passing in visitorData -->
-    <ExcessCagrVsTradingActivity {visitorData} />
+    <ExcessCagrVsTradingActivity {visitorData} {userGame} />
     </div>
 
   {/if}

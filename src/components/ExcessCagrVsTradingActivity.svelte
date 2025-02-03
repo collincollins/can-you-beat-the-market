@@ -30,6 +30,11 @@
   //   buys, sells, portfolioCAGR, buyHoldCAGR.
   export let visitorData = [];
 
+  // New prop for the current (user) game. This should be an object with:
+  //   totalTrades, portfolioCAGR, buyHoldCAGR, etc.
+  // Pass this in only if the user’s game is valid.
+  export let userGame = null;
+
   let chart;
   let canvasElement;
 
@@ -108,24 +113,24 @@
       {
         label: 'Games ',
         data: cleanedData,
-        backgroundColor: '#b8bece82', // blue like background
+        backgroundColor: '#B8BECE', // blue like background
         pointRadius: 4,
         showLine: false,
         type: 'scatter',
-        order: 3
+        order: 4
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
         label: `Fit:m=${slope.toFixed(2)},b=${intercept.toFixed(2)} `,
         data: regressionPoints,
-        borderColor: '#008b02', // green
-        borderWidth: 4, // increased line width
+        borderColor: '#f44336', // red
+        borderWidth: 3, // increased line width
         fill: false,
         tension: 0,
         pointRadius: 0,
         type: 'line',
         borderDash: [4, 4],
-        order: 2,
+        order: 3,
         // Use a line icon in the legend
         pointStyle: 'line'
       },
@@ -139,11 +144,33 @@
         pointRadius: 6,
         showLine: false,
         type: 'scatter',
-        order: 1,
+        order: 2,
       }
     ];
 
-    // Create the Chart.js chart.
+      // If the user's game is valid, add the "You" datapoint.
+      if (userGame) {
+      // Calculate excess CAGR for the user game.
+      const userExcessCAGR = Number(userGame.portfolioCAGR) - Number(userGame.buyHoldCAGR);
+      // Construct the datapoint using the user's total trades.
+      const userPoint = {
+        x: (userGame.buys || 0) + (userGame.sells || 0),
+        y: userExcessCAGR,
+      };
+
+      datasets.push({
+        label: 'You',
+        data: [userPoint],
+        backgroundColor: '#008b02', // green
+        borderColor: 'black',
+        pointRadius: 8,
+        pointStyle: 'star',
+        type: 'scatter',
+        order: 1, // draw this on top
+      });
+    }
+
+   // Create the Chart.js chart.
     chart = new Chart(canvasElement, {
       type: 'scatter',
       data: { datasets },
@@ -164,9 +191,10 @@
             }
           },
           tooltip: {
-            callbacks: {
-              // (additional tooltip customization can be added here if desired)
-            }
+            // This filter function returns tooltips only for the Avg. Excess CAGR dataset (dataset index 2).
+            filter: function(tooltipItem) {
+              return tooltipItem.datasetIndex === 2;
+            },
           }
         },
         scales: {
@@ -195,8 +223,8 @@
               display: true,
               text: 'Excess CAGR (%)',
               font: { 
-                 size: 11,
-                 family: "Press Start 2P"
+                size: 11,
+                family: "Press Start 2P"
               }
             },
             ticks: {
