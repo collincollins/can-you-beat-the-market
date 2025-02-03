@@ -111,7 +111,7 @@
     const datasets = [
       // User outcomes: scatter points with 50% opacity.
       {
-        label: 'Games ',
+        label: 'Games',
         data: cleanedData,
         backgroundColor: '#B8BECE', // blue like background
         pointRadius: 4,
@@ -121,7 +121,7 @@
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
-        label: `Fit`,
+        label: 'Fit ',
         data: regressionPoints,
         borderColor: '#f44336', // red
         borderWidth: 3, // increased line width
@@ -136,12 +136,13 @@
       },
       // Mean outcomes: red points with a black border drawn on top.
       {
-        label: 'Mean',
+        label: 'Mean ',
         data: meanData,
         backgroundColor: '#435b9f', // blue like button
         borderColor: 'black',
-        borderWidth: 1,
+        borderWidth: 2,
         pointRadius: 6,
+        pointHoverRadius: 7,
         showLine: false,
         type: 'scatter',
         order: 2,
@@ -159,11 +160,13 @@
       };
 
       datasets.push({
-        label: 'You',
+        label: 'You ',
         data: [userPoint],
         backgroundColor: '#008b02', // green
-        borderColor: '#027504', // darker green
-        pointRadius: 8,
+        borderColor: 'black', // darker green
+        borderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 6,
         pointStyle: 'rectRounded',
         type: 'scatter',
         order: 1, // draw this on top
@@ -196,8 +199,7 @@
             }
           },
           tooltip: {
-            // This filter function returns tooltips only for the Avg. Excess CAGR dataset (dataset index 2).
-            filter: tooltipItem => tooltipItem.datasetIndex === 2 || 1,
+            filter: tooltipItem => [2, 3].includes(tooltipItem.datasetIndex),
           }
         },
         scales: {

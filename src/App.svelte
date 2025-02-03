@@ -266,6 +266,13 @@
      SIMULATION END HANDLER
      ------------------------------------------------------------------------- */
      async function endSimulation() {
+
+  // 9. Temporarily disable the restart button to prevent rapid re-clicks.
+  restartDisabled = true;
+  setTimeout(() => {
+    restartDisabled = false;
+  }, 1000);
+  
   // 1. Stop the simulation.
   simulationEnded = true;
   simulationRunning = false;
@@ -415,11 +422,6 @@
     }
   }
 
-  // 9. Temporarily disable the restart button to prevent rapid re-clicks.
-  restartDisabled = true;
-  setTimeout(() => {
-    restartDisabled = false;
-  }, 1000);
 }
 
   /* -------------------------------------------------------------------------
