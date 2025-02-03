@@ -68,7 +68,7 @@
         const excessCAGR = portfolioCAGR - buyHoldCAGR;
         return { x: totalTrades, y: excessCAGR };
       })
-      .filter(d => d.x > 2 && d.x <= 35); // only include games with totalTrades > 2 and <= 30
+      .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 30
 
     if (cleanedData.length === 0) {
       console.warn('No valid data available for the chart.');
@@ -109,8 +109,8 @@
     const xTickMin = ((xMin - 1) % 2 === 0) ? (xMin - 1) : (xMin - 1) + 1;
     const xTickMax = ((xMax + 1) % 2 === 0) ? (xMax + 1) : (xMax + 1) + 1;
 
-    const yTickMin = Math.floor((yMin - 5) / 5) * 5;
-    const yTickMax = Math.ceil((yMax + 5) / 5) * 5;
+    const yTickMin = Math.floor((yMin - 1) / 5) * 5;
+    const yTickMax = Math.ceil((yMax + 1) / 5) * 5;
 
     // Define the datasets with explicit drawing order.
     const datasets = [
@@ -119,7 +119,7 @@
         label: 'Games',
         data: cleanedData,
         backgroundColor: '#B8BECE', // blue like background
-        pointRadius: 4,
+        pointRadius: 2,
         showLine: false,
         type: 'scatter',
         order: 4
@@ -145,9 +145,9 @@
         data: meanData,
         backgroundColor: '#435b9f', // blue like button
         borderColor: 'black',
-        borderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 7,
+        borderWidth: 1.5,
+        pointRadius: 5,
+        pointHoverRadius: 6,
         showLine: false,
         type: 'scatter',
         order: 2,
@@ -169,9 +169,9 @@
         data: [userPoint],
         backgroundColor: '#008b02', // green
         borderColor: 'black', // darker green
-        borderWidth: 2,
-        pointRadius: 7,
-        pointHoverRadius: 8,
+        borderWidth: 1.5,
+        pointRadius: 6,
+        pointHoverRadius: 7,
         pointStyle: 'rectRounded',
         type: 'scatter',
         order: 1, // draw this on top
@@ -267,7 +267,7 @@
   .chart-container {
     position: relative;
     height: 300px;
-    width: 95%;
+    width: 97%;
     max-width: 800px;
   }
 </style>
