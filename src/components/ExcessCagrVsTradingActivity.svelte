@@ -170,6 +170,11 @@
       });
     }
 
+// Destroy any existing chart.
+    if (chart) {
+      chart.destroy();
+    }
+
    // Create the Chart.js chart.
     chart = new Chart(canvasElement, {
       type: 'scatter',
@@ -192,9 +197,7 @@
           },
           tooltip: {
             // This filter function returns tooltips only for the Avg. Excess CAGR dataset (dataset index 2).
-            filter: function(tooltipItem) {
-              return tooltipItem.datasetIndex === 2;
-            },
+            filter: tooltipItem => tooltipItem.datasetIndex === 2 || 1,
           }
         },
         scales: {
@@ -250,16 +253,6 @@
       chart.destroy();
     }
   });
-
-  // **Reactive Statement for Updating the Chart**
-  // Whenever visitorData or userGame changes, destroy and re-create the chart.
-  $: if (canvasElement && visitorData) {
-    // If a chart already exists, destroy it before re-creating.
-    if (chart) {
-      chart.destroy();
-    }
-    createChart();
-  }
 </script>
 
 <style>

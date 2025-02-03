@@ -329,6 +329,8 @@
       portfolioCAGR: userAnnualReturn,
       buyHoldCAGR: buyHoldAnnualReturn
     };
+  } else {
+    userGame = null;
   }
 
   // 5. Build the payload and send the POST update.
@@ -370,10 +372,7 @@
     console.error('Error fetching visitor documents:', error);
   }
 
-  // 7. Update (or create) the chart with the new visitorData.
-  createChart();
-
-  // 8. Update win streak logic.
+  // 7. Update win streak logic.
   let streakForUpdate = consecutiveWinsValue;
   if (!simulationValidFlag) {
     streakForUpdate = 0;
@@ -446,6 +445,7 @@
     userAnnualReturn = 0;
     buyHoldAnnualReturn = 0;
     buyHoldFinal = 0;
+    userGame = null;
 
     // Reset market data and user portfolio to their initial states
     marketData.set({
