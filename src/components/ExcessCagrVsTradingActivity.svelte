@@ -165,8 +165,8 @@
         backgroundColor: '#008b02', // green
         borderColor: 'black', // darker green
         borderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 6,
+        pointRadius: 6,
+        pointHoverRadius: 7,
         pointStyle: 'rectRounded',
         type: 'scatter',
         order: 1, // draw this on top
