@@ -108,7 +108,7 @@
       {
         label: 'Games ',
         data: cleanedData,
-        backgroundColor: 'rgba(0, 0, 255, 0.5)', // blue with 0.5 opacity
+        backgroundColor: '#b8bece82', // blue like background
         pointRadius: 4,
         showLine: false,
         type: 'scatter',
@@ -116,10 +116,10 @@
       },
       // Regression line: slightly thicker line and drawn beneath the mean points.
       {
-        label: `Fit: m=${slope.toFixed(2)}, b=${intercept.toFixed(2)} `,
+        label: `Fit:m=${slope.toFixed(2)},b=${intercept.toFixed(2)} `,
         data: regressionPoints,
-        borderColor: 'red',
-        borderWidth: 2, // increased line width
+        borderColor: '#008b02', // green
+        borderWidth: 4, // increased line width
         fill: false,
         tension: 0,
         pointRadius: 0,
@@ -133,9 +133,9 @@
       {
         label: 'Avg. Excess CAGR',
         data: meanData,
-        backgroundColor: 'red',
+        backgroundColor: '#435b9f', // blue like button
         borderColor: 'black',
-        borderWidth: 0.5,
+        borderWidth: 1,
         pointRadius: 6,
         showLine: false,
         type: 'scatter',
@@ -160,7 +160,7 @@
           legend: {
             labels: {
               usePointStyle: true, // makes the legend icon match the dataset's marker style
-              font: { size: 8.5, family: "'Press Start 2P'" }
+              font: { size: 8, family: "'Press Start 2P'" }
             }
           },
           tooltip: {
@@ -205,8 +205,8 @@
                 family: "Press Start 2P"
               }
             },
-            min: yMin - 8,
-            max: yMax + 8
+            min: Math.round(yMin - 4),
+            max: Math.round(yMax + 4)
           }
         }
       }

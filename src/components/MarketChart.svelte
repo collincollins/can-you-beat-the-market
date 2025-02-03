@@ -55,7 +55,7 @@
         // sell markers
         label: 'Sell Event',
         data: [],
-        backgroundColor: 'red',
+        backgroundColor: '#f44336',
         pointStyle: 'circle',
         pointRadius: 6,
         showLine: false,
