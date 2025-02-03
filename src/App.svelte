@@ -5,6 +5,7 @@
   import { onMount, onDestroy } from 'svelte';
   import MarketChart from './components/MarketChart.svelte';
   import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
+  import DistributionChart from './components/DistributionChart.svelte';
   import Controls from './components/Controls.svelte';
   import UsernameModal from './components/UsernameModal.svelte';
 
@@ -905,12 +906,21 @@
 
     <div class="chart-container-excess card">
      <ExcessCagrVsTradingActivity {visitorData} {userGame} bind:resultNote />
-     <div>   
-       {#if resultNote}
-        <p class="result-note" style="font-size: 0.8em">{resultNote}</p>
-      {/if}
+      <div>   
+        {#if resultNote}
+          <p class="result-note" style="font-size: 0.8em">{resultNote}</p>
+        {/if}
+      </div>
     </div>
-    </div>
+
+    <div class="chart-container-excess card">
+      <DistributionChart {visitorData} {userGame} bind:resultNote />
+       <div>   
+         {#if resultNote}
+           <p class="result-note" style="font-size: 0.8em">{resultNote}</p>
+         {/if}
+       </div>
+     </div>
 
     <div class="card results-details-card high-score-card">
       <h2>High Score</h2>
