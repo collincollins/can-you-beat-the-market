@@ -897,10 +897,11 @@
       </p>
     </div>
 
-    <div class="chart-container-excess card">
-    <!-- Render the chart component, passing in visitorData -->
-    <ExcessCagrVsTradingActivity {visitorData} {userGames} />
-    </div>
+    {#if simulationEnded}
+      <div class="chart-container-excess card">
+        <ExcessCagrVsTradingActivity {visitorData} {userGame} />
+      </div>
+    {/if}
 
   {/if}
 

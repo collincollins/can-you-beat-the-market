@@ -250,6 +250,16 @@
       chart.destroy();
     }
   });
+
+  // **Reactive Statement for Updating the Chart**
+  // Whenever visitorData or userGame changes, destroy and re-create the chart.
+  $: if (canvasElement && visitorData) {
+    // If a chart already exists, destroy it before re-creating.
+    if (chart) {
+      chart.destroy();
+    }
+    createChart();
+  }
 </script>
 
 <style>
