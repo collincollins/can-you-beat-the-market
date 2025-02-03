@@ -128,7 +128,7 @@
       {
         label: 'Games',
         data: cleanedData,
-        backgroundColor: '#B8BECE', // blue like background
+        backgroundColor: 'rgba(184,190,206,0.5)', // blue like background with 50% opacity
         pointRadius: 3,
         showLine: false,
         type: 'scatter',
