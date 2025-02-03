@@ -718,8 +718,8 @@
   font-family: 'Press Start 2P', cursive;
   text-align: justify;
   color: #353535;
-  padding-left: 10px;
-  padding-right: 20px;
+  padding-left: 25px;
+  padding-right: 40px;
 }
 
 </style>
