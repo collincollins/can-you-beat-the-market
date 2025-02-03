@@ -186,13 +186,14 @@ function createChart() {
             backgroundColor: 'rgb(67, 91, 159, 0.5)',
             borderWidth: 0,
             barPercentage: 100,
+            categoryPercentage: 100,
             order: 1
         },
         {
             label: `User Fit (μ=${userStats.mu.toFixed(2)})`,
             data: userGaussian,
             type: 'line',
-            borderColor: '#435b9f',
+            borderColor: 'rgb(244, 67, 54, 50)',
             borderDash: [5, 5],
             borderWidth: 3,
             fill: false,
@@ -203,9 +204,10 @@ function createChart() {
         {
             label: 'B&H',
             data: bhBarData,
-            backgroundColor: 'rgb(184, 190, 206)',
+            backgroundColor: 'rgb(0, 139, 2, 50)',
             borderWidth: 0,
             barPercentage: 100,
+            categoryPercentage: 100,
             order: 3
         },
         {
