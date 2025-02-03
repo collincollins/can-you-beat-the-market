@@ -256,7 +256,7 @@
     if (slope < 0) {
       resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
     } else if (slope > 0) {
-      resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, your performance may improve relative to a buy‑and‑hold strategy.`;
+      resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance may improve relative to a buy‑and‑hold strategy.`;
     } else {
       resultNote = `Slope ${slope.toFixed(2)}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
     }
@@ -278,8 +278,10 @@
   .chart-container {
     position: relative;
     height: auto;
+    max-height: 350px;
     width: 97%;
     max-width: 800px;
+    padding-bottom: 10px;
   }
 
   .result-note {
