@@ -78,6 +78,9 @@
       return;
     }
 
+    // Calculate the number of data points
+    const dataCount = cleanedData.length;
+
     // Compute the mean excess CAGR per totalTrades value.
     const groups = {};
     cleanedData.forEach(d => {
@@ -196,7 +199,8 @@
         plugins: {
           title: {
             display: true,
-            text: 'Excess Return vs. Trading Activity',
+            text: ['Excess Return vs. Trading Activity',
+                  `(n=${dataCount})`],
             font: { size: 10, family: "'Press Start 2P'" },
             color: "#353535",
           },
