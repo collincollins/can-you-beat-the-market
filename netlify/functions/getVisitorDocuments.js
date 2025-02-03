@@ -32,9 +32,10 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
-    // Query for documents that contain the required fields and are marked as valid.
+    // Query for documents that have the required fields and
+    // a durationOfGame greater than or equal to 10.
     const query = {
-      valid: true,
+      durationOfGame: { $gte: 10 },
       buys: { $exists: true },
       sells: { $exists: true },
       portfolioCAGR: { $exists: true },
