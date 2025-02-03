@@ -904,7 +904,7 @@
     </div>
 
     <div class="chart-container-excess card">
-     <ExcessCagrVsTradingActivity {visitorData} {userGame} />
+     <ExcessCagrVsTradingActivity {visitorData} {userGame} bind:resultNote />
      <div>   
        {#if resultNote}
         <p class="result-note" style="font-size: 0.8em">{resultNote}</p>

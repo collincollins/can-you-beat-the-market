@@ -196,7 +196,7 @@
         plugins: {
           title: {
             display: true,
-            text: '(Excess Return vs. Trading Activity',
+            text: 'Excess Return vs. Trading Activity',
             font: { size: 10, family: "'Press Start 2P'" },
             color: "#353535",
           },
@@ -234,7 +234,7 @@
           y: {
             title: {
               display: true,
-              text: 'Excess Return (Your Return - B&H Return) [%]',
+              text: 'Excess Return (You-B%H) [%]',
               font: { 
                 size: 11,
                 family: "Press Start 2P"
@@ -289,7 +289,7 @@
   display: flex;
   flex-direction: column;
   width: 97%;
-  max-width: 800px;
+  max-width: 1000px;
   padding-bottom: 10px; /* Adjust padding as needed */
   height: 350px;  /* Let the container expand */
 }
