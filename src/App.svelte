@@ -182,7 +182,7 @@ onMount(async () => {
     }
 
     // Now create the chart
-    const res = await fetch('/.netlify/functions/getVisitorDocuments');
+    const res = await fetch('/.netlify/functions/getVisitorDocuments?realMode=${realMode}');
     visitorData = await res.json();
 });
 
