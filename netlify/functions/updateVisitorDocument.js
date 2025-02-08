@@ -2,11 +2,6 @@
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-// Only log if the deploy context is 'deploy-preview' or 'branch-deploy'
-const shouldLog =
-  process.env.CONTEXT === 'deploy-preview' ||
-  process.env.CONTEXT === 'branch-deploy';
-
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -29,7 +24,8 @@ exports.handler = async (event, context) => {
     if (!isConnected) {
       await client.connect();
       isConnected = true;
-      if (shouldLog) console.log('Connected to MongoDB for updateVisitorDocument.');
+      //DELETEIT
+      console.log('Connected to MongoDB for updateVisitorDocument.');
     }
 
     const defaultDbName =
@@ -41,9 +37,8 @@ exports.handler = async (event, context) => {
     const visitorsCollection = database.collection('visitors');
 
     const payload = JSON.parse(event.body);
-    if (shouldLog) {
-      console.log('updateVisitorDocument payload:', payload);
-    }
+    //DELETEIT
+    console.log('updateVisitorDocument payload:', payload);
 
     const {
       documentId,
@@ -95,18 +90,16 @@ exports.handler = async (event, context) => {
       ...(endRealMarketDate && { endRealMarketDate: new Date(endRealMarketDate) }),
     };
 
-    if (shouldLog) {
-      console.log('updateVisitorDocument updateData:', updateData);
-    }
+    //DELETEIT
+    console.log('updateVisitorDocument updateData:', updateData);
 
     const result = await visitorsCollection.updateOne(
       filter,
       { $set: updateData }
     );
 
-    if (shouldLog) {
-      console.log('updateOne result:', result);
-    }
+    //DELETEIT
+    console.log('updateOne result:', result);
 
     if (result.modifiedCount === 1) {
       return {
@@ -114,7 +107,8 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ message: 'Visitor document updated successfully.' }),
       };
     } else {
-      if (shouldLog) console.error('Failed to update visitor document:', result);
+        //DELETEIT
+        console.error('Failed to update visitor document:', result);
       return {
         statusCode: 500,
         body: JSON.stringify({ message: 'Failed to update visitor document.' }),

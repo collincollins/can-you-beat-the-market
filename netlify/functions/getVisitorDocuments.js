@@ -2,11 +2,6 @@
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
-// only log if the deploy context is 'deploy-preview' or 'branch-deploy'
-const shouldLog =
-  process.env.CONTEXT === 'deploy-preview' ||
-  process.env.CONTEXT === 'branch-deploy';
-
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: { version: ServerApiVersion.v1, deprecationErrors: true },
@@ -26,7 +21,8 @@ exports.handler = async (event, context) => {
     if (!isConnected) {
       await client.connect();
       isConnected = true;
-      if (shouldLog) console.log('Connected to MongoDB.');
+      //DELETEIT
+      console.log('Connected to MongoDB.');
     }
 
     // determine the appropriate database name.
@@ -109,15 +105,13 @@ exports.handler = async (event, context) => {
       ];
     }
 
-    if (shouldLog) {
-      console.log("Aggregation pipeline:", JSON.stringify(pipeline, null, 2));
-    }
+    //DELETEIT
+    console.log("Aggregation pipeline:", JSON.stringify(pipeline, null, 2));
 
     const visitorDocs = await visitorsCollection.aggregate(pipeline).toArray();
 
-    if (shouldLog) {
-      console.log(`Found ${visitorDocs.length} visitor document(s).`);
-    }
+    //DELETEIT
+    console.log(`Found ${visitorDocs.length} visitor document(s).`);
 
     return {
       statusCode: 200,
