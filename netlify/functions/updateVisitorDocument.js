@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
       buyHoldCAGR,
       buys,
       sells,
-      realMarket,
+      realMode,
       startRealMarketDate,
       endRealMarketDate
     } = payload;
@@ -90,7 +90,7 @@ exports.handler = async (event, context) => {
       buyHoldCAGR,
       buys,
       sells,
-      realMarket,
+      realMode,
       ...(startRealMarketDate && { simulationStartDate: new Date(startRealMarketDate) }),
       ...(endRealMarketDate && { simulationEndDate: new Date(endRealMarketDate) })
     };

@@ -76,7 +76,7 @@ exports.handler = async (event, context) => {
       buyHoldCAGR: null,         // buy-and-hold CAGR (computed from simulation)
       buys: 0,                   // number of buy actions (to be tallied)
       sells: 0,                  // number of sell actions (to be tallied)
-      realMarket: false,         // true if real market data is enabled
+      realMode: false,         // true if real market data is enabled
       startRealMarketDate: null, // the S&P data starting point (date)
       endRealMarketDate: null    // the S&P data ending point (date)
     };

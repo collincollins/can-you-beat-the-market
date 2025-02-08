@@ -393,7 +393,7 @@ async function endSimulation() {
         buyHoldCAGR: buyHoldAnnualReturn,
         buys: data.actions.filter(action => action.type === 'buy').length,
         sells: data.actions.filter(action => action.type === 'sell').length,
-        realMarket: realMode,
+        realMode: realMode,
         ...(realMarketDates && {
             startRealMarketDate: realMarketDates.startRealMarketDate,
             endRealMarketDate: realMarketDates.endRealMarketDate

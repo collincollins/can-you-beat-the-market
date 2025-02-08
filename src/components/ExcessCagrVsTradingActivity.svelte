@@ -34,6 +34,8 @@ Chart.register(
 // buys, sells, portfolioCAGR, buyHoldCAGR.
 export let visitorData = [];
 
+  console.log("visitorData: ", visitorData)
+
 // new prop for the current (user) game. this should be an object with:
 // totalTrades, portfolioCAGR, buyHoldCAGR, etc.
 // pass this in only if the user’s game is valid.
