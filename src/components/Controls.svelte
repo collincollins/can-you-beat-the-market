@@ -2,39 +2,39 @@
 
 <script>
   /**
-   * Controls Component
+   * controls component
    * 
-   * Provides "Buy" and "Sell" buttons for managing the user's portfolio.
-   * Buttons are conditionally rendered based on the `canBuy` and `canSell` props.
+   * provides "Buy" and "Sell" buttons for managing the user's portfolio.
+   * buttons are conditionally rendered based on the `canBuy` and `canSell` props.
    * 
-   * Props:
-   * - canBuy (boolean): Determines if the "Buy" button should be displayed.
-   * - canSell (boolean): Determines if the "Sell" button should be displayed.
+   * props:
+   * - canBuy (boolean): determines if the "Buy" button should be displayed.
+   * - canSell (boolean): determines if the "Sell" button should be displayed.
    * 
-   * Events:
-   * - buy: Emitted when the "Buy" button is clicked.
-   * - sell: Emitted when the "Sell" button is clicked.
+   * events:
+   * - buy: emitted when the "Buy" button is clicked.
+   * - sell: emitted when the "Sell" button is clicked.
    */
 
   import { createEventDispatcher } from 'svelte';
 
-  // Props passed from the parent component
+  // props passed from the parent component
   export let canBuy = false;
   export let canSell = false;
 
   const dispatch = createEventDispatcher();
 
   /**
-   * Handles the "Buy" button click.
-   * Dispatches a 'buy' event.
+   * handles the "Buy" button click.
+   * dispatches a 'buy' event.
    */
   function handleBuy() {
     dispatch('buy');
   }
 
   /**
-   * Handles the "Sell" button click.
-   * Dispatches a 'sell' event.
+   * handles the "Sell" button click.
+   * dispatches a 'sell' event.
    */
   function handleSell() {
     dispatch('sell');

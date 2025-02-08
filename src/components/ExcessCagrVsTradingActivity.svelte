@@ -16,7 +16,7 @@ import {
     CategoryScale,
 } from 'chart.js';
 
-// Register Chart.js components
+// register Chart.js components
 Chart.register(
     ScatterController,
     LineController,
@@ -29,22 +29,22 @@ Chart.register(
     Legend
 );
 
-// Expect visitorData as a prop. Each visitor document should include:
-//   buys, sells, portfolioCAGR, buyHoldCAGR.
+// expect visitorData as a prop. each visitor document should include:
+// buys, sells, portfolioCAGR, buyHoldCAGR.
 export let visitorData = [];
 
-// New prop for the current (user) game. This should be an object with:
-//   totalTrades, portfolioCAGR, buyHoldCAGR, etc.
-// Pass this in only if the user’s game is valid.
+// new prop for the current (user) game. this should be an object with:
+// totalTrades, portfolioCAGR, buyHoldCAGR, etc.
+// pass this in only if the user’s game is valid.
 export let userGame = null;
 
 let chart;
 let canvasElement;
 
-// Export the result note so that App.svelte can bind to it.
+// export the result note so that App.svelte can bind to it.
 export let resultNote = '';
 
-// Helper: compute linear regression parameters from arrays of x and y values.
+// helper: compute linear regression parameters from arrays of x and y values.
 function linearRegression(x, y) {
     const n = x.length;
     if (n === 0) return {
@@ -71,7 +71,7 @@ function linearRegression(x, y) {
 }
 
 function createChart() {
-    // Process visitorData to compute totalTrades and excessCAGR.
+    // process visitorData to compute totalTrades and excessCAGR.
     const cleanedData = visitorData
         .map(doc => {
             const totalTrades = (doc.buys || 0) + (doc.sells || 0);
@@ -85,8 +85,8 @@ function createChart() {
         })
         .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 25
 
-    // Calculate the number of data points.
-    // If the user's game is valid, include it in the count.
+    // calculate the number of data points.
+    // if the user's game is valid, include it in the count.
     let dataCount = cleanedData.length;
     if (userGame) {
         dataCount++;
@@ -97,7 +97,7 @@ function createChart() {
         return;
     }
 
-    // Compute the mean excess CAGR per totalTrades value.
+    // compute the mean excess CAGR per totalTrades value.
     const groups = {};
     cleanedData.forEach(d => {
         if (!groups[d.x]) {
@@ -114,7 +114,7 @@ function createChart() {
         };
     });
 
-    // Prepare arrays of x and y values for regression.
+    // prepare arrays of x and y values for regression.
     const xValues = cleanedData.map(d => d.x);
     const yValues = cleanedData.map(d => d.y);
     const {
@@ -122,7 +122,7 @@ function createChart() {
         intercept
     } = linearRegression(xValues, yValues);
 
-    // Generate regression line data over the span of totalTrades.
+    // generate regression line data over the span of totalTrades.
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
     const yMin = Math.min(...yValues);
@@ -143,7 +143,7 @@ function createChart() {
     const yTickMin = Math.floor((yMin - 1) / 5) * 5;
     const yTickMax = Math.ceil((yMax + 1) / 5) * 5;
 
-    // Define the datasets with explicit drawing order.
+    // define the datasets with explicit drawing order.
     const datasets = [{
             label: 'Games',
             data: cleanedData,
@@ -153,22 +153,21 @@ function createChart() {
             type: 'scatter',
             order: 4
         },
-        // Regression line: slightly thicker line and drawn beneath the mean points.
+        // regression line: slightly thicker line and drawn beneath the mean points.
         {
             label: 'Fit ',
             data: regressionPoints,
             borderColor: '#f44336', // red
-            borderWidth: 3, // increased line width
+            borderWidth: 3,
             fill: false,
             tension: 0,
             pointRadius: 0,
             type: 'line',
             borderDash: [4, 4],
             order: 3,
-            // Use a line icon in the legend
             pointStyle: 'line'
         },
-        // Mean outcomes: red points with a black border drawn on top.
+        // mean outcomes: red points with a black border drawn on top.
         {
             label: 'Avg ',
             data: meanData,
@@ -183,11 +182,11 @@ function createChart() {
         }
     ];
 
-    // If the user's game is valid, add the "You" datapoint.
+    // if the user's game is valid, add the "You" datapoint.
     if (userGame) {
-        // Calculate excess CAGR for the user game.
+        // calculate excess CAGR for the user game.
         const userExcessCAGR = Number(userGame.portfolioCAGR) - Number(userGame.buyHoldCAGR);
-        // Construct the datapoint using the user's total trades.
+        // construct the datapoint using the user's total trades.
         const userPoint = {
             x: (userGame.buys || 0) + (userGame.sells || 0),
             y: userExcessCAGR,
@@ -207,12 +206,12 @@ function createChart() {
         });
     }
 
-    // Destroy any existing chart.
+    // destroy any existing chart.
     if (chart) {
         chart.destroy();
     }
 
-    // Create the Chart.js chart.
+    // create the Chart.js chart.
     chart = new Chart(canvasElement, {
         type: 'scatter',
         data: {
@@ -236,7 +235,7 @@ function createChart() {
                 },
                 legend: {
                     labels: {
-                        usePointStyle: true, // makes the legend icon match the dataset's marker style
+                        usePointStyle: true,
                         font: {
                             size: 8,
                             family: "'Press Start 2P'"
@@ -289,7 +288,7 @@ function createChart() {
             }
         }
     });
-    // Set the result note based on the slope.
+    // set the result note based on the slope.
     if (slope < 0) {
         resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
     } else if (slope > 0) {
@@ -311,15 +310,6 @@ onDestroy(() => {
 </script>
 
 <style>
-/* Updated container style to match the main chart container */
-/* .chart-container {
-    position: relative;
-    height: auto;
-    max-height: 350px;
-    width: 97%;
-    max-width: 800px;
-    padding-bottom: 10px;
-  } */
 
 .chart-container {
     position: relative;
@@ -328,18 +318,8 @@ onDestroy(() => {
     width: 97%;
     max-width: 1000px;
     padding-bottom: 10px;
-    /* Adjust padding as needed */
     height: 350px;
-    /* Let the container expand */
 }
-
-/* .result-note {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.75em;
-    text-align: center;
-    margin-top: 10px;
-    color: #353535;
-  } */
 </style>
 
 <div class="chart-container">

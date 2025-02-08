@@ -4,7 +4,7 @@ import { writable } from './store';
 
 export const visitorCount = writable(0);
 
-// Function to fetch the current visitor count
+// function to fetch the current visitor count
 export const fetchVisitorCount = async () => {
   try {
     const response = await fetch('/.netlify/functions/getVisitorCount', {

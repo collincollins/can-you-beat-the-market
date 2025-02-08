@@ -14,14 +14,17 @@ export const userPortfolio = writable({
   portfolioValue: 0
 });
 
-// High Score Store
+// high score store
 export const highScore = writable({
   score: 0,
   playerName: 'No one yet'
 });
 
-// **Consecutive Wins Store**
+// consecutive Wins store
 export const consecutiveWins = writable(0);
 
-// Export writable to allow its usage in other files
+// sp500 data store
+export const sp500DataStore = writable([]);
+
+// export writable to allow its usage in other files
 export { writable };

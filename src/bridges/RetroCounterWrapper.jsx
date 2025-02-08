@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom/client';
 import reactToWebComponent from 'react-to-webcomponent';
 import RetroHitCounter from 'react-retro-hit-counter';
 
-// Utility functions to parse boolean and number values
+// utility functions to parse boolean and number values
 function parseBool(val) {
   return val === 'true' || val === true;
 }
@@ -20,10 +20,10 @@ function RetroCounterWC(props) {
   const [visitorCount, setVisitorCount] = useState(parseNumber(visitors)); // initialize state for visitor count
 
   useEffect(() => {
-    // Function to increment the hit count and retrieve the updated visitor count
+    // function to increment the hit count and retrieve the updated visitor count
     const updateVisitorCount = async () => {
       try {
-        // Simply fetch the count of unique visitors
+        // fetch the count of unique visitors
         const response = await fetch('/.netlify/functions/getVisitorCount', {
           method: 'GET',
         });
@@ -31,7 +31,7 @@ function RetroCounterWC(props) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
   
-        // Fetch the updated visitor count
+        // fetch the updated visitor count
         const getVisitorResponse = await fetch('/.netlify/functions/getVisitorCount', {
           method: 'GET',
         });
@@ -45,8 +45,8 @@ function RetroCounterWC(props) {
         }
     };
   
-    updateVisitorCount(); // Execute the function on component mount
-  }, []); // Empty dependency array ensures this runs only once on mount
+    updateVisitorCount(); // execute function on component mount
+  }, []); // empty dependency array ensures this runs only once on mount
 
   return (
     <RetroHitCounter
@@ -68,10 +68,10 @@ function RetroCounterWC(props) {
   );
 }
 
-// Convert the React component to a Web Component
+// convert the React component to a Web Component
 const RetroCounterElement = reactToWebComponent(RetroCounterWC, React, ReactDOM);
 
-// Define the custom element if it hasn't been defined yet
+// define the custom element if it hasn't been defined yet
 if (!customElements.get('retro-counter')) {
   customElements.define('retro-counter', RetroCounterElement);
 }

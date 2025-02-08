@@ -48,7 +48,10 @@ exports.handler = async (event, context) => {
       portfolioCAGR,
       buyHoldCAGR,
       buys,
-      sells
+      sells,
+      realMarket,
+      startMarketDate,
+      endMarketDate
     } = JSON.parse(event.body);
 
     if (!documentId) {
@@ -58,7 +61,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Convert documentId string to an ObjectId
+    // convert documentId string to an ObjectId
     const filter = { _id: new ObjectId(documentId) };
 
     const updateData = {
@@ -74,7 +77,10 @@ exports.handler = async (event, context) => {
       portfolioCAGR,
       buyHoldCAGR,
       buys,
-      sells
+      sells,
+      realMarket,
+      ...(startRealMarketDate && { simulationStartDate: new Date(simulationStartDate) }),
+      ...(endRealMarketDate && { simulationEndDate: new Date(simulationEndDate) })
     };
 
     const result = await visitorsCollection.updateOne(

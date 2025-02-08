@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
       isConnected = true;
     }
 
-    // Determine the appropriate database name.
+    // determine the appropriate database name.
     const defaultDbName =
       process.env.CONTEXT === 'deploy-preview'
         ? 'canyoubeatthemarket-test'
@@ -32,15 +32,42 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
-    // Query for documents that have the required fields and
-    // a durationOfGame greater than or equal to 10.
-    const query = {
+    // base query criteria for both game modes.
+    let query = {
       durationOfGame: { $gte: 10 },
       buys: { $exists: true },
       sells: { $exists: true },
       portfolioCAGR: { $exists: true },
       buyHoldCAGR: { $exists: true }
     };
+
+    // read the realMode value from the query string (if provided).
+    const { realMode } = event.queryStringParameters || {};
+
+    if (realMode === "true") {
+      // for real market mode, require that both startRealMarketDate and endRealMarketDate
+      // exist and have non-null, non-zero values.
+      query.startRealMarketDate = { $exists: true, $nin: [null, 0] };
+      query.endRealMarketDate = { $exists: true, $nin: [null, 0] };
+    } else {
+      // for simulated mode, ensure that there are no meaningful real market dates.
+      // we require that startRealMarketDate is either not present or is null/0,
+      // and similarly for endRealMarketDate.
+      query.$and = [
+        {
+          $or: [
+            { startRealMarketDate: { $exists: false } },
+            { startRealMarketDate: { $in: [null, 0] } }
+          ]
+        },
+        {
+          $or: [
+            { endRealMarketDate: { $exists: false } },
+            { endRealMarketDate: { $in: [null, 0] } }
+          ]
+        }
+      ];
+    }
 
     const visitorDocs = await visitorsCollection.find(query).toArray();
 

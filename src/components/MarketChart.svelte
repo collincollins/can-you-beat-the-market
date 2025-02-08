@@ -12,8 +12,8 @@
     Legend,
   } from 'chart.js';
   import { marketData } from '../logic/store';
+  import annotationPlugin from 'chartjs-plugin-annotation';
 
-  // register Chart.js components
   Chart.register(
     LineController,
     LineElement,
@@ -22,18 +22,30 @@
     Title,
     CategoryScale,
     Tooltip,
-    Legend
+    Legend,
+    annotationPlugin
   );
 
   let chart;
   let ctx;
 
-  // prepare the datasets
+
+  // Use the first market price as the starting price.
+  // In simulated mode, this will be 100; in real mode, it will be the starting price from the S&P500 historical data.
+  $: initialPrice = ($marketData.marketPrices && $marketData.marketPrices.length)
+      ? $marketData.marketPrices[0]
+      : 100;
+
+  // Compute the suggested limits and round them to the nearest integer.
+  $: roundedYMin = Math.round(initialPrice * 0.95);
+  $: roundedYMax = Math.round(initialPrice * 1.10);
+
+
   const data = {
     labels: [],
     datasets: [
       {
-        // rolling average line
+        // Rolling average line
         label: 'Market Price ',
         data: [],
         borderColor: 'black',
@@ -43,28 +55,25 @@
         tension: 0,
       },
       {
-        // buy markers
         label: 'Buy Event ',
         data: [],
         backgroundColor: '#008b02',
         pointStyle: 'circle',
-        pointRadius: 6,
+        pointRadius: 5.5,
         showLine: false,
       },
       {
-        // sell markers
         label: 'Sell Event',
         data: [],
         backgroundColor: '#f44336',
         pointStyle: 'circle',
-        pointRadius: 6,
+        pointRadius: 5.5,
         showLine: false,
       },
     ],
   };
 
-  // chart options
-  const options = {
+  $: options = {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
@@ -89,8 +98,8 @@
         },
       },
       y: {
-        suggestedMin: 95,
-        suggestedMax: 110,
+        suggestedMin: roundedYMin,
+        suggestedMax: roundedYMax,
         title: {
           display: true,
           text: 'Price ($)',
@@ -123,13 +132,31 @@
       },
       tooltip: {
         enabled: true,
+        bodyFont: {
+                        family: "'Press Start 2P'",
+                        size: 8
+                    },
+                    titleFont: {
+                        family: "'Press Start 2P'",
+                        size: 10
+                    },
+                    footerFont: {
+                        family: "'Press Start 2P'",
+                        size: 8
+                    }
       },
     },
   };
 
+  // reactive block to update the chart instance when roundedYMin or roundedYMax change.
+  $: if (chart) {
+    chart.options.scales.y.suggestedMin = roundedYMin;
+    chart.options.scales.y.suggestedMax = roundedYMax;
+    chart.update('none');
+  }
+
   let unsubscribe;
 
-  // function to initialize the chart
   function initializeChart() {
     if (ctx) {
       chart = new Chart(ctx, {
@@ -137,16 +164,12 @@
         data,
         options,
       });
-
-      // subscribe to marketData updates
       unsubscribe = marketData.subscribe(newData => {
-        // update rolling-average line
         chart.data.datasets[0].data = newData.rollingAverages.map((ra, i) => ({
           x: newData.days[i],
           y: ra,
         }));
 
-        // update buy and sell actions
         const buyActions = newData.actions
           .filter(a => a.type === 'buy')
           .map(a => ({ x: a.day, y: a.executedPrice }));
@@ -165,7 +188,6 @@
   onMount(() => {
     // wait for fonts to load before rendering the chart
     document.fonts.ready.then(() => {
-      console.log('Fonts loaded, initializing chart...');
       initializeChart();
     }).catch(() => {
       console.error('Fonts failed to load, initializing chart anyway...');
@@ -175,6 +197,7 @@
 
   onDestroy(() => {
     if (chart) chart.destroy();
+    chart = null;
     if (unsubscribe) unsubscribe();
   });
 </script>

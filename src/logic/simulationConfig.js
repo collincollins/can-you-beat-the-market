@@ -1,45 +1,58 @@
 // src/logic/simulationConfig.js
 
 /**
- * Simulation Configuration Parameters
+ * simulation configuration parameters
  * 
- * Centralizes all configurable parameters for the market simulation.
+ * this file centralizes all configurable parameters for the market simulation.
+ * 
+ * the new approach uses a fixed mapping:
+ *   - "secondsPerMarketYear": the number of real seconds that correspond to one market year (365 days).
+ *     for example, if set to 6, then 6 real seconds equal 1 market year.
+ * 
+ * this means the number of market days to generate (or fetch) is calculated as:
+ *   numDays = Math.floor((timerSeconds / secondsPerMarketYear) * 365);
+ * 
  */
 
+// constant representing the number of days in a market year.
 const DAYS_IN_YEAR = 365;
 
-// Initial Simulation Parameters
 let SIMULATION_PARAMS = {
-  simulationDurationYears: 5,      // Total simulated years
-  simulationRealTimeSeconds: 30,   // Total real-time duration of the simulation in seconds
-  stepsPerSecond: 10,              // Number of simulation steps per second
-  annualDrift: 0.09,               // Expected annual return of the market
-  annualVolatility: 0.20,          // Annual volatility of the market
-  windowSize: 2,                    // Number of data points for rolling average
+  // the total real-time duration of the simulation in seconds (default; can be updated via user input).
+  simulationRealTimeSeconds: 30,
+  
+  // mapping parameter: how many real seconds correspond to 1 market year.
+  // for instance, with secondsPerMarketYear = 6, 6 seconds of real time equal 1 market year (365 days).
+  secondsPerMarketYear: 10,
+  
+  // market dynamics parameters for the simulated (GBM) mode.
+  annualDrift: 0.09,      // expected annual return
+  annualVolatility: 0.20, // annual volatility
+  
+  // smoothing parameter: the window size for the rolling average.
+  // this value is fixed and should only be changed by the developer.
+  windowSize: 5,
+  
+  // toggle for using real market data versus simulated data.
+  realMode: false,
+  
+  // for real mode: number of data points plotted per second.
+  realMarketDataFrequency: 61
 };
 
-// Function to update simulation parameters
+/**
+ * 
+ * @param {Object} newParams - an object containing the parameters to update.
+ */
 export function setSimulationParams(newParams) {
   SIMULATION_PARAMS = { ...SIMULATION_PARAMS, ...newParams };
 }
 
-// Function to retrieve current simulation parameters
+/**
+ * retrieves the current simulation parameters.
+ * 
+ * @returns {Object} the current simulation configuration.
+ */
 export function getSimulationParams() {
   return SIMULATION_PARAMS;
 }
-
-// Derived Parameters
-export const getDaysPerStep = () => {
-  const { simulationDurationYears, simulationRealTimeSeconds, stepsPerSecond } = SIMULATION_PARAMS;
-  
-  if (stepsPerSecond <= 0) {
-    throw new Error("stepsPerSecond must be greater than 0");
-  }
-
-  return (simulationDurationYears * DAYS_IN_YEAR) / (simulationRealTimeSeconds * stepsPerSecond);
-};
-
-export const getSimulationIntervalMs = () => {
-  const { stepsPerSecond } = SIMULATION_PARAMS;
-  return 1000 / stepsPerSecond;
-};
