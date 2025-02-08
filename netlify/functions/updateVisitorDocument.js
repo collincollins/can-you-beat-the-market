@@ -50,8 +50,8 @@ exports.handler = async (event, context) => {
       buys,
       sells,
       realMarket,
-      startMarketDate,
-      endMarketDate
+      startRealMarketDate,
+      endRealMarketDate
     } = JSON.parse(event.body);
 
     if (!documentId) {
@@ -79,8 +79,8 @@ exports.handler = async (event, context) => {
       buys,
       sells,
       realMarket,
-      ...(startRealMarketDate && { simulationStartDate: new Date(simulationStartDate) }),
-      ...(endRealMarketDate && { simulationEndDate: new Date(simulationEndDate) })
+      ...(startRealMarketDate && { simulationStartDate: new Date(startRealMarketDate) }),
+      ...(endRealMarketDate && { simulationEndDate: new Date(endRealMarketDate) })
     };
 
     const result = await visitorsCollection.updateOne(

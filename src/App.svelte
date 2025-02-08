@@ -416,7 +416,7 @@ async function endSimulation() {
 
     // 6. fetch the visitor documents once (to include the user’s data indirectly via the update).
     try {
-        const res = await fetch(`/netlify/functions/getVisitorDocuments?realMode=${realMode}`);
+      const res = await fetch(`/.netlify/functions/getVisitorDocuments?realMode=${realMode}`);
         visitorData = await res.json();
     } catch (error) {
         console.error('Error fetching visitor documents:', error);
