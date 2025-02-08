@@ -478,6 +478,7 @@ function restartSimulation() {
     timer = timerInput;
     portfolioColor = 'black';
     buyHoldColor = 'black';
+    visitorData = [];
     finalComparison = '';
     userAnnualReturn = 0;
     buyHoldAnnualReturn = 0;

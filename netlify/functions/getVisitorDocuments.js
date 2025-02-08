@@ -38,57 +38,82 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
-    // base query criteria common to both modes.
-    let query = {
-      durationOfGame: { $gte: 10 },
-      buys: { $exists: true },
-      sells: { $exists: true },
-      portfolioCAGR: { $exists: true },
-      buyHoldCAGR: { $exists: true }
-    };
-
-    // read the realMode value from the query string (if provided)
+    // read the realMode parameter from the query string.
+    // (if realMode is "true", use the real mode pipeline; otherwise, use simulation mode.)
     const { realMode } = event.queryStringParameters || {};
 
+    let pipeline = [];
+
     if (realMode === "true") {
-      // for real market mode:
-      // - the document must be explicitly marked as realMode true.
-      // - both startRealMarketDate and endRealMarketDate must exist and be non-null/non-zero.
-      query.realMode = true;
-      query.startRealMarketDate = { $exists: true, $nin: [null, 0] };
-      query.endRealMarketDate = { $exists: true, $nin: [null, 0] };
+      // real mode: require that the document explicitly indicates real mode and has valid market dates.
+      pipeline = [
+        {
+          $match: {
+            durationOfGame: { $gte: 10 },
+            buys: { $exists: true },
+            sells: { $exists: true },
+            portfolioCAGR: { $exists: true },
+            buyHoldCAGR: { $exists: true },
+            realMode: true,
+            startRealMarketDate: { $exists: true, $nin: [null, 0] },
+            endRealMarketDate: { $exists: true, $nin: [null, 0] },
+          },
+        },
+        {
+          $addFields: {
+            totalTrades: {
+              $add: [
+                { $ifNull: ["$buys", 0] },
+                { $ifNull: ["$sells", 0] },
+              ],
+            },
+          },
+        },
+        {
+          $match: {
+            totalTrades: { $gt: 2, $lte: 25 },
+          },
+        },
+      ];
     } else {
-      // for simulated market mode:
-      // - the document must not be marked as real mode (i.e. realMode is false, null, or missing)
-      // - and neither startRealMarketDate nor endRealMarketDate should hold a meaningful value.
-      query.$and = [
+      // simulation mode: include documents that either lack the realMode field or have it set to false.
+      pipeline = [
         {
-          $or: [
-            { realMode: false },
-            { realMode: { $exists: false } },
-            { realMode: null }
-          ]
+          $match: {
+            durationOfGame: { $gte: 10 },
+            buys: { $exists: true },
+            sells: { $exists: true },
+            portfolioCAGR: { $exists: true },
+            buyHoldCAGR: { $exists: true },
+            $or: [
+              { realMode: { $exists: false } },
+              { realMode: false },
+            ],
+          },
         },
         {
-          $or: [
-            { startRealMarketDate: { $exists: false } },
-            { startRealMarketDate: { $in: [null, 0] } }
-          ]
+          $addFields: {
+            totalTrades: {
+              $add: [
+                { $ifNull: ["$buys", 0] },
+                { $ifNull: ["$sells", 0] },
+              ],
+            },
+          },
         },
         {
-          $or: [
-            { endRealMarketDate: { $exists: false } },
-            { endRealMarketDate: { $in: [null, 0] } }
-          ]
-        }
+          $match: {
+            totalTrades: { $gt: 2, $lte: 25 },
+          },
+        },
       ];
     }
 
     if (shouldLog) {
-      console.log('getVisitorDocuments query:', JSON.stringify(query, null, 2));
+      console.log("Aggregation pipeline:", JSON.stringify(pipeline, null, 2));
     }
 
-    const visitorDocs = await visitorsCollection.find(query).toArray();
+    const visitorDocs = await visitorsCollection.aggregate(pipeline).toArray();
 
     if (shouldLog) {
       console.log(`Found ${visitorDocs.length} visitor document(s).`);
