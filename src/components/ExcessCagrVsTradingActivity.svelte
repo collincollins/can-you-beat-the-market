@@ -1,4 +1,5 @@
 <script>
+
 import {
     onMount,
     onDestroy
@@ -72,6 +73,8 @@ function linearRegression(x, y) {
 
 function createChart() {
     // process visitorData to compute totalTrades and excessCAGR.
+    // DELETEIT
+    console.log('Raw visitorData:', visitorData);
     const cleanedData = visitorData
         .map(doc => {
             const totalTrades = (doc.buys || 0) + (doc.sells || 0);
@@ -82,24 +85,30 @@ function createChart() {
                 x: totalTrades,
                 y: excessCAGR
             };
-        })
-        .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 25
+        });
+        //DELETIT
+        console.log('Mapped data (before filtering):', cleanedData);
+
+    // only include games with totalTrades greater than 2 and less than or equal to 25.
+    const filteredData = cleanedData.filter(d => d.x > 2 && d.x <= 25);
+    //DELETIT
+    console.log('Filtered data:', filteredData);
 
     // calculate the number of data points.
     // if the user's game is valid, include it in the count.
-    let dataCount = cleanedData.length;
-    if (userGame) {
-        dataCount++;
-    }
-
-    if (cleanedData.length === 0) {
+    
+    if (filteredData.length === 0) {
         console.warn('No valid data available for the chart.');
         return;
     }
 
+    let dataCount = filteredData.length;
+    if (userGame) {
+        dataCount++;
+    }
     // compute the mean excess CAGR per totalTrades value.
     const groups = {};
-    cleanedData.forEach(d => {
+    filteredData.forEach(d => {
         if (!groups[d.x]) {
             groups[d.x] = [];
         }
@@ -115,8 +124,8 @@ function createChart() {
     });
 
     // prepare arrays of x and y values for regression.
-    const xValues = cleanedData.map(d => d.x);
-    const yValues = cleanedData.map(d => d.y);
+    const xValues = filteredData.map(d => d.x);
+    const yValues = filteredData.map(d => d.y);
     const {
         slope,
         intercept
@@ -125,8 +134,6 @@ function createChart() {
     // generate regression line data over the span of totalTrades.
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
-    const yMin = Math.min(...yValues);
-    const yMax = Math.max(...yValues);
     const regressionPoints = [];
     const numLinePoints = 100;
     const step = (xMax - xMin) / (numLinePoints - 1);
@@ -139,14 +146,15 @@ function createChart() {
     }
     const xTickMin = ((xMin - 1) % 2 === 0) ? (xMin - 1) : (xMin - 1) + 1;
     const xTickMax = ((xMax + 1) % 2 === 0) ? (xMax + 1) : (xMax + 1) + 1;
-
+    const yMin = Math.min(...yValues);
+    const yMax = Math.max(...yValues);
     const yTickMin = Math.floor((yMin - 1) / 5) * 5;
     const yTickMax = Math.ceil((yMax + 1) / 5) * 5;
 
     // define the datasets with explicit drawing order.
     const datasets = [{
             label: 'Games',
-            data: cleanedData,
+            data: filteredData,
             backgroundColor: 'rgba(184,190,206,0.5)', // blue like background
             pointRadius: 3,
             showLine: false,
@@ -310,7 +318,6 @@ onDestroy(() => {
 </script>
 
 <style>
-
 .chart-container {
     position: relative;
     display: flex;
