@@ -91,8 +91,8 @@ exports.handler = async (event, context) => {
       buys,
       sells,
       realMode,
-      ...(startRealMarketDate && { simulationStartDate: new Date(startRealMarketDate) }),
-      ...(endRealMarketDate && { simulationEndDate: new Date(endRealMarketDate) })
+      ...(startRealMarketDate && { startRealMarketDate: new Date(startRealMarketDate) }),
+      ...(endRealMarketDate && { endRealMarketDate: new Date(endRealMarketDate) }),
     };
 
     if (shouldLog) {
