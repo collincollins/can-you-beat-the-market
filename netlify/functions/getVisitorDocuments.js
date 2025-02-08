@@ -38,7 +38,7 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
-    // base query criteria for both game modes.
+    // base query criteria common to both modes.
     let query = {
       durationOfGame: { $gte: 10 },
       buys: { $exists: true },
@@ -47,19 +47,28 @@ exports.handler = async (event, context) => {
       buyHoldCAGR: { $exists: true }
     };
 
-    // read the realMode value from the query string (if provided).
+    // read the realMode value from the query string (if provided)
     const { realMode } = event.queryStringParameters || {};
 
     if (realMode === "true") {
-      // for real market mode, require that both startRealMarketDate and endRealMarketDate
-      // exist and have non-null, non-zero values.
+      // for real market mode:
+      // - the document must be explicitly marked as realMode true.
+      // - both startRealMarketDate and endRealMarketDate must exist and be non-null/non-zero.
+      query.realMode = true;
       query.startRealMarketDate = { $exists: true, $nin: [null, 0] };
       query.endRealMarketDate = { $exists: true, $nin: [null, 0] };
     } else {
-      // for simulated mode, ensure that there are no meaningful real market dates.
-      // we require that startRealMarketDate is either not present or is null/0,
-      // and similarly for endRealMarketDate.
+      // for simulated market mode:
+      // - the document must not be marked as real mode (i.e. realMode is false, null, or missing)
+      // - and neither startRealMarketDate nor endRealMarketDate should hold a meaningful value.
       query.$and = [
+        {
+          $or: [
+            { realMode: false },
+            { realMode: { $exists: false } },
+            { realMode: null }
+          ]
+        },
         {
           $or: [
             { startRealMarketDate: { $exists: false } },

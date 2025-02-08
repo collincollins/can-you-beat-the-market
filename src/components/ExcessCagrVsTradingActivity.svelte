@@ -73,8 +73,6 @@ function linearRegression(x, y) {
 
 function createChart() {
     // process visitorData to compute totalTrades and excessCAGR.
-    // DELETEIT
-    console.log('Raw visitorData:', visitorData);
     const cleanedData = visitorData
         .map(doc => {
             const totalTrades = (doc.buys || 0) + (doc.sells || 0);
@@ -86,13 +84,9 @@ function createChart() {
                 y: excessCAGR
             };
         });
-        //DELETIT
-        console.log('Mapped data (before filtering):', cleanedData);
 
     // only include games with totalTrades greater than 2 and less than or equal to 25.
     const filteredData = cleanedData.filter(d => d.x > 2 && d.x <= 25);
-    //DELETIT
-    console.log('Filtered data:', filteredData);
 
     // calculate the number of data points.
     // if the user's game is valid, include it in the count.
