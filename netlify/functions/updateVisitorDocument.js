@@ -27,7 +27,7 @@ exports.handler = async (event, context) => {
     }
 
     const defaultDbName =
-      process.env.CONTEXT === 'deploy-preview'
+      process.env.CONTEXT === 'branch-deploy'
         ? 'canyoubeatthemarket-test'
         : 'canyoubeatthemarket';
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
