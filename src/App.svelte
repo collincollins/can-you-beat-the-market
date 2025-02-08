@@ -181,9 +181,9 @@ onMount(async () => {
         console.error("Error fetching SP500 data:", error);
     }
 
-    // // Now create the chart
-    // const res = await fetch('/.netlify/functions/getVisitorDocuments');
-    // visitorData = await res.json();
+    // Now create the chart
+    const res = await fetch('/.netlify/functions/getVisitorDocuments');
+    visitorData = await res.json();
 });
 
 onDestroy(() => {
