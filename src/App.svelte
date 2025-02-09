@@ -307,6 +307,7 @@ async function startSimulationHandler() {
         console.error('Error pre-fetching visitor documents:', error);
     }
     try {
+      const windowSize = 2;
       const spDataFull = await fetchAndPrepFullSp500(windowSize); 
       // but it doesn't filter by start/end date yet
       precomputedSp500ChartStore.set(spDataFull);
