@@ -1036,7 +1036,7 @@ function handleSell() {
         />
       </a>
       <div style="font-size: 0.7em; color: 'black'; margin-top: -10px; margin-left: 50px; margin-right: 50px;">
-        <sup>*</sup> <a href="https://dontbuythat.org" target="_blank" rel="noopener noreferrer" style="color: #435b9f; text-decoration: none;">Don't Buy That</a> and see how much your money could grow into.
+        <sup>*</sup> <a href="https://dontbuythat.org" target="_blank" rel="noopener noreferrer" style="color: #435b9f; text-decoration: none;">Don't Buy That</a> coffee and see how much your money could grow into.
       </div>
     {/if}
     <div class="counter-container">
