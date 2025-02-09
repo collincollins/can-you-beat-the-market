@@ -90,6 +90,11 @@ onDestroy(() => {
  * and then instantiate (or re-instantiate) the Chart.
  */
 function createChart() {
+    // If there's no canvas anymore, bail out.
+    if (!canvasElement) {
+    return;
+    }
+
     // Destroy an existing chart instance if it exists
     if (chart) {
         chart.destroy();
