@@ -1,4 +1,6 @@
 <script>
+// Set DEBUG to true to enable logging
+const DEBUG = true;
 
 import {
     onMount,
@@ -16,7 +18,9 @@ import {
     Legend,
     CategoryScale,
 } from 'chart.js';
-import { visitorDataStore } from '../logic/store';
+import {
+    visitorDataStore
+} from '../logic/store';
 
 // register Chart.js components
 Chart.register(
@@ -31,7 +35,6 @@ Chart.register(
     Legend
 );
 
-
 // new prop for the current (user) game. this should be an object with:
 // totalTrades, portfolioCAGR, buyHoldCAGR, etc.
 // pass this in only if the user’s game is valid.
@@ -40,9 +43,11 @@ export let resultNote = '';
 
 let chart;
 let canvasElement;
+if (DEBUG) console.log("DEBUG MODE ON: ExcessCagrVsTradingActivity.svelte loaded.");
 
 // helper: compute linear regression parameters from arrays of x and y values.
 function linearRegression(x, y) {
+    if (DEBUG) console.log("Calculating linear regression for x:", x, " and y:", y);
     const n = x.length;
     if (n === 0) return {
         slope: 0,
@@ -51,6 +56,7 @@ function linearRegression(x, y) {
 
     const meanX = x.reduce((sum, val) => sum + val, 0) / n;
     const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+    if (DEBUG) console.log("meanX:", meanX, " meanY:", meanY);
 
     let numerator = 0;
     let denominator = 0;
@@ -58,9 +64,11 @@ function linearRegression(x, y) {
         numerator += (x[i] - meanX) * (y[i] - meanY);
         denominator += (x[i] - meanX) ** 2;
     }
+    if (DEBUG) console.log("Regression numerator:", numerator, " denominator:", denominator);
 
     const slope = denominator === 0 ? 0 : numerator / denominator;
     const intercept = meanY - slope * meanX;
+    if (DEBUG) console.log("Calculated slope:", slope, " intercept:", intercept);
     return {
         slope,
         intercept
@@ -68,19 +76,27 @@ function linearRegression(x, y) {
 }
 
 function createChart() {
+    if (DEBUG) console.log("createChart() called. $visitorDataStore:", $visitorDataStore);
     // process visitorData to compute totalTrades and excessCAGR.
-    const cleanedData = $visitorDataStore
-    .map(doc => {
-        // Use the precomputed totalTrades if it exists, otherwise fall back to computing from buys/sells.
-        const totalTrades = doc.totalTrades !== undefined ? doc.totalTrades : ((doc.buys || 0) + (doc.sells || 0));
+    // Use the precomputed totalTrades field if available.
+    const cleanedData = $visitorDataStore.map(doc => {
+        const totalTrades = doc.totalTrades !== undefined ?
+            doc.totalTrades :
+            ((doc.buys || 0) + (doc.sells || 0));
         const portfolioCAGR = Number(doc.portfolioCAGR) || 0;
         const buyHoldCAGR = Number(doc.buyHoldCAGR) || 0;
         const excessCAGR = portfolioCAGR - buyHoldCAGR;
-        return { x: totalTrades, y: excessCAGR };
+        if (DEBUG) console.log("Mapping document:", doc, "->", {
+            x: totalTrades,
+            y: excessCAGR
+        });
+        return {
+            x: totalTrades,
+            y: excessCAGR
+        };
     });
-    // calculate the number of data points.
-    // if the user's game is valid, include it in the count.
-    
+    if (DEBUG) console.log("Cleaned data:", cleanedData);
+
     if (cleanedData.length === 0) {
         console.warn('No valid data available for the chart.');
         return;
@@ -89,6 +105,7 @@ function createChart() {
     let dataCount = cleanedData.length;
     if (userGame) {
         dataCount++;
+        if (DEBUG) console.log("User game exists. Incrementing data count to:", dataCount);
     }
     // compute the mean excess CAGR per totalTrades value.
     const groups = {};
@@ -98,18 +115,23 @@ function createChart() {
         }
         groups[d.x].push(d.y);
     });
+    if (DEBUG) console.log("Groups by totalTrades:", groups);
     const meanData = Object.entries(groups).map(([trade, outcomes]) => {
         const sum = outcomes.reduce((a, b) => a + b, 0);
         const mean = sum / outcomes.length;
+        if (DEBUG) console.log("Computed mean for totalTrades", trade, ":", mean);
         return {
             x: Number(trade),
             y: mean
         };
     });
+    if (DEBUG) console.log("Mean data:", meanData);
 
     // prepare arrays of x and y values for regression.
     const xValues = cleanedData.map(d => d.x);
     const yValues = cleanedData.map(d => d.y);
+    if (DEBUG) console.log("xValues:", xValues, " yValues:", yValues);
+
     const {
         slope,
         intercept
@@ -118,6 +140,8 @@ function createChart() {
     // generate regression line data over the span of totalTrades.
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
+    if (DEBUG) console.log("xMin:", xMin, " xMax:", xMax);
+
     const regressionPoints = [];
     const numLinePoints = 100;
     const step = (xMax - xMin) / (numLinePoints - 1);
@@ -128,12 +152,15 @@ function createChart() {
             y: slope * xVal + intercept
         });
     }
+    if (DEBUG) console.log("Regression points:", regressionPoints);
+
     const xTickMin = ((xMin - 1) % 2 === 0) ? (xMin - 1) : (xMin - 1) + 1;
     const xTickMax = ((xMax + 1) % 2 === 0) ? (xMax + 1) : (xMax + 1) + 1;
     const yMin = Math.min(...yValues);
     const yMax = Math.max(...yValues);
     const yTickMin = Math.floor((yMin - 1) / 5) * 5;
     const yTickMax = Math.ceil((yMax + 1) / 5) * 5;
+    if (DEBUG) console.log("Ticks: xTickMin:", xTickMin, " xTickMax:", xTickMax, " yTickMin:", yTickMin, " yTickMax:", yTickMax);
 
     // define the datasets with explicit drawing order.
     const datasets = [{
@@ -183,7 +210,7 @@ function createChart() {
             x: (userGame.buys || 0) + (userGame.sells || 0),
             y: userExcessCAGR,
         };
-
+        if (DEBUG) console.log("User game point:", userPoint);
         datasets.push({
             label: 'You ',
             data: [userPoint],
@@ -200,10 +227,12 @@ function createChart() {
 
     // destroy any existing chart.
     if (chart) {
+        if (DEBUG) console.log("Destroying existing chart instance.");
         chart.destroy();
     }
 
     // create the Chart.js chart.
+    if (DEBUG) console.log("Creating new Chart with datasets:", datasets);
     chart = new Chart(canvasElement, {
         type: 'scatter',
         data: {
@@ -280,6 +309,9 @@ function createChart() {
             }
         }
     });
+    
+    if (DEBUG) console.log("Chart created successfully.");
+
     // set the result note based on the slope.
     if (slope < 0) {
         resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
@@ -288,14 +320,17 @@ function createChart() {
     } else {
         resultNote = `Slope ${slope.toFixed(2)}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
     }
+    if (DEBUG) console.log("Result note set to:", resultNote);
 }
 
 onMount(() => {
+    if (DEBUG) console.log("onMount: Calling createChart()");
     createChart();
 });
 
 onDestroy(() => {
     if (chart) {
+        if (DEBUG) console.log("onDestroy: Destroying chart instance.");
         chart.destroy();
     }
 });
