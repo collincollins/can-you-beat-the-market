@@ -39,5 +39,12 @@ export const precomputedChartDataStore = writable({
   regressionPoints: []
 });
 
+export const precomputedSp500ChartStore = writable({
+  weeklyData: [],
+  minPrice: 0,
+  maxPrice: 0,
+  // or anything else you want to store from fetchAndPrepFullSp500
+});
+
 // export writable to allow its usage in other files
 export { writable };

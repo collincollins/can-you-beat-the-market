@@ -30,11 +30,15 @@ import {
     consecutiveWins,
     sp500DataStore,
     visitorDataStore,
-    precomputedChartDataStore
+    precomputedChartDataStore,
+    precomputedSp500ChartStore
 } from './logic/store';
 import {
     preComputeChartData
 } from './logic/prepareChartData';
+import {
+    fetchAndPrepFullSp500
+} from './logic/prepareSp500ChartData';
 import {
     fetchHighScore,
     updateHighScore
@@ -302,6 +306,13 @@ async function startSimulationHandler() {
     } catch (error) {
         console.error('Error pre-fetching visitor documents:', error);
     }
+    try {
+      const spDataFull = await fetchAndPrepFullSp500(windowSize); 
+      // but it doesn't filter by start/end date yet
+      precomputedSp500ChartStore.set(spDataFull);
+    } catch (err) {
+      console.error('Error fetching and preparing SP500 data:', err);
+  }
 }
 
 async function endSimulation() {

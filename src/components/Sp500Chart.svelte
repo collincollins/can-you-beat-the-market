@@ -18,6 +18,7 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import annotationPlugin from 'chartjs-plugin-annotation';
+
 Chart.register(
     LineController,
     LineElement,
@@ -33,77 +34,56 @@ Chart.register(
 );
 
 import {
-    getSimulationParams
-} from '../logic/simulationConfig';
-// import {
-//     marketData
-// } from '../logic/store'; // to access simulation day info
+    precomputedSp500ChartStore
+} from '../logic/store';
 
-// Accept simulation dates from App.svelte.
+// accept simulation dates from App.svelte.
 export let simulationStartDate = null;
 export let simulationEndDate = null;
 
 let canvas;
 let chart;
 
-let sp500Data = [];
-let smoothedData = [];
+let weeklyData = [];
 
-// rolling average function for smoothing the data.
-function applyRollingAverage(data, windowSize) {
-    const smoothed = [];
-    for (let i = 0; i < data.length; i++) {
-        const start = Math.max(0, i - windowSize + 1);
-        const subset = data.slice(start, i + 1);
-        const sum = subset.reduce((acc, val) => acc + val, 0);
-        smoothed.push(sum / subset.length);
+const unsub = precomputedSp500ChartStore.subscribe(val => {
+    weeklyData = val.weeklyData || [];
+    createChart();
+});
+
+onMount(() => {
+    if (weeklyData.length) {
+        createChart();
     }
-    return smoothed;
-}
+});
 
-let yMinBox, yMaxBox;
+onDestroy(() => {
+    if (chart) chart.destroy();
+    unsub();
+});
 
-onMount(async () => {
-    const response = await fetch('/data/sp500_filtered.json');
-    sp500Data = await response.json();
+function createChart() {
+    // if no canvas or no data, bail
+    if (!canvas || !weeklyData.length) return;
 
-    let windowSize = 1;
-    const prices = sp500Data.map(d => d.Close);
-    smoothedData = applyRollingAverage(prices, windowSize);
+    // 1. slice for the user's actual (startDate, endDate)
+    const fullFirstDate = weeklyData[0]?.x;
+    const fullLastDate = weeklyData[weeklyData.length - 1]?.x;
+    const effectiveStart = simulationStartDate ? new Date(simulationStartDate) : fullFirstDate;
+    const effectiveEnd = simulationEndDate ? new Date(simulationEndDate) : fullLastDate;
 
-    const datasetData = sp500Data.map((d, i) => ({
-        x: new Date(d.Date),
-        y: smoothedData[i]
-    }));
+    const slicedData = weeklyData.filter(point => point.x >= effectiveStart && point.x <= effectiveEnd);
 
-    // sample the data to weekly values
-    const weeklyData = datasetData.filter((_, i) => i % 5 === 0);
-    // determine the full date range from the dataset.
-    const fullFirstDate = new Date(sp500Data[0].Date);
-    const fullLastDate = new Date(sp500Data[sp500Data.length - 1].Date);
-
-    // determine the previous game's market interval.
-    // if we’re in real mode and the props were provided, use them.
-    // otherwise, fall back to the full dataset range.
-    const effectiveStartDate = (getSimulationParams().realMode && simulationStartDate) ?
-        new Date(simulationStartDate) :
-        fullFirstDate;
-    const effectiveEndDate = (getSimulationParams().realMode && simulationEndDate) ?
-        new Date(simulationEndDate) :
-        fullLastDate;
-
-    const simulationWeeklyData = weeklyData.filter(point =>
-        point.x >= effectiveStartDate && point.x <= effectiveEndDate
-    );
-    if (simulationWeeklyData.length > 0) {
-        const yValues = simulationWeeklyData.map(point => point.y);
-        const minY = Math.min(...yValues);
-        const maxY = Math.max(...yValues);
-        yMinBox = minY * 0.70;
-        yMaxBox = maxY * 1.50;
-    } else {
-        console.log("There is no data in the previous game's interval")
+    // 2. optionally compute yMinBox / yMaxBox
+    let yMinBox = null,
+        yMaxBox = null;
+    if (slicedData.length) {
+        const yVals = slicedData.map(d => d.y);
+        yMinBox = Math.min(...yVals) * 0.7;
+        yMaxBox = Math.max(...yVals) * 1.5;
     }
+    // destroy any existing chart
+    if (chart) chart.destroy();
 
     chart = new Chart(canvas, {
         type: 'line',
@@ -114,9 +94,9 @@ onMount(async () => {
                 borderColor: 'black',
                 backgroundColor: 'black',
                 fill: false,
-                tension: 0.1,
+                tension: 0.5,
                 pointRadius: 0,
-                borderWidth: 1.0
+                borderWidth: 0.8
             }]
         },
         options: {
@@ -133,7 +113,7 @@ onMount(async () => {
                                 fontColor: '#545454',
                                 fillStyle: 'rgb(0, 139, 2, 0.1)',
                                 strokeStyle: 'rgb(0, 139, 2, 1)',
-                                lineWidth: 1.5,
+                                lineWidth: 1.3,
                                 hidden: false,
                                 borderRadius: 3,
                                 index: 0
@@ -183,14 +163,14 @@ onMount(async () => {
                     annotations: [{
                         id: 'box',
                         type: 'box',
-                        xMin: effectiveStartDate,
-                        xMax: effectiveEndDate,
+                        xMin: effectiveStart,
+                        xMax: effectiveEnd,
                         yMin: yMinBox,
                         yMax: yMaxBox,
                         backgroundColor: 'rgb(0, 139, 2, 0.1)',
                         borderColor: 'rgb(0, 139, 2, 1)',
                         borderRadius: 10,
-                        borderWidth: 1.5,
+                        borderWidth: 1.2,
                         label: {
                             enabled: true,
                             content: 'Your Game',
@@ -257,14 +237,7 @@ onMount(async () => {
             }
         }
     });
-});
-
-onDestroy(() => {
-    if (chart) {
-        chart.destroy();
-        chart = null
-    }
-});
+};
 </script>
 
 <style>
