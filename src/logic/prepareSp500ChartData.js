@@ -1,4 +1,5 @@
 // ./logic/prepareSp500ChartData.js
+
 export async function fetchAndPrepFullSp500(windowSize = 1) {
   // 1. fetch
   const response = await fetch('/data/sp500_filtered.json');
@@ -27,7 +28,7 @@ export async function fetchAndPrepFullSp500(windowSize = 1) {
 }
 
 // rolling average function for smoothing the data.
-function applyRollingAverage(data, windowSize) {
+function applyRollingAverage(data, windowSize = 1) {
   const smoothed = [];
   for (let i = 0; i < data.length; i++) {
       const start = Math.max(0, i - windowSize + 1);
