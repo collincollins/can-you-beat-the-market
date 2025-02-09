@@ -163,7 +163,6 @@ function createChart() {
             x: (userGame.buys || 0) + (userGame.sells || 0),
             y: userExcessCAGR,
         };
-        if (DEBUG) console.log("User game point:", userPoint);
         datasets.push({
             label: 'You ',
             data: [userPoint],
