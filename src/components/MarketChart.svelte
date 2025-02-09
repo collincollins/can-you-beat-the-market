@@ -52,7 +52,7 @@
         borderWidth: 1.5,
         fill: false,
         pointRadius: 0,
-        tension: 0,
+        tension: .5,
       },
       {
         label: 'Buy Event ',

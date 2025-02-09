@@ -22,7 +22,7 @@ let SIMULATION_PARAMS = {
   simulationRealTimeSeconds: 30,
   
   // mapping parameter: how many real seconds correspond to 1 market year.
-  // for instance, with secondsPerMarketYear = 6, 6 seconds of real time equal 1 market year (365 days).
+  // for instance, with secondsPerMarketYear = 10, 10 seconds of real time equal 1 market year (365 days).
   secondsPerMarketYear: 10,
   
   // market dynamics parameters for the simulated (GBM) mode.
@@ -31,7 +31,7 @@ let SIMULATION_PARAMS = {
   
   // smoothing parameter: the window size for the rolling average.
   // this value is fixed and should only be changed by the developer.
-  windowSize: 5,
+  windowSize: 10,
   
   // toggle for using real market data versus simulated data.
   realMode: false,
