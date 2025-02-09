@@ -70,16 +70,14 @@ function linearRegression(x, y) {
 function createChart() {
     // process visitorData to compute totalTrades and excessCAGR.
     const cleanedData = $visitorDataStore
-        .map(doc => {
-            const totalTrades = (doc.buys || 0) + (doc.sells || 0);
-            const portfolioCAGR = Number(doc.portfolioCAGR) || 0;
-            const buyHoldCAGR = Number(doc.buyHoldCAGR) || 0;
-            const excessCAGR = portfolioCAGR - buyHoldCAGR;
-            return {
-                x: totalTrades,
-                y: excessCAGR
-            };
-        });
+    .map(doc => {
+        // Use the precomputed totalTrades if it exists, otherwise fall back to computing from buys/sells.
+        const totalTrades = doc.totalTrades !== undefined ? doc.totalTrades : ((doc.buys || 0) + (doc.sells || 0));
+        const portfolioCAGR = Number(doc.portfolioCAGR) || 0;
+        const buyHoldCAGR = Number(doc.buyHoldCAGR) || 0;
+        const excessCAGR = portfolioCAGR - buyHoldCAGR;
+        return { x: totalTrades, y: excessCAGR };
+    });
     // calculate the number of data points.
     // if the user's game is valid, include it in the count.
     
