@@ -180,10 +180,6 @@ onMount(async () => {
     } catch (error) {
         console.error("Error fetching SP500 data:", error);
     }
-
-    // Now create the chart
-    const res = await fetch(`/.netlify/functions/getVisitorDocuments?realMode=${realMode}`);
-    visitorData = await res.json();
 });
 
 onDestroy(() => {
@@ -400,6 +396,7 @@ async function endSimulation() {
         })
     };
 
+    // 5. Send the update to MongoDB
     try {
         const resUpdate = await fetch('/.netlify/functions/updateVisitorDocument', {
             method: 'POST',
@@ -409,14 +406,19 @@ async function endSimulation() {
             body: JSON.stringify(postUpdatePayload)
         });
         const updateResult = await resUpdate.json();
-        console.log(updateResult.message);
+        console.log('Update result:', updateResult.message);
     } catch (error) {
         console.error('Error updating visitor document:', error);
+        // Optionally, you might decide to abort further operations here.
+        return;
     }
 
-    // 6. fetch the visitor documents once (to include the user’s data indirectly via the update).
+    // 6. Fetch visitor documents after the update is confirmed
     try {
-      const res = await fetch(`/.netlify/functions/getVisitorDocuments?realMode=${realMode}`);
+        const url = realMode ?
+            '/.netlify/functions/getVisitorDocuments?realMode=true' :
+            '/.netlify/functions/getVisitorDocuments?realMode=false';
+        const res = await fetch(url);
         visitorData = await res.json();
     } catch (error) {
         console.error('Error fetching visitor documents:', error);

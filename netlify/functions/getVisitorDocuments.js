@@ -52,24 +52,24 @@ exports.handler = async (event, context) => {
             buyHoldCAGR: { $exists: true },
             realMode: true,
             startRealMarketDate: { $exists: true, $nin: [null, 0] },
-            endRealMarketDate: { $exists: true, $nin: [null, 0] },
-          },
+            endRealMarketDate: { $exists: true, $nin: [null, 0] }
+          }
         },
         {
           $addFields: {
             totalTrades: {
               $add: [
                 { $ifNull: ["$buys", 0] },
-                { $ifNull: ["$sells", 0] },
-              ],
-            },
-          },
+                { $ifNull: ["$sells", 0] }
+              ]
+            }
+          }
         },
         {
           $match: {
-            totalTrades: { $gt: 2, $lte: 25 },
-          },
-        },
+            totalTrades: { $gt: 2, $lte: 25 }
+          }
+        }
       ];
     } else {
       // simulation mode: include documents that either lack the realMode field or have it set to false.
@@ -83,25 +83,25 @@ exports.handler = async (event, context) => {
             buyHoldCAGR: { $exists: true },
             $or: [
               { realMode: { $exists: false } },
-              { realMode: false },
-            ],
-          },
+              { realMode: false }
+            ]
+          }
         },
         {
           $addFields: {
             totalTrades: {
               $add: [
                 { $ifNull: ["$buys", 0] },
-                { $ifNull: ["$sells", 0] },
-              ],
-            },
-          },
+                { $ifNull: ["$sells", 0] }
+              ]
+            }
+          }
         },
         {
           $match: {
             totalTrades: { $gt: 2, $lte: 25 },
-          },
-        },
+          }
+        }
       ];
     }
 
