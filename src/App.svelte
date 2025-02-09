@@ -419,7 +419,9 @@ async function endSimulation() {
             '/.netlify/functions/getVisitorDocuments?realMode=true' :
             '/.netlify/functions/getVisitorDocuments?realMode=false';
         const res = await fetch(url);
-        visitorData = await res.json();
+        const json = await res.json()
+        visitorDataStore.set(json);
+        console.log(visitorData)
     } catch (error) {
         console.error('Error fetching visitor documents:', error);
     }

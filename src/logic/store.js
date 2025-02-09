@@ -26,5 +26,8 @@ export const consecutiveWins = writable(0);
 // sp500 data store
 export const sp500DataStore = writable([]);
 
+// ADD visitorData store:
+export const visitorDataStore = writable([]);
+
 // export writable to allow its usage in other files
 export { writable };

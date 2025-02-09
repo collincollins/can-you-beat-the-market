@@ -16,6 +16,7 @@ import {
     Legend,
     CategoryScale,
 } from 'chart.js';
+import { visitorDataStore } from '../logic/store';
 
 // register Chart.js components
 Chart.register(
@@ -32,9 +33,7 @@ Chart.register(
 
 // expect visitorData as a prop. each visitor document should include:
 // buys, sells, portfolioCAGR, buyHoldCAGR.
-export let visitorData = [];
-
-  console.log("visitorData: ", visitorData)
+$: visitorData = $visitorDataStore;
 
 // new prop for the current (user) game. this should be an object with:
 // totalTrades, portfolioCAGR, buyHoldCAGR, etc.

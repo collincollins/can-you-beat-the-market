@@ -21,8 +21,6 @@ exports.handler = async (event, context) => {
     if (!isConnected) {
       await client.connect();
       isConnected = true;
-      //DELETEIT
-      console.log('Connected to MongoDB.');
     }
 
     // determine the appropriate database name.
@@ -69,6 +67,14 @@ exports.handler = async (event, context) => {
           $match: {
             totalTrades: { $gt: 2, $lte: 25 }
           }
+        },
+        {
+          $project: {
+            _id: 1,
+            portfolioCAGR: 1,
+            buyHoldCAGR: 1,
+            totalTrades: 1
+          }
         }
       ];
     } else {
@@ -101,17 +107,18 @@ exports.handler = async (event, context) => {
           $match: {
             totalTrades: { $gt: 2, $lte: 25 },
           }
+        },
+        {
+          $project: {
+            _id: 1,
+            portfolioCAGR: 1,
+            buyHoldCAGR: 1,
+            totalTrades: 1
+          }
         }
       ];
     }
-
-    //DELETEIT
-    console.log("Aggregation pipeline:", JSON.stringify(pipeline, null, 2));
-
     const visitorDocs = await visitorsCollection.aggregate(pipeline).toArray();
-
-    //DELETEIT
-    console.log(`Found ${visitorDocs.length} visitor document(s).`);
 
     return {
       statusCode: 200,
