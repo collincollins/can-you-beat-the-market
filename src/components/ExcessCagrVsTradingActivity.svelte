@@ -31,20 +31,15 @@ Chart.register(
     Legend
 );
 
-// expect visitorData as a prop. each visitor document should include:
-// buys, sells, portfolioCAGR, buyHoldCAGR.
-$: visitorData = $visitorDataStore;
 
 // new prop for the current (user) game. this should be an object with:
 // totalTrades, portfolioCAGR, buyHoldCAGR, etc.
 // pass this in only if the user’s game is valid.
 export let userGame = null;
+export let resultNote = '';
 
 let chart;
 let canvasElement;
-
-// export the result note so that App.svelte can bind to it.
-export let resultNote = '';
 
 // helper: compute linear regression parameters from arrays of x and y values.
 function linearRegression(x, y) {
@@ -74,7 +69,7 @@ function linearRegression(x, y) {
 
 function createChart() {
     // process visitorData to compute totalTrades and excessCAGR.
-    const cleanedData = visitorData
+    const cleanedData = $visitorDataStore
         .map(doc => {
             const totalTrades = (doc.buys || 0) + (doc.sells || 0);
             const portfolioCAGR = Number(doc.portfolioCAGR) || 0;
@@ -85,25 +80,21 @@ function createChart() {
                 y: excessCAGR
             };
         });
-
-    // only include games with totalTrades greater than 2 and less than or equal to 25.
-    const filteredData = cleanedData.filter(d => d.x > 2 && d.x <= 25);
-
     // calculate the number of data points.
     // if the user's game is valid, include it in the count.
     
-    if (filteredData.length === 0) {
+    if (cleanedData.length === 0) {
         console.warn('No valid data available for the chart.');
         return;
     }
 
-    let dataCount = filteredData.length;
+    let dataCount = cleanedData.length;
     if (userGame) {
         dataCount++;
     }
     // compute the mean excess CAGR per totalTrades value.
     const groups = {};
-    filteredData.forEach(d => {
+    cleanedData.forEach(d => {
         if (!groups[d.x]) {
             groups[d.x] = [];
         }
@@ -119,8 +110,8 @@ function createChart() {
     });
 
     // prepare arrays of x and y values for regression.
-    const xValues = filteredData.map(d => d.x);
-    const yValues = filteredData.map(d => d.y);
+    const xValues = cleanedData.map(d => d.x);
+    const yValues = cleanedData.map(d => d.y);
     const {
         slope,
         intercept
@@ -149,7 +140,7 @@ function createChart() {
     // define the datasets with explicit drawing order.
     const datasets = [{
             label: 'Games',
-            data: filteredData,
+            data: cleanedData,
             backgroundColor: 'rgba(184,190,206,0.5)', // blue like background
             pointRadius: 3,
             showLine: false,
