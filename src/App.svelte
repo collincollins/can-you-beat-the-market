@@ -69,7 +69,7 @@ let timerInterval; // reference to the interval used for countdown
 let showModal = false; // controls visibility of the UsernameModal (for high score submission)
 let restartDisabled = false; // controls whether the restart button is temporarily disabled
 let slowMo = false; // indicates if the simulation is running in slow-motion mode
-let realMode = false;
+let realMode = true;
 
 // user portfolio and market data initialization
 let portfolio = {
@@ -84,15 +84,11 @@ let data = {
     actions: []
 };
 
-// toggle for showing the help section in the UI
-let isHelpVisible = false;
-
+let isHelpVisible = false; // toggle for showing the help section in the UI
 // annualized return values for user and buy-and-hold strategy (in percent)
 let userAnnualReturn = 0;
 let buyHoldAnnualReturn = 0;
-
-// final value of the buy-and-hold strategy
-let buyHoldFinal = 0;
+let buyHoldFinal = 0; // final value of the buy-and-hold strategy
 
 // colors for displaying portfolio and buy-and-hold values in the header
 let portfolioColor = 'black';
@@ -103,15 +99,17 @@ let highScorePlayer = 'No one yet';
 let consecutiveWinsValue = 0; // user's local win streak for this session
 let visitorDocId = null; // visitor document id used to update the visitor record in MongoDB
 let resultNote = ''; // local variable that will be bound to the chart's resultNote;
-let distributionNote = ''; // local variable that will be bound to the chart's resultNote;
+// let distributionNote = ''; // local variable that will be bound to the chart's resultNote;
 
 // visitor and simulation data
 let visitorData = [];
+let sp500Data = []
 let userGame = null;
 let simulationStartDate = null;
 let simulationEndDate = null;
-// a local variable to hold the SP500 data.
-let sp500Data = [];
+
+// track simulation start time (for duration calculations)
+let simulationStartTime = null;
 
 // ========================
 // STORE SUBSCRIPTIONS & REACTIVE STATEMENTS
@@ -120,9 +118,6 @@ let unsubscribePortfolio;
 let unsubscribeMarketData;
 let unsubscribeHighScore;
 let unsubscribeConsecutiveWins;
-
-// track simulation start time (for duration calculations)
-let simulationStartTime = null;
 
 // subscribe to Svelte stores reactively
 $: portfolio = $userPortfolio;
@@ -159,12 +154,12 @@ onMount(async () => {
         console.error('Error creating visitor document:', error);
     }
 
-    // 2. fetch the current high score from the database and update the store.
-    const hs = await fetchHighScore();
-    highScore.set({
-        score: hs.score,
-        playerName: hs.playerName
-    });
+    // // 2. fetch the current high score from the database and update the store.
+    // const hs = await fetchHighScore();
+    // highScore.set({
+    //     score: hs.score,
+    //     playerName: hs.playerName
+    // });
 
     // 3. set up subscriptions to shared stores to react to changes.
     unsubscribePortfolio = userPortfolio.subscribe(value => {
@@ -318,16 +313,16 @@ async function startSimulationHandler() {
 
 async function endSimulation() {
 
+    // stop the simulation.
+    simulationEnded = true;
+    simulationRunning = false;
+    stopSimulation();
+
     // temporarily disable the restart button to prevent rapid re-clicks.
     restartDisabled = true;
     setTimeout(() => {
         restartDisabled = false;
     }, 1000);
-
-    // stop the simulation.
-    simulationEnded = true;
-    simulationRunning = false;
-    stopSimulation();
 
     // 1. clear the countdown timer.
     timerInterval && clearInterval(timerInterval);
@@ -432,7 +427,7 @@ async function endSimulation() {
         })
     };
 
-    // 5. Send the update to MongoDB
+    // 5. send the update to MongoDB
     try {
         const resUpdate = await fetch('/.netlify/functions/updateVisitorDocument', {
             method: 'POST',
@@ -991,8 +986,13 @@ function handleSell() {
   <!-- High Score Display -->
   {#if simulationEnded}
 
-    <div class="card" style="max-width: 200px; align-items: center; padding-bottom: 0px;">
-      <h2>Statistics</h2>
+    <div class="card" style="max-width: 300px; align-items: center; padding-bottom: 0px;">
+      <h2 style="margin-bottom: 0px; margin-top: 0px;">Statistics</h2>
+      {#if realMode}
+        <p style="font-size: 0.8em;">(Real Market Data)</p>
+      {:else}
+        <p style="font-size: 0.8em;">(Simulated Market Data)</p>
+      {/if}
     </div>
 
     <div class="chart-container-excess card">
@@ -1014,7 +1014,7 @@ function handleSell() {
      </div> -->
 
     <div class="card results-details-card high-score-card">
-      <h2>High Score</h2>
+      <h2 style="margin-bottom: 0px; margin-top: 5px;">High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
@@ -1031,7 +1031,7 @@ function handleSell() {
     style="text-align: center;"
     >
     <div>
-      <p>Made by Collin</p>
+      <p style="margin-top: 0px">Made by Collin</p>
     </div>
     {#if simulationEnded}
       <a

@@ -37,7 +37,7 @@ let SIMULATION_PARAMS = {
   realMode: false,
   
   // for real mode: number of data points plotted per second.
-  realMarketDataFrequency: 61
+  realMarketDataFrequency: 37
 };
 
 /**
