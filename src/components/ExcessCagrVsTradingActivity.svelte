@@ -154,13 +154,16 @@ function createChart() {
         }
     ];
 
+    let totalPoints = cleanedData.length;
+
     // if the user's game is valid, add the "You" datapoint.
     if (userGame) {
         // calculate excess CAGR for the user game.
         const userExcessCAGR = Number(userGame.portfolioCAGR) - Number(userGame.buyHoldCAGR);
+        const userTrades = (userGame.buys || 0) + (userGame.sells || 0);
         // construct the datapoint using the user's total trades.
         const userPoint = {
-            x: (userGame.buys || 0) + (userGame.sells || 0),
+            x: userTrades,
             y: userExcessCAGR,
         };
         datasets.push({
@@ -175,6 +178,7 @@ function createChart() {
             type: 'scatter',
             order: 1, // draw this on top
         });
+        totalPoints += 1;
     }
 
     // create the Chart.js chart.
@@ -191,7 +195,7 @@ function createChart() {
                     display: true,
                     text: ['Excess Return vs. Trading Activity',
                         '\n',
-                        '(n=' + dataCount + ')'
+                        '(n=' + totalPoints + ')'
                     ],
                     font: {
                         size: 10,
