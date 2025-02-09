@@ -28,7 +28,8 @@ import {
     marketData,
     highScore,
     consecutiveWins,
-    sp500DataStore
+    sp500DataStore,
+    visitorDataStore
 } from './logic/store';
 import {
     fetchHighScore,
