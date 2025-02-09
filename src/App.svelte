@@ -30,8 +30,11 @@ import {
     consecutiveWins,
     sp500DataStore,
     visitorDataStore,
-    preComputeChartData
+    precomputedChartDataStore
 } from './logic/store';
+import {
+    preComputeChartData
+} from './logic/prepareChartData';
 import {
     fetchHighScore,
     updateHighScore
