@@ -29,7 +29,8 @@ import {
     highScore,
     consecutiveWins,
     sp500DataStore,
-    visitorDataStore
+    visitorDataStore,
+    preComputeChartData
 } from './logic/store';
 import {
     fetchHighScore,
@@ -279,6 +280,25 @@ async function startSimulationHandler() {
             endSimulation();
         }
     }, intervalDuration);
+
+    // PRE-FETCH THE VISITOR DATA HERE
+    try {
+        const url = realMode ?
+            '/.netlify/functions/getVisitorDocuments?realMode=true' :
+            '/.netlify/functions/getVisitorDocuments?realMode=false';
+
+        const res = await fetch(url);
+        const json = await res.json();
+        // store the result in visitorDataStore
+        visitorDataStore.set(json);
+
+        // PRE-COMPUTE CHART DATA, including regression, now
+        const chartData = preComputeChartData(json);
+        precomputedChartDataStore.set(chartData);
+
+    } catch (error) {
+        console.error('Error pre-fetching visitor documents:', error);
+    }
 }
 
 async function endSimulation() {
@@ -412,19 +432,6 @@ async function endSimulation() {
         console.error('Error updating visitor document:', error);
         // Optionally, you might decide to abort further operations here.
         return;
-    }
-
-    // 6. Fetch visitor documents after the update is confirmed
-    try {
-        const url = realMode ?
-            '/.netlify/functions/getVisitorDocuments?realMode=true' :
-            '/.netlify/functions/getVisitorDocuments?realMode=false';
-        const res = await fetch(url);
-        const json = await res.json()
-        visitorDataStore.set(json);
-        console.log(visitorData)
-    } catch (error) {
-        console.error('Error fetching visitor documents:', error);
     }
 
     // 7. update win streak logic.

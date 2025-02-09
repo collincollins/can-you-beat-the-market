@@ -29,5 +29,15 @@ export const sp500DataStore = writable([]);
 // ADD visitorData store:
 export const visitorDataStore = writable([]);
 
+export const precomputedChartDataStore = writable({
+  cleanedData: [],
+  meanData: [],
+  slope: 0,
+  intercept: 0,
+  xMin: 0,
+  xMax: 0,
+  regressionPoints: []
+});
+
 // export writable to allow its usage in other files
 export { writable };

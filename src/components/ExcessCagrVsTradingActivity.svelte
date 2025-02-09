@@ -1,7 +1,5 @@
+<!-- ./components/ExcessCagrVsTradingActivity.svelte -->
 <script>
-// Set DEBUG to true to enable logging
-const DEBUG = true;
-
 import {
     onMount,
     onDestroy
@@ -18,9 +16,6 @@ import {
     Legend,
     CategoryScale,
 } from 'chart.js';
-import {
-    visitorDataStore
-} from '../logic/store';
 
 // register Chart.js components
 Chart.register(
@@ -35,132 +30,90 @@ Chart.register(
     Legend
 );
 
-// new prop for the current (user) game. this should be an object with:
-// totalTrades, portfolioCAGR, buyHoldCAGR, etc.
-// pass this in only if the user’s game is valid.
+// import store that contains all the precomputed chart data
+import {
+    precomputedChartDataStore
+} from '../logic/store';
+
+// props, passed in from App.svelte:
+// - userGame: the user's final game data (null if invalid).
+// - resultNote: a bound string that we update to describe the slope results.
 export let userGame = null;
 export let resultNote = '';
 
 let chart;
 let canvasElement;
-if (DEBUG) console.log("DEBUG MODE ON: ExcessCagrVsTradingActivity.svelte loaded.");
 
-// helper: compute linear regression parameters from arrays of x and y values.
-function linearRegression(x, y) {
-    if (DEBUG) console.log("Calculating linear regression for x:", x, " and y:", y);
-    const n = x.length;
-    if (n === 0) return {
-        slope: 0,
-        intercept: 0
-    };
+// We'll keep a copy of the precomputed data
+let precomputedData = {
+    cleanedData: [],
+    meanData: [],
+    slope: 0,
+    intercept: 0,
+    regressionPoints: [],
+    xMin: 0,
+    xMax: 0,
+    yMin: 0,
+    yMax: 0,
+    xTickMin: 0,
+    xTickMax: 0,
+    yTickMin: 0,
+    yTickMax: 0
+};
 
-    const meanX = x.reduce((sum, val) => sum + val, 0) / n;
-    const meanY = y.reduce((sum, val) => sum + val, 0) / n;
-    if (DEBUG) console.log("meanX:", meanX, " meanY:", meanY);
+// subscribe to the precomputedChartDataStore
+const unsubscribe = precomputedChartDataStore.subscribe(value => {
+    precomputedData = value;
 
-    let numerator = 0;
-    let denominator = 0;
-    for (let i = 0; i < n; i++) {
-        numerator += (x[i] - meanX) * (y[i] - meanY);
-        denominator += (x[i] - meanX) ** 2;
+    createChart();
+});
+
+// svelte's onMount - we can create the chart immediately if data is already in the store
+onMount(() => {
+    {
+        createChart();
     }
-    if (DEBUG) console.log("Regression numerator:", numerator, " denominator:", denominator);
+});
 
-    const slope = denominator === 0 ? 0 : numerator / denominator;
-    const intercept = meanY - slope * meanX;
-    if (DEBUG) console.log("Calculated slope:", slope, " intercept:", intercept);
-    return {
-        slope,
-        intercept
-    };
-}
+// Clean up when this component is destroyed
+onDestroy(() => {
+    unsubscribe();
+    if (chart) {
+        chart.destroy();
+        chart = null;
+    }
+});
 
+/**
+ * createChart()
+ * uses the precomputed data + userGame to build the Chart.js datasets
+ * and then instantiate (or re-instantiate) the Chart.
+ */
 function createChart() {
-    if (DEBUG) console.log("createChart() called. $visitorDataStore:", $visitorDataStore);
-    // process visitorData to compute totalTrades and excessCAGR.
-    // Use the precomputed totalTrades field if available.
-    const cleanedData = $visitorDataStore.map(doc => {
-        const totalTrades = doc.totalTrades !== undefined ?
-            doc.totalTrades :
-            ((doc.buys || 0) + (doc.sells || 0));
-        const portfolioCAGR = Number(doc.portfolioCAGR) || 0;
-        const buyHoldCAGR = Number(doc.buyHoldCAGR) || 0;
-        const excessCAGR = portfolioCAGR - buyHoldCAGR;
-        if (DEBUG) console.log("Mapping document:", doc, "->", {
-            x: totalTrades,
-            y: excessCAGR
-        });
-        return {
-            x: totalTrades,
-            y: excessCAGR
-        };
-    });
-    if (DEBUG) console.log("Cleaned data:", cleanedData);
+    // Destroy an existing chart instance if it exists
+    if (chart) {
+        chart.destroy();
+        chart = null;
+    }
 
-    if (cleanedData.length === 0) {
+    // If there's no data at all, bail out
+    if (!precomputedData.cleanedData || precomputedData.cleanedData.length === 0) {
         console.warn('No valid data available for the chart.');
         return;
     }
 
-    let dataCount = cleanedData.length;
-    if (userGame) {
-        dataCount++;
-        if (DEBUG) console.log("User game exists. Incrementing data count to:", dataCount);
-    }
-    // compute the mean excess CAGR per totalTrades value.
-    const groups = {};
-    cleanedData.forEach(d => {
-        if (!groups[d.x]) {
-            groups[d.x] = [];
-        }
-        groups[d.x].push(d.y);
-    });
-    if (DEBUG) console.log("Groups by totalTrades:", groups);
-    const meanData = Object.entries(groups).map(([trade, outcomes]) => {
-        const sum = outcomes.reduce((a, b) => a + b, 0);
-        const mean = sum / outcomes.length;
-        if (DEBUG) console.log("Computed mean for totalTrades", trade, ":", mean);
-        return {
-            x: Number(trade),
-            y: mean
-        };
-    });
-    if (DEBUG) console.log("Mean data:", meanData);
-
-    // prepare arrays of x and y values for regression.
-    const xValues = cleanedData.map(d => d.x);
-    const yValues = cleanedData.map(d => d.y);
-    if (DEBUG) console.log("xValues:", xValues, " yValues:", yValues);
-
+    // Destructure everything from precomputedData for convenience
     const {
+        cleanedData,
+        meanData,
         slope,
-        intercept
-    } = linearRegression(xValues, yValues);
-
-    // generate regression line data over the span of totalTrades.
-    const xMin = Math.min(...xValues);
-    const xMax = Math.max(...xValues);
-    if (DEBUG) console.log("xMin:", xMin, " xMax:", xMax);
-
-    const regressionPoints = [];
-    const numLinePoints = 100;
-    const step = (xMax - xMin) / (numLinePoints - 1);
-    for (let i = 0; i < numLinePoints; i++) {
-        const xVal = xMin + i * step;
-        regressionPoints.push({
-            x: xVal,
-            y: slope * xVal + intercept
-        });
-    }
-    if (DEBUG) console.log("Regression points:", regressionPoints);
-
-    const xTickMin = ((xMin - 1) % 2 === 0) ? (xMin - 1) : (xMin - 1) + 1;
-    const xTickMax = ((xMax + 1) % 2 === 0) ? (xMax + 1) : (xMax + 1) + 1;
-    const yMin = Math.min(...yValues);
-    const yMax = Math.max(...yValues);
-    const yTickMin = Math.floor((yMin - 1) / 5) * 5;
-    const yTickMax = Math.ceil((yMax + 1) / 5) * 5;
-    if (DEBUG) console.log("Ticks: xTickMin:", xTickMin, " xTickMax:", xTickMax, " yTickMin:", yTickMin, " yTickMax:", yTickMax);
+        intercept,
+        regressionPoints,
+        xTickMin,
+        xTickMax,
+        yTickMin,
+        yTickMax
+    } = precomputedData;
 
     // define the datasets with explicit drawing order.
     const datasets = [{
@@ -215,7 +168,7 @@ function createChart() {
             label: 'You ',
             data: [userPoint],
             backgroundColor: '#008b02', // green
-            borderColor: 'black', // darker green
+            borderColor: 'black',
             borderWidth: 1.5,
             pointRadius: 6,
             pointHoverRadius: 7,
@@ -225,14 +178,7 @@ function createChart() {
         });
     }
 
-    // destroy any existing chart.
-    if (chart) {
-        if (DEBUG) console.log("Destroying existing chart instance.");
-        chart.destroy();
-    }
-
     // create the Chart.js chart.
-    if (DEBUG) console.log("Creating new Chart with datasets:", datasets);
     chart = new Chart(canvasElement, {
         type: 'scatter',
         data: {
@@ -252,7 +198,7 @@ function createChart() {
                         size: 10,
                         family: "'Press Start 2P'"
                     },
-                    color: "#353535",
+                    color: '#353535',
                 },
                 legend: {
                     labels: {
@@ -309,8 +255,6 @@ function createChart() {
             }
         }
     });
-    
-    if (DEBUG) console.log("Chart created successfully.");
 
     // set the result note based on the slope.
     if (slope < 0) {
@@ -320,20 +264,7 @@ function createChart() {
     } else {
         resultNote = `Slope ${slope.toFixed(2)}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
     }
-    if (DEBUG) console.log("Result note set to:", resultNote);
 }
-
-onMount(() => {
-    if (DEBUG) console.log("onMount: Calling createChart()");
-    createChart();
-});
-
-onDestroy(() => {
-    if (chart) {
-        if (DEBUG) console.log("onDestroy: Destroying chart instance.");
-        chart.destroy();
-    }
-});
 </script>
 
 <style>
