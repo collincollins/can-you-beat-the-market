@@ -28,7 +28,6 @@
     if (!sessionStorage.getItem('fontLoadAttempted')) {
       document.fonts.ready
         .then(() => {
-          console.log('Fonts successfully loaded!');
         })
         .catch(() => {
           console.error('Fonts failed to load. Reloading the page...');

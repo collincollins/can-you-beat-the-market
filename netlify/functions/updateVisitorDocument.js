@@ -98,14 +98,8 @@ exports.handler = async (event, context) => {
       { $set: updateData }
     );
 
-    //DELETEIT
-    console.log('updateOne result:', result);
-
+    
     if (result.modifiedCount === 1) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Visitor document updated successfully.' }),
-      };
     } else {
         //DELETEIT
         console.error('Failed to update visitor document:', result);

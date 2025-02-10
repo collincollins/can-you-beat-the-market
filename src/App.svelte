@@ -148,7 +148,6 @@ onMount(async () => {
         if (result.documentId) {
             visitorDocId = result.documentId;
             localStorage.setItem('visitorDocId', visitorDocId);
-            console.log('Visitor document successfully created.');
         }
     } catch (error) {
         console.error('Error creating visitor document:', error);
@@ -323,8 +322,6 @@ async function endSimulation() {
         if (currentDates) {
             simulationStartDate = currentDates.startRealMarketDate;
             simulationEndDate = currentDates.endRealMarketDate;
-            console.log("Simulation start date:", simulationStartDate);
-            console.log("Simulation end date:", simulationEndDate);
         } else {
             console.warn("Simulation dates not available yet.");
         }
