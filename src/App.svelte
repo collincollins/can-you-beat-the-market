@@ -339,7 +339,7 @@ async function endSimulation() {
     const simulationEndTime = Date.now();
     const durationInSeconds = (simulationEndTime - simulationStartTime) / 1000;
     const endedNaturally = timer <= 0;
-    const minimumRequiredSeconds = slowMo ? 5 : 10;
+    const minimumRequiredSeconds = slowMo ? 20 : 10;
     const simulationValidFlag = durationInSeconds >= minimumRequiredSeconds;
     simulationValid = simulationValidFlag;
 
