@@ -219,6 +219,19 @@ function createChart() {
                 },
                 tooltip: {
                     filter: tooltipItem => [2, 3].includes(tooltipItem.datasetIndex),
+                    enabled: true,
+                    bodyFont: {
+                        family: "'Press Start 2P'",
+                        size: 8
+                    },
+                    titleFont: {
+                        family: "'Press Start 2P'",
+                        size: 10
+                    },
+                    footerFont: {
+                        family: "'Press Start 2P'",
+                        size: 8
+                    }
                 }
             },
             scales: {
