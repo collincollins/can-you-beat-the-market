@@ -1,7 +1,7 @@
 /* app.css */
 
 :root {
-  /* Colors */
+  /* colors */
   --color-background-card: #F3F4F6;
   --color-primary: #3B518B;
   --color-dark-text: #353535;
@@ -13,19 +13,19 @@
   --color-background-dark: #B8BECE;
   --color-pure-white: #ffffff;
 
-  /* Fonts */
+  /* fonts */
   --font-main: 'Press Start 2P', cursive;
   line-height: 1.4;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 
-  /* Shadows */
+  /* shadows */
   --shadow-default: 2px 2px 0px black;
   --shadow-light: 2px 2px 0px black;
   --shadow-extra-light: 1px 1px 0px black;
 }
 
-/* Global Styles */
+/* global styles */
 body {
   background-color: var(--color-background-dark);
   font-family: var(--font-main);
@@ -64,7 +64,7 @@ h2 {
 
 }
 
-/* Global Resets */
+/* global resets */
 p, li, a {
   color: var(--color-dark-text);
   font-family: var(--font-main);
@@ -81,7 +81,7 @@ li {
 }
 
 
-/* 1. Generic Card Style */
+/* 1. generic card style */
 
 .card {
   font-size: 0.8em; /* Standard font-size, can be overridden */
@@ -98,14 +98,14 @@ li {
   box-shadow: var(--shadow-default);
 }
 
-/* 2. Specific Adjustments */
+/* 2. specific adjustments */
 
-/* Header Card (Contains "Can You Beat The Market") */ 
+/* header card */ 
 .header-card {
   font-size: 1em;
 }
 
-/* Header Container (Holds: .header-card) */
+/* header container */
 .header-container {
   font-size: 0.6em;
   background-color: #ccd0dcd9;
@@ -128,17 +128,17 @@ li {
   display: inline-block;
 }
 
-/* High Score Container (contains "Win Streak") */
+/* High score container */
 .high-score-container {
-  /* Inherits all styles from .card */
+  /* inherits all styles from .card */
   font-size: 0.7em;
   width: 65%;
   max-width: 300px;
 }
 
-/* Footer Card */
+/* footer card */
 .footer-card {
-  /* Inherits all styles from .card */
+  /* inherits all styles from .card */
   width: 75%;
   max-width: 600px;
   text-align: center;
@@ -146,14 +146,14 @@ li {
   margin-top: 30px;
 }
 
-/* Results Details Card */
+/* results details card */
 .results-details-card {
-  /* Inherits all styles from .card */
+  /* inherits all styles from .card */
   text-align: left;
   font-size: 0.8em;
 }
 
-/* 3. Base Button Style */
+/* 3. base button style */
 .button {
   background-color: var(--color-button-default);
 
@@ -176,26 +176,26 @@ li {
   display: inline-block;
 }
 
-/* 4. Hover Effect for Buttons */
+/* 4. hover effect for buttons */
 .button:hover {
-  background-color: var(--color-button-hover); /* Default hover color */
+  background-color: var(--color-button-hover);
 }
 
-/* 5. Modifier Classes */
+/* 5. modifier classes */
 
-/* Buy Button */
+/*buy button */
 .button.buy {
   background-color: var(--color-success);
-  font-size: 4em; /* Specific font size */
+  font-size: 4em;
   margin-top: -10px;
   margin-bottom: 10px;
 }
 
 .button.buy:hover {
-  background-color: #016101; /* Darker green on hover */
+  background-color: #016101;
 }
 
-/* Sell Button */
+/*sell button */
 .button.sell {
   background-color: var(--color-danger);
   font-size: 4em;
@@ -204,20 +204,20 @@ li {
 }
 
 .button.sell:hover {
-  background-color: #a62525; /* Darker red on hover */
+  background-color: #a62525;
 }
 
-/* Stop Button */
+/* stop button */
 .button.stop {
   background-color: #878282ae;
-  /* Inherits other styles from .button */
+  /* inherits other styles from .button */
 }
 
 .button.stop:hover {
-  background-color: #6b6b6b; /* Darker shade on hover */
+  background-color: #6b6b6b;
 }
 
-/* Utility Classes */
+/* utility classes */
 .text-small {
   font-size: 0.7em;
 }

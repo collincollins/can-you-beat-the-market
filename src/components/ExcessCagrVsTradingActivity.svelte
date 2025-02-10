@@ -1,6 +1,10 @@
+<!-- ./components/ExcessCagrVsTradingActivity.svelte -->
 <script>
-  import { onMount, onDestroy } from 'svelte';
-  import {
+import {
+    onMount,
+    onDestroy
+} from 'svelte';
+import {
     Chart,
     ScatterController,
     LineController,
@@ -11,10 +15,10 @@
     Tooltip,
     Legend,
     CategoryScale,
-  } from 'chart.js';
+} from 'chart.js';
 
-  // Register Chart.js components
-  Chart.register(
+// register Chart.js components
+Chart.register(
     ScatterController,
     LineController,
     PointElement,
@@ -24,295 +28,278 @@
     Title,
     Tooltip,
     Legend
-  );
+);
 
-  // Expect visitorData as a prop. Each visitor document should include:
-  //   buys, sells, portfolioCAGR, buyHoldCAGR.
-  export let visitorData = [];
+// import store that contains all the precomputed chart data
+import {
+    precomputedChartDataStore
+} from '../logic/store';
 
-  // New prop for the current (user) game. This should be an object with:
-  //   totalTrades, portfolioCAGR, buyHoldCAGR, etc.
-  // Pass this in only if the user’s game is valid.
-  export let userGame = null;
+// props, passed in from App.svelte:
+// - userGame: the user's final game data (null if invalid).
+// - resultNote: a bound string that we update to describe the slope results.
+export let userGame = null;
+export let resultNote = '';
 
-  let chart;
-  let canvasElement;
+let chart;
+let canvasElement;
 
-  // Export the result note so that App.svelte can bind to it.
-  export let resultNote = '';
+// We'll keep a copy of the precomputed data
+let precomputedData = {
+    cleanedData: [],
+    meanData: [],
+    slope: 0,
+    intercept: 0,
+    regressionPoints: [],
+    xMin: 0,
+    xMax: 0,
+    yMin: 0,
+    yMax: 0,
+    xTickMin: 0,
+    xTickMax: 0,
+    yTickMin: 0,
+    yTickMax: 0
+};
 
-  // Helper: compute linear regression parameters from arrays of x and y values.
-  function linearRegression(x, y) {
-    const n = x.length;
-    if (n === 0) return { slope: 0, intercept: 0 };
+// subscribe to the precomputedChartDataStore
+const unsubscribe = precomputedChartDataStore.subscribe(value => {
+    precomputedData = value;
 
-    const meanX = x.reduce((sum, val) => sum + val, 0) / n;
-    const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+    createChart();
+});
 
-    let numerator = 0;
-    let denominator = 0;
-    for (let i = 0; i < n; i++) {
-      numerator += (x[i] - meanX) * (y[i] - meanY);
-      denominator += (x[i] - meanX) ** 2;
+// svelte's onMount - we can create the chart immediately if data is already in the store
+onMount(() => {
+    {
+        createChart();
+    }
+});
+
+// Clean up when this component is destroyed
+onDestroy(() => {
+    unsubscribe();
+    if (chart) {
+        chart.destroy();
+        chart = null;
+    }
+});
+
+/**
+ * createChart()
+ * uses the precomputed data + userGame to build the Chart.js datasets
+ * and then instantiate (or re-instantiate) the Chart.
+ */
+function createChart() {
+    // If there's no canvas anymore, bail out.
+    if (!canvasElement) {
+    return;
     }
 
-    const slope = denominator === 0 ? 0 : numerator / denominator;
-    const intercept = meanY - slope * meanX;
-    return { slope, intercept };
-  }
-
-  function createChart() {
-    // Process visitorData to compute totalTrades and excessCAGR.
-    const cleanedData = visitorData
-      .map(doc => {
-        const totalTrades = (doc.buys || 0) + (doc.sells || 0);
-        const portfolioCAGR = Number(doc.portfolioCAGR) || 0;
-        const buyHoldCAGR = Number(doc.buyHoldCAGR) || 0;
-        const excessCAGR = portfolioCAGR - buyHoldCAGR;
-        return { x: totalTrades, y: excessCAGR };
-      })
-      .filter(d => d.x > 2 && d.x <= 25); // only include games with totalTrades > 2 and <= 25
-
-    // Calculate the number of data points.
-    // If the user's game is valid, include it in the count.
-    let dataCount = cleanedData.length;
-    if (userGame) {
-      dataCount++;
+    // Destroy an existing chart instance if it exists
+    if (chart) {
+        chart.destroy();
+        chart = null;
     }
 
-    if (cleanedData.length === 0) {
-      console.warn('No valid data available for the chart.');
-      return;
+    // If there's no data at all, bail out
+    if (!precomputedData.cleanedData || precomputedData.cleanedData.length === 0) {
+        console.warn('No valid data available for the chart.');
+        return;
     }
 
-    // Compute the mean excess CAGR per totalTrades value.
-    const groups = {};
-    cleanedData.forEach(d => {
-      if (!groups[d.x]) {
-        groups[d.x] = [];
-      }
-      groups[d.x].push(d.y);
-    });
-    const meanData = Object.entries(groups).map(([trade, outcomes]) => {
-      const sum = outcomes.reduce((a, b) => a + b, 0);
-      const mean = sum / outcomes.length;
-      return { x: Number(trade), y: mean };
-    });
-
-    // Prepare arrays of x and y values for regression.
-    const xValues = cleanedData.map(d => d.x);
-    const yValues = cleanedData.map(d => d.y);
-    const { slope, intercept } = linearRegression(xValues, yValues);
-
-    // Generate regression line data over the span of totalTrades.
-    const xMin = Math.min(...xValues);
-    const xMax = Math.max(...xValues);
-    const yMin = Math.min(...yValues);
-    const yMax = Math.max(...yValues);
-    const regressionPoints = [];
-    const numLinePoints = 100;
-    const step = (xMax - xMin) / (numLinePoints - 1);
-    for (let i = 0; i < numLinePoints; i++) {
-      const xVal = xMin + i * step;
-      regressionPoints.push({ x: xVal, y: slope * xVal + intercept });
-    }
-    const xTickMin = ((xMin - 1) % 2 === 0) ? (xMin - 1) : (xMin - 1) + 1;
-    const xTickMax = ((xMax + 1) % 2 === 0) ? (xMax + 1) : (xMax + 1) + 1;
-
-    const yTickMin = Math.floor((yMin - 1) / 5) * 5;
-    const yTickMax = Math.ceil((yMax + 1) / 5) * 5;
-
-    // Define the datasets with explicit drawing order.
-    const datasets = [
-      // User outcomes: scatter points with 50% opacity.
-      {
-        label: 'Games',
-        data: cleanedData,
-        backgroundColor: 'rgba(184,190,206,0.5)', // blue like background with 50% opacity
-        pointRadius: 3,
-        showLine: false,
-        type: 'scatter',
-        order: 4
-      },
-      // Regression line: slightly thicker line and drawn beneath the mean points.
-      {
-        label: 'Fit ',
-        data: regressionPoints,
-        borderColor: '#f44336', // red
-        borderWidth: 3, // increased line width
-        fill: false,
-        tension: 0,
-        pointRadius: 0,
-        type: 'line',
-        borderDash: [4, 4],
-        order: 3,
-        // Use a line icon in the legend
-        pointStyle: 'line'
-      },
-      // Mean outcomes: red points with a black border drawn on top.
-      {
-        label: 'Avg ',
-        data: meanData,
-        backgroundColor: '#435b9f', // blue like button
-        borderColor: 'black',
-        borderWidth: 1.5,
-        pointRadius: 5,
-        pointHoverRadius: 6,
-        showLine: false,
-        type: 'scatter',
-        order: 2,
-      }
+    // Destructure everything from precomputedData for convenience
+    const {
+        cleanedData,
+        meanData,
+        slope,
+        intercept,
+        regressionPoints,
+        xTickMin,
+        xTickMax,
+        yTickMin,
+        yTickMax
+    } = precomputedData;
+  
+    // define the datasets with explicit drawing order.
+    const datasets = [{
+            label: 'Games',
+            data: cleanedData,
+            backgroundColor: 'rgba(184,190,206,0.5)', // blue like background
+            pointRadius: 3,
+            showLine: false,
+            type: 'scatter',
+            order: 4
+        },
+        // regression line: slightly thicker line and drawn beneath the mean points.
+        {
+            label: 'Fit ',
+            data: regressionPoints,
+            borderColor: '#f44336', // red
+            borderWidth: 3,
+            fill: false,
+            tension: 0,
+            pointRadius: 0,
+            type: 'line',
+            borderDash: [4, 4],
+            order: 3,
+            pointStyle: 'line'
+        },
+        // mean outcomes: red points with a black border drawn on top.
+        {
+            label: 'Avg ',
+            data: meanData,
+            backgroundColor: '#435b9f', // blue like button
+            borderColor: 'black',
+            borderWidth: 1.5,
+            pointRadius: 5,
+            pointHoverRadius: 6,
+            showLine: false,
+            type: 'scatter',
+            order: 2,
+        }
     ];
 
-      // If the user's game is valid, add the "You" datapoint.
-      if (userGame) {
-      // Calculate excess CAGR for the user game.
-      const userExcessCAGR = Number(userGame.portfolioCAGR) - Number(userGame.buyHoldCAGR);
-      // Construct the datapoint using the user's total trades.
-      const userPoint = {
-        x: (userGame.buys || 0) + (userGame.sells || 0),
-        y: userExcessCAGR,
-      };
+    let totalPoints = cleanedData.length;
 
-      datasets.push({
-        label: 'You ',
-        data: [userPoint],
-        backgroundColor: '#008b02', // green
-        borderColor: 'black', // darker green
-        borderWidth: 1.5,
-        pointRadius: 6,
-        pointHoverRadius: 7,
-        pointStyle: 'rectRounded',
-        type: 'scatter',
-        order: 1, // draw this on top
-      });
+    // if the user's game is valid, add the "You" datapoint.
+    if (userGame) {
+        // calculate excess CAGR for the user game.
+        const userExcessCAGR = Number(userGame.portfolioCAGR) - Number(userGame.buyHoldCAGR);
+        const userTrades = (userGame.buys || 0) + (userGame.sells || 0);
+        // construct the datapoint using the user's total trades.
+        const userPoint = {
+            x: userTrades,
+            y: userExcessCAGR,
+        };
+        datasets.push({
+            label: 'You ',
+            data: [userPoint],
+            backgroundColor: '#008b02', // green
+            borderColor: 'black',
+            borderWidth: 1.5,
+            pointRadius: 6,
+            pointHoverRadius: 7,
+            pointStyle: 'rectRounded',
+            type: 'scatter',
+            order: 1, // draw this on top
+        });
+        totalPoints += 1;
     }
 
-// Destroy any existing chart.
-    if (chart) {
-      chart.destroy();
-    }
-
-   // Create the Chart.js chart.
+    // create the Chart.js chart.
     chart = new Chart(canvasElement, {
-      type: 'scatter',
-      data: { datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          title: {
-            display: true,
-            text: ['Excess Return vs. Trading Activity',
-                  '\n',
-                  '(n=' + dataCount + ')'],
-            font: { size: 10, family: "'Press Start 2P'" },
-            color: "#353535",
-          },
-          legend: {
-            labels: {
-              usePointStyle: true, // makes the legend icon match the dataset's marker style
-              font: { size: 8, family: "'Press Start 2P'" }
-            }
-          },
-          tooltip: {
-            filter: tooltipItem => [2, 3].includes(tooltipItem.datasetIndex),
-          }
+        type: 'scatter',
+        data: {
+            datasets
         },
-        scales: {
-          x: {
-            type: 'linear',
-            title: {
-              display: true,
-              text: 'Total Trades (Buys + Sells)',
-              font: { 
-                size: 12,
-                family: "Press Start 2P"  
-              }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: ['Excess Return vs. Trading Activity',
+                        '\n',
+                        '(n=' + totalPoints + ')'
+                    ],
+                    font: {
+                        size: 10,
+                        family: "'Press Start 2P'"
+                    },
+                    color: '#353535',
+                },
+                legend: {
+                    labels: {
+                        usePointStyle: true,
+                        font: {
+                            size: 8,
+                            family: "'Press Start 2P'"
+                        }
+                    }
+                },
+                tooltip: {
+                    filter: tooltipItem => [2, 3].includes(tooltipItem.datasetIndex),
+                    enabled: true,
+                    bodyFont: {
+                        family: "'Press Start 2P'",
+                        size: 8
+                    },
+                    titleFont: {
+                        family: "'Press Start 2P'",
+                        size: 10
+                    },
+                    footerFont: {
+                        family: "'Press Start 2P'",
+                        size: 8
+                    }
+                }
             },
-            ticks: {
-              stepSize: 2,
-              font: { 
-                size: 8.5,
-                family: "Press Start 2P"
-              }
-            },
-            min: xTickMin,
-            max: xTickMax,
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Excess Return (You-B&H) [%]',
-              font: { 
-                size: 12,
-                family: "Press Start 2P"
-              }
-            },
-            ticks: {
-              font: { 
-                size: 8.5,
-                family: "Press Start 2P"
-              }
-            },
-            min: yTickMin,
-            max: yTickMax,
-          }
+            scales: {
+                x: {
+                    type: 'linear',
+                    title: {
+                        display: true,
+                        text: 'Total Trades (Buys + Sells)',
+                        font: {
+                            size: 12,
+                            family: "Press Start 2P"
+                        }
+                    },
+                    ticks: {
+                        stepSize: 2,
+                        font: {
+                            size: 8.5,
+                            family: "Press Start 2P"
+                        }
+                    },
+                    min: xTickMin,
+                    max: xTickMax,
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Excess Return (You-B&H) [%]',
+                        font: {
+                            size: 12,
+                            family: "Press Start 2P"
+                        }
+                    },
+                    ticks: {
+                        font: {
+                            size: 8.5,
+                            family: "Press Start 2P"
+                        }
+                    },
+                    min: yTickMin,
+                    max: yTickMax,
+                }
+            }
         }
-      }
     });
-    // Set the result note based on the slope.
+
+    // set the result note based on the slope.
     if (slope < 0) {
-      resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
+        resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
     } else if (slope > 0) {
-      resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance may improve relative to a buy‑and‑hold strategy.`;
+        resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance may improve relative to a buy‑and‑hold strategy.`;
     } else {
-      resultNote = `Slope ${slope.toFixed(2)}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
+        resultNote = `Slope ${slope.toFixed(2)}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
     }
-  }
-
-  onMount(() => {
-    createChart();
-  });
-
-  onDestroy(() => {
-    if (chart) {
-      chart.destroy();
-    }
-  });
+}
 </script>
 
 <style>
-  /* Updated container style to match the main chart container */
-  /* .chart-container {
+.chart-container {
     position: relative;
-    height: auto;
-    max-height: 350px;
+    display: flex;
+    flex-direction: column;
     width: 97%;
-    max-width: 800px;
+    max-width: 1000px;
     padding-bottom: 10px;
-  } */
-
-  .chart-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 97%;
-  max-width: 1000px;
-  padding-bottom: 10px; /* Adjust padding as needed */
-  height: 350px;  /* Let the container expand */
+    height: 350px;
 }
-
-  /* .result-note {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.75em;
-    text-align: center;
-    margin-top: 10px;
-    color: #353535;
-  } */
-
 </style>
 
 <div class="chart-container">
-  <canvas bind:this={canvasElement}></canvas>
+    <canvas bind:this={canvasElement}></canvas>
 </div>

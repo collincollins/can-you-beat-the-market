@@ -13,13 +13,13 @@ const client = new MongoClient(uri, {
 
 let isConnected = false;
 
-// Function to extract the user's IP from request headers.
+// function to extract the user's IP from request headers.
 const getUserIP = (event) => {
   const headers = event.headers;
   return headers['x-nf-client-connection-ip'] || headers['x-real-ip'] || '0.0.0.0';
 };
 
-// Function to hash the IP address using SHA-256.
+// function to hash the IP address using SHA-256.
 const hashIP = (ip) => {
   return crypto.createHash('sha256').update(ip).digest('hex');
 };
@@ -33,13 +33,13 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Parse the incoming data.
+    // parse the incoming data.
     const data = JSON.parse(event.body);
     const { playerName, score } = data;
 
     console.log('Received high score submission.');
 
-    // Validate input.
+    // validate input.
     if (
       typeof playerName !== 'string' ||
       playerName.trim() === '' ||
@@ -53,24 +53,24 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Connect to MongoDB if not already connected.
+    // connect to MongoDB if not already connected.
     if (!isConnected) {
       await client.connect();
       isConnected = true;
     }
 
-    // Determine the database name based on deploy context.
+    // determine the database name based on deploy context.
     const defaultDbName = process.env.CONTEXT === 'deploy-preview'
       ? 'canyoubeatthemarket-test'
       : 'canyoubeatthemarket';
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
 
-    // Get and hash the user's IP address.
+    // get and hash the user's IP address.
     const visitorIP = getUserIP(event);
     const visitorFingerprint = hashIP(visitorIP);
 
-    // 1. Update the current high score document in the "currentHighScore" collection.
+    // 1. update the current high score document in the "currentHighScore" collection.
     const currentHighScoreCollection = database.collection('currentHighScore');
 
     const updateResult = await currentHighScoreCollection.updateOne(
@@ -79,7 +79,7 @@ exports.handler = async (event, context) => {
         $set: {
           updatedAt: new Date(),
           playerName: playerName.trim(),
-          visitorFingerprint: visitorFingerprint  // Save hashed IP here.
+          visitorFingerprint: visitorFingerprint  // save hashed IP here.
         },
         $max: { score: score },
         $setOnInsert: { _id: 'current', createdAt: new Date() }
@@ -87,12 +87,12 @@ exports.handler = async (event, context) => {
       { upsert: true }
     );
 
-    // 2. Append a history log in the "highScoreHistory" collection.
+    // 2. append a history log in the "highScoreHistory" collection.
     const highScoreHistoryCollection = database.collection('highScoreHistory');
     await highScoreHistoryCollection.insertOne({
       playerName: playerName.trim(),
       score,
-      visitorFingerprint: visitorFingerprint,  // Save hashed IP for history as well.
+      visitorFingerprint: visitorFingerprint,  // save hashed IP for history as well.
       submittedAt: new Date()
     });
 

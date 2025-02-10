@@ -27,12 +27,14 @@ exports.handler = async (event, context) => {
     }
 
     const defaultDbName =
-      process.env.CONTEXT === 'deploy-preview'
+      process.env.CONTEXT === 'branch-deploy'
         ? 'canyoubeatthemarket-test'
         : 'canyoubeatthemarket';
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
+
+    const payload = JSON.parse(event.body);
 
     const {
       documentId,
@@ -48,8 +50,11 @@ exports.handler = async (event, context) => {
       portfolioCAGR,
       buyHoldCAGR,
       buys,
-      sells
-    } = JSON.parse(event.body);
+      sells,
+      realMode,
+      startRealMarketDate,
+      endRealMarketDate
+    } = payload;
 
     if (!documentId) {
       return {
@@ -58,7 +63,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Convert documentId string to an ObjectId
+    // convert documentId string to an ObjectId
     const filter = { _id: new ObjectId(documentId) };
 
     const updateData = {
@@ -74,7 +79,10 @@ exports.handler = async (event, context) => {
       portfolioCAGR,
       buyHoldCAGR,
       buys,
-      sells
+      sells,
+      realMode,
+      ...(startRealMarketDate && { startRealMarketDate: new Date(startRealMarketDate) }),
+      ...(endRealMarketDate && { endRealMarketDate: new Date(endRealMarketDate) }),
     };
 
     const result = await visitorsCollection.updateOne(
@@ -82,12 +90,15 @@ exports.handler = async (event, context) => {
       { $set: updateData }
     );
 
+    
     if (result.modifiedCount === 1) {
       return {
         statusCode: 200,
         body: JSON.stringify({ message: 'Visitor document updated successfully.' }),
       };
     } else {
+        //DELETEIT
+        console.error('Failed to update visitor document:', result);
       return {
         statusCode: 500,
         body: JSON.stringify({ message: 'Failed to update visitor document.' }),
