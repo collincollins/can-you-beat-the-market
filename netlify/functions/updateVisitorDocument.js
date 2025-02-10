@@ -24,8 +24,6 @@ exports.handler = async (event, context) => {
     if (!isConnected) {
       await client.connect();
       isConnected = true;
-      //DELETEIT
-      console.log('Connected to MongoDB for updateVisitorDocument.');
     }
 
     const defaultDbName =
@@ -37,8 +35,6 @@ exports.handler = async (event, context) => {
     const visitorsCollection = database.collection('visitors');
 
     const payload = JSON.parse(event.body);
-    //DELETEIT
-    console.log('updateVisitorDocument payload:', payload);
 
     const {
       documentId,
@@ -61,7 +57,6 @@ exports.handler = async (event, context) => {
     } = payload;
 
     if (!documentId) {
-      if (shouldLog) console.error('Missing documentId in payload.');
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Missing documentId in payload.' }),
@@ -90,9 +85,6 @@ exports.handler = async (event, context) => {
       ...(endRealMarketDate && { endRealMarketDate: new Date(endRealMarketDate) }),
     };
 
-    //DELETEIT
-    console.log('updateVisitorDocument updateData:', updateData);
-
     const result = await visitorsCollection.updateOne(
       filter,
       { $set: updateData }
@@ -100,6 +92,10 @@ exports.handler = async (event, context) => {
 
     
     if (result.modifiedCount === 1) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Visitor document updated successfully.' }),
+      };
     } else {
         //DELETEIT
         console.error('Failed to update visitor document:', result);
