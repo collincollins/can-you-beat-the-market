@@ -119,7 +119,7 @@ function createChart() {
         yTickMin,
         yTickMax
     } = precomputedData;
-
+  
     // define the datasets with explicit drawing order.
     const datasets = [{
             label: 'Games',
