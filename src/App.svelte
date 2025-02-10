@@ -175,15 +175,6 @@ onMount(async () => {
     unsubscribeConsecutiveWins = consecutiveWins.subscribe(value => {
         consecutiveWinsValue = value;
     });
-
-    // fetch SP500 data
-    try {
-        const response = await fetch('/data/sp500_filtered.json');
-        const spData = await response.json();
-        sp500DataStore.set(spData);
-    } catch (error) {
-        console.error("Error fetching SP500 data:", error);
-    }
 });
 
 onDestroy(() => {

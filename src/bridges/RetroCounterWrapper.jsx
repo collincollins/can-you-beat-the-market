@@ -30,14 +30,7 @@ function RetroCounterWC(props) {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-  
-        // fetch the updated visitor count
-        const getVisitorResponse = await fetch('/.netlify/functions/getVisitorCount', {
-          method: 'GET',
-        });
-        if (!getVisitorResponse.ok) {
-          throw new Error(`HTTP error! status: ${getVisitorResponse.status}`);
-        }
+        
         const data = await response.json();
         setVisitorCount(data.count);
         } catch (error) {
