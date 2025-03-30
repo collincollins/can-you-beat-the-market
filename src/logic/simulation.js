@@ -289,7 +289,7 @@ const simulationInstance = new MarketSimulation();
 // note: The start() function now expects three parameters:
 //   timerSeconds (the real time duration selected by the user)
 //   realMode (boolean indicating whether to use real market data)
-//   enter here...
+//   adjustedFrequency (frequency parameter for real market data points)
 export const startSimulation = simulationInstance.start.bind(simulationInstance);
 export const stopSimulation = simulationInstance.stop.bind(simulationInstance);
 export const buyShares = simulationInstance.buyShares.bind(simulationInstance);

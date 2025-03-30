@@ -63,5 +63,5 @@ This project is open-source. See the LICENSE file for additional details.
 
 ## Acknowledgments
 This webapp was inspired by a similar one that I saw in "The Simple Path to Wealth" by JL Collins. More versions are:
-- (https://engaging-data.com/market-timing-game/)[Shall We Play A (Market Timing) Game?]
-- (https://www.personalfinanceclub.com/time-the-market-game/)[Time The Market Game]
+- [Shall We Play A (Market Timing) Game?](https://engaging-data.com/market-timing-game/)
+- [Time The Market Game](https://www.personalfinanceclub.com/time-the-market-game/)

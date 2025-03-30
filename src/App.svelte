@@ -56,7 +56,7 @@ import './bridges/RetroCounterWrapper.jsx';
 import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
 
 /* -------------------------------------------------------------------------
-   SIMULATION SETTINGS & STATE VARIABLES
+  SIMULATION SETTINGS & STATE VARIABLES
    ------------------------------------------------------------------------- */
 // timer input and countdown state (in seconds)
 let timerInput = 30; // default simulation duration (seconds)
