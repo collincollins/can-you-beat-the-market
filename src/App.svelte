@@ -1019,7 +1019,7 @@ function handleSell() {
     style="text-align: center;"
     >
     <div>
-      <p style="margin-top: 0px">Made by Collin</p>
+      <p style="margin-top: 0px">made by collin and claude</p>
     </div>
     {#if simulationEnded}
       <a
