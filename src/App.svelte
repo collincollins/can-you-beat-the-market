@@ -1018,9 +1018,6 @@ function handleSell() {
     class="card footer-card {simulationRunning || !simulationEnded ? 'hidden-footer' : ''}"
     style="text-align: center;"
     >
-    <div>
-      <p style="margin-top: 0px">made by collin and claude</p>
-    </div>
     {#if simulationEnded}
       <a
         href="https://www.buymeacoffee.com/B4Aaol3SrI"
@@ -1039,9 +1036,12 @@ function handleSell() {
         <sup>*</sup> <a href="https://dontbuythat.org" target="_blank" rel="noopener noreferrer" style="color: #435b9f; text-decoration: none;">Don't Buy That</a> coffee and see how much your money could grow into.
       </div>
     {/if}
-    <div class="counter-container">
-      <p style="margin-top: 50px; margin-bottom: 2px; font-size: 0.5em;">Visitors</p>
+    <div class="counter-container" style="margin-bottom: 20px;">
+      <p style="margin-top: 8px; margin-bottom: 2px; font-size: 0.5em;">Visitors</p>
       <retro-counter></retro-counter>
+    </div>
+    <div>
+      <p style="margin-top: 0px; font-size: 0.5em;">made by collin and claude</p>
     </div>
   </div>
 
