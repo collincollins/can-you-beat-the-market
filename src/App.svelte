@@ -1016,7 +1016,7 @@ function handleSell() {
   <!-- Footer Card -->
   <div
     class="card footer-card {simulationRunning || !simulationEnded ? 'hidden-footer' : ''}"
-    style="text-align: center;"
+    style="text-align: center; margin-bottom: 20px;"
     >
     {#if simulationEnded}
       <a

@@ -233,4 +233,5 @@ li {
 
 .hidden-footer {
   transform: translateX(0%) translateY(300%);
+  margin-bottom: 15px;
 }
