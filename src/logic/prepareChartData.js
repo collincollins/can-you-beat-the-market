@@ -1,13 +1,10 @@
 // ./logic/prepareChartData.js
 
-const DEBUG = false; 
-
 /**
  * A simple linear regression helper that takes arrays of
  * x and y values and returns { slope, intercept }.
  */
 function linearRegression(x, y) {
-  if (DEBUG) console.log("Calculating linear regression for x:", x, "and y:", y);
   const n = x.length;
   if (n === 0) {
     return { slope: 0, intercept: 0 };
@@ -16,7 +13,6 @@ function linearRegression(x, y) {
   // means
   const meanX = x.reduce((sum, val) => sum + val, 0) / n;
   const meanY = y.reduce((sum, val) => sum + val, 0) / n;
-  if (DEBUG) console.log("meanX:", meanX, " meanY:", meanY);
 
   let numerator = 0;
   let denominator = 0;
@@ -24,11 +20,9 @@ function linearRegression(x, y) {
     numerator += (x[i] - meanX) * (y[i] - meanY);
     denominator += (x[i] - meanX) ** 2;
   }
-  if (DEBUG) console.log("Regression numerator:", numerator, " denominator:", denominator);
 
   const slope = denominator === 0 ? 0 : numerator / denominator;
   const intercept = meanY - slope * meanX;
-  if (DEBUG) console.log("Calculated slope:", slope, " intercept:", intercept);
 
   return { slope, intercept };
 }
@@ -55,7 +49,6 @@ export function preComputeChartData(rawVisitorDocs) {
         return { x: totalTrades, y: excessCAGR };
     });
 
-    if (DEBUG) console.log("cleanedData:", cleanedData);
 
     // Step 2: Group by totalTrades to compute the mean
     const groups = {};
