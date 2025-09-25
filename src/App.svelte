@@ -52,7 +52,7 @@ import {
 
 // additional assets and bridges
 import './bridges/RetroCounterWrapper.jsx';
-import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
+import coffeeButton from './assets/buy-me-a-coffee-button.png';
 
 /* -------------------------------------------------------------------------
    SIMULATION SETTINGS & STATE VARIABLES
