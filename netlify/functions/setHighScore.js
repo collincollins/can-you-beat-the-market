@@ -70,6 +70,22 @@ exports.handler = async (event, context) => {
     const visitorIP = getUserIP(event);
     const visitorFingerprint = hashIP(visitorIP);
 
+    // validate that the visitor has enough actual wins to support this score.
+    const visitorsCollection = database.collection('visitors');
+    const actualWins = await visitorsCollection.countDocuments({
+      visitorFingerprint: visitorFingerprint,
+      valid: true,
+      win: true
+    });
+
+    if (score > actualWins) {
+      console.log(`Score validation failed: claimed ${score}, actual wins ${actualWins}`);
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Score exceeds actual game wins.' }),
+      };
+    }
+
     // 1. update the current high score document in the "currentHighScore" collection.
     const currentHighScoreCollection = database.collection('currentHighScore');
 
