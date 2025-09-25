@@ -42,7 +42,7 @@ let chart;
 let canvasElement;
 
 // --- helper functions ---
-// felper: compute the interquartile range.
+// helper: compute the interquartile range.
 function interquartileRange(data) {
     const sorted = data.slice().sort((a, b) => a - b);
     const q1 = sorted[Math.floor((sorted.length / 4))];

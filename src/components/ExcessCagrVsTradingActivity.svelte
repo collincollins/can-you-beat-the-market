@@ -90,7 +90,7 @@ onDestroy(() => {
 function createChart() {
     // If there's no canvas anymore, bail out.
     if (!canvasElement) {
-    return;
+        return;
     }
 
     // Destroy an existing chart instance if it exists
