@@ -70,9 +70,7 @@ const unsubscribe = precomputedChartDataStore.subscribe(value => {
 
 // svelte's onMount - we can create the chart immediately if data is already in the store
 onMount(() => {
-    {
-        createChart();
-    }
+    createChart();
 });
 
 // Clean up when this component is destroyed
