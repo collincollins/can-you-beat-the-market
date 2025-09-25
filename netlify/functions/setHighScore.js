@@ -21,7 +21,11 @@ const getUserIP = (event) => {
 
 // function to hash the IP address using SHA-256.
 const hashIP = (ip) => {
-  return crypto.createHash('sha256').update(ip).digest('hex');
+  const salt = process.env.VISITOR_SALT;
+  if (!salt) {
+    throw new Error('Missing environment variable: VISITOR_SALT');
+  }
+  return crypto.createHash('sha256').update(ip + salt).digest('hex');
 };
 
 exports.handler = async (event, context) => {
