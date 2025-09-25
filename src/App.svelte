@@ -11,7 +11,6 @@ import {
 import MarketChart from './components/MarketChart.svelte';
 import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
 import Sp500Chart from './components/Sp500Chart.svelte';
-// import DistributionChart from './components/DistributionChart.svelte';
 import Controls from './components/Controls.svelte';
 import UsernameModal from './components/UsernameModal.svelte';
 
@@ -99,7 +98,6 @@ let highScorePlayer = 'No one yet';
 let consecutiveWinsValue = 0; // user's local win streak for this session
 let visitorDocId = null; // visitor document id used to update the visitor record in MongoDB
 let resultNote = ''; // local variable that will be bound to the chart's resultNote;
-// let distributionNote = ''; // local variable that will be bound to the chart's resultNote;
 
 // visitor and simulation data
 let visitorData = [];
