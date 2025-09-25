@@ -153,14 +153,7 @@ onMount(async () => {
         console.error('Error creating visitor document:', error);
     }
 
-    // // 2. fetch the current high score from the database and update the store.
-    // const hs = await fetchHighScore();
-    // highScore.set({
-    //     score: hs.score,
-    //     playerName: hs.playerName
-    // });
-
-    // 3. set up subscriptions to shared stores to react to changes.
+    // set up subscriptions to shared stores to react to changes.
     unsubscribePortfolio = userPortfolio.subscribe(value => {
         portfolio = value;
     });
