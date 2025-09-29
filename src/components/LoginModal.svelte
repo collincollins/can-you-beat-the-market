@@ -4,6 +4,8 @@
   export let isSignup = false; // Toggle between signup and login
   
   let username = '';
+  let password = '';
+  let confirmPassword = '';
   let errorMessage = '';
   let isCheckingUsername = false;
   const dispatch = createEventDispatcher();
@@ -12,6 +14,8 @@
     isSignup = !isSignup;
     errorMessage = '';
     username = '';
+    password = '';
+    confirmPassword = '';
   }
 
   function handleClose() {
@@ -42,6 +46,23 @@
       return;
     }
 
+    // Validate password
+    if (password.trim() === '') {
+      errorMessage = 'Password cannot be empty.';
+      return;
+    }
+
+    if (password.length < 6) {
+      errorMessage = 'Password must be at least 6 characters.';
+      return;
+    }
+
+    // For signup, validate password confirmation
+    if (isSignup && password !== confirmPassword) {
+      errorMessage = 'Passwords do not match.';
+      return;
+    }
+
     if (isSignup) {
       // Check if username exists
       isCheckingUsername = true;
@@ -67,7 +88,7 @@
     }
 
     // Dispatch the action (signup or login)
-    dispatch('submit', { username: trimmedUsername, isSignup });
+    dispatch('submit', { username: trimmedUsername, password, isSignup });
   }
 
   function handleInput(event) {
@@ -96,12 +117,26 @@
       on:input={handleInput}
       maxlength="16"
     />
+    <input
+      type="password"
+      bind:value={password}
+      placeholder="Password"
+      class:invalid={errorMessage !== ''}
+    />
+    {#if isSignup}
+      <input
+        type="password"
+        bind:value={confirmPassword}
+        placeholder="Confirm Password"
+        class:invalid={errorMessage !== ''}
+      />
+    {/if}
     {#if errorMessage}
       <p class="error-message">{errorMessage}</p>
     {/if}
     <button 
       on:click={handleSubmit} 
-      disabled={errorMessage !== '' || username.trim() === '' || isCheckingUsername}
+      disabled={errorMessage !== '' || username.trim() === '' || password.trim() === '' || (isSignup && confirmPassword.trim() === '') || isCheckingUsername}
     >
       {isCheckingUsername ? 'Checking...' : (isSignup ? 'Sign Up' : 'Log In')}
     </button>
@@ -145,7 +180,7 @@
 
   input {
     padding: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     background-color: #F3F4F6;
     font-family: 'Press Start 2P', cursive;
     font-size: 0.9em;
@@ -211,7 +246,7 @@
   .error-message {
     color: red;
     font-size: 0.7em;
-    margin-top: -15px;
+    margin-top: -10px;
     margin-bottom: 10px;
   }
 </style>

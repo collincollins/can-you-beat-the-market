@@ -559,7 +559,7 @@ function handleLoginClick() {
 }
 
 async function handleLoginSubmit(event) {
-    const { username, isSignup } = event.detail;
+    const { username, password, isSignup } = event.detail;
     
     try {
         if (isSignup) {
@@ -569,6 +569,7 @@ async function handleLoginSubmit(event) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     username,
+                    password,
                     visitorFingerprint 
                 })
             });
@@ -602,7 +603,7 @@ async function handleLoginSubmit(event) {
             const response = await fetch('/.netlify/functions/loginUser', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ username, password })
             });
             
             if (!response.ok) {

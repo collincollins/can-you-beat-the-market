@@ -1,6 +1,7 @@
 // netlify/functions/loginUser.js
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const bcrypt = require('bcryptjs');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -34,12 +35,19 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const usersCollection = database.collection('users');
 
-    const { username } = JSON.parse(event.body);
+    const { username, password } = JSON.parse(event.body);
 
     if (!username || typeof username !== 'string') {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Invalid username' }),
+      };
+    }
+
+    if (!password || typeof password !== 'string') {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Invalid password' }),
       };
     }
 
@@ -51,7 +59,17 @@ exports.handler = async (event, context) => {
     if (!user) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ message: 'User not found' }),
+        body: JSON.stringify({ message: 'Invalid username or password' }),
+      };
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+
+    if (!isPasswordValid) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ message: 'Invalid username or password' }),
       };
     }
 

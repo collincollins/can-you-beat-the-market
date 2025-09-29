@@ -2,6 +2,7 @@
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -35,12 +36,19 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const usersCollection = database.collection('users');
 
-    const { username, visitorFingerprint } = JSON.parse(event.body);
+    const { username, password, visitorFingerprint } = JSON.parse(event.body);
 
     if (!username || typeof username !== 'string') {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Invalid username' }),
+      };
+    }
+
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Password must be at least 6 characters' }),
       };
     }
 
@@ -59,10 +67,15 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     // Create new user
     const userDoc = {
       userId,
       username: username.trim(),
+      hashedPassword,
       createdAt: new Date(),
       visitorFingerprint: visitorFingerprint || null
     };
