@@ -13,6 +13,7 @@ import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivit
 import Sp500Chart from './components/Sp500Chart.svelte';
 import Controls from './components/Controls.svelte';
 import UsernameModal from './components/UsernameModal.svelte';
+import LoginModal from './components/LoginModal.svelte';
 
 // import simulation functions and shared state stores
 import {
@@ -69,6 +70,11 @@ let showModal = false; // controls visibility of the UsernameModal (for high sco
 let restartDisabled = false; // controls whether the restart button is temporarily disabled
 let slowMo = false; // indicates if the simulation is running in slow-motion mode
 let realMode = true;
+
+// login/auth state
+let showLoginModal = false;
+let currentUser = null; // {userId, username}
+let visitorFingerprint = null; // store the hashed IP for linking sessions
 
 // user portfolio and market data initialization
 let portfolio = {
@@ -137,15 +143,31 @@ $: canSell = portfolio.shares > 0;
 // LIFECYCLE HOOKS
 // ========================
 onMount(async () => {
+    // 0. Check if user is logged in
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+        try {
+            currentUser = JSON.parse(storedUser);
+        } catch (e) {
+            localStorage.removeItem('currentUser');
+        }
+    }
+
     // 1. create a new visitor document on page load for tracking session data.
     try {
         const response = await fetch('/.netlify/functions/createVisitorDocument', {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUser?.userId || null })
         });
         const result = await response.json();
         if (result.documentId) {
             visitorDocId = result.documentId;
             localStorage.setItem('visitorDocId', visitorDocId);
+        }
+        // Store visitorFingerprint from the session for later linking
+        if (result.visitorFingerprint) {
+            visitorFingerprint = result.visitorFingerprint;
         }
     } catch (error) {
         console.error('Error creating visitor document:', error);
@@ -503,7 +525,9 @@ function restartSimulation() {
 
     // create a new visitor document for the new game session
     fetch('/.netlify/functions/createVisitorDocument', {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUser?.userId || null })
         })
         .then(response => response.json())
         .then(result => {
@@ -528,6 +552,93 @@ function handleBuy() {
 function handleSell() {
     sellShares();
 }
+
+// login/signup handlers
+function handleLoginClick() {
+    showLoginModal = true;
+}
+
+async function handleLoginSubmit(event) {
+    const { username, isSignup } = event.detail;
+    
+    try {
+        if (isSignup) {
+            // Create new user
+            const response = await fetch('/.netlify/functions/createUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username,
+                    visitorFingerprint 
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                alert(error.message || 'Failed to create account');
+                return;
+            }
+            
+            const result = await response.json();
+            currentUser = { userId: result.userId, username: result.username };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Link current session data to the new user
+            if (visitorFingerprint) {
+                await fetch('/.netlify/functions/linkSessionToUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: currentUser.userId,
+                        visitorFingerprint 
+                    })
+                });
+            }
+            
+            showLoginModal = false;
+            console.log(`Signed up as ${result.username}`);
+        } else {
+            // Login existing user
+            const response = await fetch('/.netlify/functions/loginUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                alert(error.message || 'Login failed');
+                return;
+            }
+            
+            const result = await response.json();
+            currentUser = { userId: result.userId, username: result.username };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Link current session data to the existing user
+            if (visitorFingerprint) {
+                await fetch('/.netlify/functions/linkSessionToUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: currentUser.userId,
+                        visitorFingerprint 
+                    })
+                });
+            }
+            
+            showLoginModal = false;
+            console.log(`Logged in as ${result.username}`);
+        }
+    } catch (error) {
+        console.error('Error during login/signup:', error);
+        alert('An error occurred. Please try again.');
+    }
+}
+
+function handleLoginClose() {
+    showLoginModal = false;
+}
 </script>
 
 <style>
@@ -548,6 +659,14 @@ function handleSell() {
     font-size: 0.5em;
     padding: 8px;
     margin-bottom: 0px;
+}
+
+.header-buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
 }
 
 .help-description-container {
@@ -834,7 +953,12 @@ function handleSell() {
       </label>
     </div>
 
-    <div>
+    <div class="header-buttons-container">
+      {#if !currentUser}
+        <button class="help-icon button start" on:click={handleLoginClick} aria-label="Login">
+          Login/Signup
+        </button>
+      {/if}
       <button class="help-icon button start" on:click={toggleHelp} aria-label="Help">
         {isHelpVisible ? "Hide Help" : "Show Help"}
       </button>
@@ -1042,6 +1166,11 @@ function handleSell() {
   <!-- Username Modal for High Score Submission -->
   {#if showModal}
     <UsernameModal on:submit={handleUsernameSubmit} />
+  {/if}
+
+  <!-- Login/Signup Modal -->
+  {#if showLoginModal}
+    <LoginModal on:submit={handleLoginSubmit} on:close={handleLoginClose} />
   {/if}
 
 </div>
