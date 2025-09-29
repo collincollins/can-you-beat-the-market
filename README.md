@@ -17,16 +17,16 @@ This project is built with Svelte and bundled with Vite. It leverages Chart.js f
 ## Code Structure
 - ```src/App.svelte```: The main application component that orchestrates the simulation flow, user interactions, timer controls, and result calculations. It integrates various components and Svelte stores for state management.
 - ```src/logic/simulation.js```: Contains the MarketSimulation class that simulates market price movements, updates portfolio values, and records every price change.
-- ```src/logic/simulationConfig.js```: Centralizes simulation parameters (e.g., duration, steps per second, annual drift, and volatility) and provides helper functions like getDaysPerStep for calculating simulation steps.
+- ```src/logic/simulationConfig.js```: Centralizes simulation parameters (e.g., duration, annual drift, and volatility) for the market simulation.
 - ```src/logic/store.js```: Implements Svelte writable stores to hold reactive state data for market prices, user portfolio, high scores, and consecutive wins.
 - ```src/components/MarketChart.svelte```: Uses Chart.js to render a live chart that displays the market price trajectory, along with markers for buy and sell events.
 - ```src/components/Controls.svelte``` & ```src/components/UsernameModal.svelte```: Offer user interface elements for executing trades and submitting high score data respectively.
-- Netlify Functions (in ```netlify/functions```): Serverless functions for visitor counting (```countVisitor.js```), high score updates (```setHighScore.js```), hit counting (```incrementHit.js```, ```getHit.js```), and fetching visitor/high score data (```getVisitorCount.js```, ```getHighScore.js```). These functions connect to a MongoDB cluster.
+- Netlify Functions (in ```netlify/functions```): Serverless functions for visitor tracking (```createVisitorDocument.js```, ```updateVisitorDocument.js```, ```getVisitorDocuments.js```), high score management (```setHighScore.js```, ```getHighScore.js```), visitor counting (```getVisitorCount.js```), and analytics (```logCoffeeClick.js```). These functions connect to a MongoDB cluster.
 
 ## How It Works
 - Simulation Flow:
   - When you start the simulation (via the start button in ```App.svelte```), the app sets up a timer and configures the simulation parameters based on your input (including an optional “Slowmo” mode).
-  - The market simulation runs by repeatedly calling ```updateMarket()```, which updates the market price, calculates the rolling average, and adjusts the user’s portfolio accordingly.
+  - The market simulation runs by playing back pre-generated market data, updating prices in real-time and adjusting the user's portfolio accordingly.
   - Trading actions (buy/sell) update the portfolio using the current market data.
 - Ending a Simulation:
   - When the timer expires, the simulation stops. The app then calculates and compares the annualized return (CAGR) of your portfolio against a buy‐and‐hold strategy.

@@ -11,7 +11,6 @@ import {
 import MarketChart from './components/MarketChart.svelte';
 import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
 import Sp500Chart from './components/Sp500Chart.svelte';
-// import DistributionChart from './components/DistributionChart.svelte';
 import Controls from './components/Controls.svelte';
 import UsernameModal from './components/UsernameModal.svelte';
 
@@ -53,7 +52,7 @@ import {
 
 // additional assets and bridges
 import './bridges/RetroCounterWrapper.jsx';
-import coffeeButton from '../src/assets/buy-me-a-coffee-button.png';
+import coffeeButton from './assets/buy-me-a-coffee-button.png';
 
 /* -------------------------------------------------------------------------
   SIMULATION SETTINGS & STATE VARIABLES
@@ -99,7 +98,6 @@ let highScorePlayer = 'No one yet';
 let consecutiveWinsValue = 0; // user's local win streak for this session
 let visitorDocId = null; // visitor document id used to update the visitor record in MongoDB
 let resultNote = ''; // local variable that will be bound to the chart's resultNote;
-// let distributionNote = ''; // local variable that will be bound to the chart's resultNote;
 
 // visitor and simulation data
 let visitorData = [];
@@ -153,14 +151,7 @@ onMount(async () => {
         console.error('Error creating visitor document:', error);
     }
 
-    // // 2. fetch the current high score from the database and update the store.
-    // const hs = await fetchHighScore();
-    // highScore.set({
-    //     score: hs.score,
-    //     playerName: hs.playerName
-    // });
-
-    // 3. set up subscriptions to shared stores to react to changes.
+    // set up subscriptions to shared stores to react to changes.
     unsubscribePortfolio = userPortfolio.subscribe(value => {
         portfolio = value;
     });
@@ -291,14 +282,17 @@ async function startSimulationHandler() {
     } catch (error) {
         console.error('Error pre-fetching visitor documents:', error);
     }
-    try {
-      const windowSize = 2;
-      const spDataFull = await fetchAndPrepFullSp500(windowSize); 
-      // but it doesn't filter by start/end date yet
-      precomputedSp500ChartStore.set(spDataFull);
-    } catch (err) {
-      console.error('Error fetching and preparing SP500 data:', err);
-  }
+
+    // PRE-FETCH S&P 500 DATA IN BACKGROUND (only in real mode, will be cached after first fetch)
+    if (realMode) {
+        try {
+            const windowSize = 2;
+            const spDataFull = await fetchAndPrepFullSp500(windowSize);
+            precomputedSp500ChartStore.set(spDataFull);
+        } catch (err) {
+            console.error('Error fetching and preparing SP500 data:', err);
+        }
+    }
 }
 
 async function endSimulation() {
