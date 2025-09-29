@@ -1,26 +1,23 @@
 // ./logic/prepareSp500ChartData.js
 
-// Cache the S&P 500 data so it's only fetched once per session
-let cachedSp500Data = null;
+// Cache the S&P 500 raw data (before processing)
+let cachedRawData = null;
 
 export async function fetchAndPrepFullSp500(windowSize) {
-  // Return cached data if available
-  if (cachedSp500Data) {
-    console.log('Using cached S&P 500 data');
-    return cachedSp500Data;
+  // Fetch raw data only once, cache it
+  if (!cachedRawData) {
+    console.log('Fetching S&P 500 raw data for the first time');
+    const response = await fetch('/data/sp500_filtered.json');
+    cachedRawData = await response.json();
+  } else {
+    console.log('Using cached S&P 500 raw data');
   }
 
-  console.log('Fetching S&P 500 data for the first time');
-  
-  // 1. fetch
-  const response = await fetch('/data/sp500_filtered.json');
-  const rawData = await response.json();
-
-  // 2. apply rolling average
-  const smoothed = applyRollingAverage(rawData.map(d => d.Close), windowSize);
+  // Always process with the current windowSize (don't cache processed data)
+  const smoothed = applyRollingAverage(cachedRawData.map(d => d.Close), windowSize);
 
   // 3. combine into weekly points
-  const datasetData = rawData.map((d, i) => ({
+  const datasetData = cachedRawData.map((d, i) => ({
     x: new Date(d.Date),
     y: smoothed[i]
   }));
@@ -31,14 +28,11 @@ export async function fetchAndPrepFullSp500(windowSize) {
   const minPrice = Math.min(...allPrices);
   const maxPrice = Math.max(...allPrices);
 
-  // Cache the result
-  cachedSp500Data = {
+  return {
     weeklyData, // The entire pre-smoothed set
     minPrice,
     maxPrice,
   };
-
-  return cachedSp500Data;
 }
 
 // rolling average function for smoothing the data.
