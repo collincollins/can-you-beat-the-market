@@ -1,6 +1,17 @@
 // ./logic/prepareSp500ChartData.js
 
+// Cache the S&P 500 data so it's only fetched once per session
+let cachedSp500Data = null;
+
 export async function fetchAndPrepFullSp500(windowSize) {
+  // Return cached data if available
+  if (cachedSp500Data) {
+    console.log('Using cached S&P 500 data');
+    return cachedSp500Data;
+  }
+
+  console.log('Fetching S&P 500 data for the first time');
+  
   // 1. fetch
   const response = await fetch('/data/sp500_filtered.json');
   const rawData = await response.json();
@@ -20,11 +31,14 @@ export async function fetchAndPrepFullSp500(windowSize) {
   const minPrice = Math.min(...allPrices);
   const maxPrice = Math.max(...allPrices);
 
-  return {
+  // Cache the result
+  cachedSp500Data = {
     weeklyData, // The entire pre-smoothed set
     minPrice,
     maxPrice,
   };
+
+  return cachedSp500Data;
 }
 
 // rolling average function for smoothing the data.
