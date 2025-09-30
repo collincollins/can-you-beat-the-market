@@ -14,6 +14,7 @@ import Sp500Chart from './components/Sp500Chart.svelte';
 import Controls from './components/Controls.svelte';
 import UsernameModal from './components/UsernameModal.svelte';
 import LoginModal from './components/LoginModal.svelte';
+import StatsPage from './components/StatsPage.svelte';
 
 // import simulation functions and shared state stores
 import {
@@ -73,6 +74,7 @@ let realMode = true;
 
 // login/auth state
 let showLoginModal = false;
+let showStatsPage = false;
 let currentUser = null; // {userId, username}
 let visitorFingerprint = null; // store the hashed IP for linking sessions
 
@@ -640,6 +642,15 @@ async function handleLoginSubmit(event) {
 function handleLoginClose() {
     showLoginModal = false;
 }
+
+// stats page handlers
+function handleStatsClick() {
+    showStatsPage = true;
+}
+
+function handleStatsClose() {
+    showStatsPage = false;
+}
 </script>
 
 <style>
@@ -959,6 +970,10 @@ function handleLoginClose() {
         <button class="help-icon button start" on:click={handleLoginClick} aria-label="Login">
           Login/Signup
         </button>
+      {:else}
+        <button class="help-icon button start" on:click={handleStatsClick} aria-label="Stats">
+          Stats
+        </button>
       {/if}
       <button class="help-icon button start" on:click={toggleHelp} aria-label="Help">
         {isHelpVisible ? "Hide Help" : "Show Help"}
@@ -1172,6 +1187,11 @@ function handleLoginClose() {
   <!-- Login/Signup Modal -->
   {#if showLoginModal}
     <LoginModal on:submit={handleLoginSubmit} on:close={handleLoginClose} />
+  {/if}
+
+  <!-- Stats Page -->
+  {#if showStatsPage}
+    <StatsPage {currentUser} onClose={handleStatsClose} />
   {/if}
 
 </div>
