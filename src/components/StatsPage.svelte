@@ -179,11 +179,12 @@
     background: var(--color-background-dark);
     z-index: 1000;
     overflow-y: auto;
-    padding: 20px;
+    padding: 10px;
   }
 
   .stats-page {
-    max-width: 900px;
+    max-width: 700px;
+    width: 93%;
     margin: 0 auto;
     padding-bottom: 40px;
   }
@@ -192,13 +193,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .header h1 {
-    font-size: 2em;
+    font-size: 1.2em;
     color: var(--color-primary);
     margin: 0;
+    flex: 1;
   }
 
   .close-button {
@@ -206,11 +210,12 @@
     background-color: var(--color-danger);
     border: 2px solid black;
     color: white;
-    padding: 10px 20px;
-    font-size: 1.2em;
+    padding: 8px 12px;
+    font-size: 0.7em;
     cursor: pointer;
     border-radius: 10px;
     box-shadow: var(--shadow-default);
+    touch-action: manipulation;
   }
 
   .close-button:hover {
@@ -219,8 +224,8 @@
 
   .loading, .error {
     text-align: center;
-    padding: 40px;
-    font-size: 1.2em;
+    padding: 20px;
+    font-size: 0.7em;
     color: var(--color-dark-text);
   }
 
@@ -231,16 +236,16 @@
   .stats-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
   }
 
   .stat-section {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
   }
 
   .stat-section h3 {
     color: var(--color-dark-text);
-    font-size: 1.2em;
+    font-size: 0.9em;
     margin-bottom: 10px;
     text-align: center;
   }
@@ -249,9 +254,10 @@
     background-color: var(--color-background-card);
     border: 2px solid black;
     border-radius: 10px;
-    padding: 20px;
+    padding: 15px;
     box-shadow: var(--shadow-default);
     text-align: center;
+    font-size: 0.8em;
   }
 
   .stat-card.header-card {
@@ -261,30 +267,32 @@
   .stat-card h2 {
     margin: 0 0 5px 0;
     color: var(--color-primary);
+    font-size: 1.3em;
   }
 
   .joined-date {
     margin: 0;
-    font-size: 0.7em;
+    font-size: 0.6em;
     color: var(--color-neutral);
   }
 
   .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .stat-value {
-    font-size: 2em;
+    font-size: 1.5em;
     font-weight: bold;
     color: var(--color-dark-text);
     margin-bottom: 5px;
   }
 
   .stat-label {
-    font-size: 0.7em;
+    font-size: 0.6em;
     color: var(--color-neutral);
+    line-height: 1.3;
   }
 
   .stat-card.positive .stat-value {
@@ -309,28 +317,29 @@
 
   .insight {
     margin: 0;
-    font-size: 0.9em;
+    font-size: 0.7em;
     color: var(--color-dark-text);
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   .recent-games {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .game-card {
     background-color: var(--color-background-card);
     border: 2px solid black;
     border-radius: 10px;
-    padding: 15px;
+    padding: 10px 12px;
     box-shadow: var(--shadow-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
+    font-size: 0.7em;
   }
 
   .game-card.win {
@@ -339,10 +348,10 @@
   }
 
   .game-date {
-    font-size: 0.7em;
+    font-size: 0.85em;
     color: var(--color-neutral);
     flex: 1;
-    min-width: 100px;
+    min-width: 80px;
   }
 
   .game-result {
@@ -361,19 +370,8 @@
 
   .game-stats {
     display: flex;
-    gap: 15px;
-    font-size: 0.8em;
+    gap: 10px;
+    font-size: 0.85em;
     flex: 0 0 auto;
-  }
-
-  @media (max-width: 600px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .game-card {
-      flex-direction: column;
-      align-items: flex-start;
-    }
   }
 </style>
