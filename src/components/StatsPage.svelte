@@ -125,12 +125,6 @@
         </div>
       {/if}
       <div class="stats-container">
-        <!-- Debug Info -->
-        <div class="stat-card" style="font-size: 0.6em; text-align: left;">
-          <strong>Debug:</strong> userId: {stats.userId}<br>
-          Raw stats: {JSON.stringify(stats, null, 2).substring(0, 200)}...
-        </div>
-
         <!-- User Info -->
         <div class="stat-card header-card">
           <h2>{stats.username}</h2>
