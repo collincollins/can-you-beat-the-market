@@ -920,6 +920,14 @@ function handleStatsClose() {
     margin: 0 auto;
     width: 100%;
 }
+
+.new-feature {
+    background-color: var(--color-success) !important;
+}
+
+.new-feature:hover {
+    background-color: #016101 !important;
+}
 </style>
 
 <div class="app">
@@ -997,11 +1005,11 @@ function handleStatsClose() {
 
     <div class="header-buttons-container">
       {#if !currentUser}
-        <button class="help-icon button start" on:click={handleLoginClick} aria-label="Login">
+        <button class="help-icon button start new-feature" on:click={handleLoginClick} aria-label="Login">
           Account
         </button>
       {:else}
-        <button class="help-icon button start" on:click={handleStatsClick} aria-label="Stats">
+        <button class="help-icon button start new-feature" on:click={handleStatsClick} aria-label="Stats">
           Stats
         </button>
       {/if}
