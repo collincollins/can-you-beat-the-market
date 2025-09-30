@@ -98,7 +98,7 @@
         disabled={refreshing || loading}
         title="Refresh stats"
       >
-        ↻
+        <span class="refresh-icon">↻</span>
       </button>
       <button class="close-button" on:click={onClose}>✕</button>
     </div>
@@ -310,6 +310,12 @@
   .refresh-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .refresh-icon {
+    font-size: 1.3em;
+    display: inline-block;
+    line-height: 0.8;
   }
 
   .loading, .error {
