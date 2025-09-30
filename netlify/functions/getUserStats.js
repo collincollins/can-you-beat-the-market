@@ -166,7 +166,7 @@ exports.handler = async (event, context) => {
     const stats = {
       username: user.username,
       userId: user.userId,
-      accountCreated: user.createdAt,
+      accountCreated: user.firstGameDate || user.createdAt,
       totalGames: startedGames.length,
       validGames: validGames.length,
       wins: wins.length,

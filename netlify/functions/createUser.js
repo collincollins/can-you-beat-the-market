@@ -89,12 +89,29 @@ exports.handler = async (event, context) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    // Check if user has existing games from this visitorFingerprint
+    const visitorsCollection = database.collection('visitors');
+    let firstGameDate = new Date();
+    
+    if (visitorFingerprint) {
+      const oldestGame = await visitorsCollection
+        .find({ visitorFingerprint })
+        .sort({ visitDate: 1 })
+        .limit(1)
+        .toArray();
+      
+      if (oldestGame.length > 0 && oldestGame[0].visitDate) {
+        firstGameDate = oldestGame[0].visitDate;
+      }
+    }
+
     // Create new user
     const userDoc = {
       userId,
       username: username.trim(),
       hashedPassword,
       createdAt: new Date(),
+      firstGameDate,
       visitorFingerprint: visitorFingerprint || null
     };
 
