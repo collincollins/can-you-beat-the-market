@@ -4,6 +4,9 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
+// Helper to escape regex special characters
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Simple profanity filter
 const badWords = ['fuck', 'shit', 'ass', 'bitch', 'damn', 'crap', 'piss', 'dick', 'cock', 'pussy', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'cunt', 'twat', 'retard', 'hoe', 'nazi', 'shithead', 'shitbag', 'shitass', 'shitface', 'shithead', 'shitass', 'shitface', 'hate', 'kill', 'die', 'murder', 'rape', 'torture'];
 const isProfane = (text) => {
@@ -72,7 +75,7 @@ exports.handler = async (event, context) => {
 
     // Check if username already exists (case-insensitive)
     const existingUser = await usersCollection.findOne({
-      username: { $regex: new RegExp(`^${username}$`, 'i') }
+      username: { $regex: new RegExp(`^${escapeRegex(username)}$`, 'i') }
     });
 
     if (existingUser) {

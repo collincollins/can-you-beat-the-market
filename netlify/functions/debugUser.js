@@ -3,6 +3,9 @@
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
+// Helper to escape regex special characters
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -46,7 +49,7 @@ exports.handler = async (event, context) => {
 
     // Find all users with this username (case-insensitive)
     const users = await usersCollection.find({
-      username: { $regex: new RegExp(`^${username}$`, 'i') }
+      username: { $regex: new RegExp(`^${escapeRegex(username)}$`, 'i') }
     }).toArray();
 
     return {
