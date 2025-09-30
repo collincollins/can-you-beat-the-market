@@ -989,7 +989,7 @@ function handleStatsClose() {
     <div class="header-buttons-container">
       {#if !currentUser}
         <button class="help-icon button start" on:click={handleLoginClick} aria-label="Login">
-          Login/Signup
+          Account
         </button>
       {:else}
         <button class="help-icon button start" on:click={handleStatsClick} aria-label="Stats">

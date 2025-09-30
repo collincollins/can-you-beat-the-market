@@ -245,8 +245,9 @@
     height: 100%;
     background: var(--color-background-dark);
     z-index: 1000;
-    overflow-y: auto;
+    overflow-y: scroll;
     padding: 10px;
+    overscroll-behavior: contain;
   }
 
   .stats-page {
