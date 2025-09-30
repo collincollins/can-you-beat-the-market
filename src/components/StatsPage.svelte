@@ -8,8 +8,9 @@
   let loading = true;
   let error = null;
   let linking = false;
+  let refreshing = false;
 
-  onMount(async () => {
+  async function fetchStats() {
     if (!currentUser?.username) {
       error = 'No user logged in';
       loading = false;
@@ -19,7 +20,7 @@
     console.log('Fetching stats for:', currentUser.username);
 
     try {
-      const response = await fetch(`/.netlify/functions/getUserStats?username=${encodeURIComponent(currentUser.username)}`);
+      const response = await fetch(`/.netlify/functions/getUserStats?username=${encodeURIComponent(currentUser.username)}&t=${Date.now()}`);
       
       console.log('Response status:', response.status);
       
@@ -33,12 +34,16 @@
       console.log('Stats data received:', data);
       stats = data;
       loading = false;
+      refreshing = false;
     } catch (err) {
       console.error('Error fetching stats:', err);
       error = `Failed to load stats: ${err.message}`;
       loading = false;
+      refreshing = false;
     }
-  });
+  }
+
+  onMount(fetchStats);
 
   function formatPercent(num) {
     return num >= 0 ? `+${num}%` : `${num}%`;
@@ -69,7 +74,8 @@
       if (response.ok) {
         alert(`Successfully linked ${result.gamesLinked} games to your account!`);
         // Reload stats
-        location.reload();
+        loading = true;
+        await fetchStats();
       } else {
         alert(`Error: ${result.message}`);
       }
@@ -86,6 +92,14 @@
   <div class="stats-page">
     <div class="header">
       <h1>Your Stats</h1>
+      <button 
+        class="refresh-button" 
+        on:click={() => { refreshing = true; loading = true; fetchStats(); }}
+        disabled={refreshing || loading}
+        title="Refresh stats"
+      >
+        ↻
+      </button>
       <button class="close-button" on:click={onClose}>✕</button>
     </div>
 
@@ -279,6 +293,28 @@
 
   .close-button:hover {
     background-color: #a62525;
+  }
+
+  .refresh-button {
+    font-family: 'Press Start 2P', cursive;
+    background-color: var(--color-button-default);
+    border: 2px solid black;
+    color: white;
+    padding: 8px 12px;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 10px;
+    box-shadow: var(--shadow-default);
+    touch-action: manipulation;
+  }
+
+  .refresh-button:hover:not(:disabled) {
+    background-color: var(--color-button-hover);
+  }
+
+  .refresh-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .loading, .error {
