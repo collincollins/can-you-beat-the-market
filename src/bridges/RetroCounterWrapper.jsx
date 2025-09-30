@@ -23,12 +23,12 @@ function RetroCounterWC(props) {
     // function to increment the hit count and retrieve the updated visitor count
     const updateVisitorCount = async () => {
       try {
-        // Check cache first (5 minute cache)
+        // Check cache first (1 day cache)
         const cached = localStorage.getItem('visitorCountCache');
         if (cached) {
           const { count, timestamp } = JSON.parse(cached);
-          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-          if (timestamp > fiveMinutesAgo) {
+          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+          if (timestamp > oneDayAgo) {
             setVisitorCount(count);
             return;
           }
