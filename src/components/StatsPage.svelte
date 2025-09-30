@@ -158,7 +158,7 @@
           }}
           title="View all users"
         >
-          👥
+          All Users
         </button>
       {/if}
       <button 
