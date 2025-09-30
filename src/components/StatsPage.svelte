@@ -145,7 +145,6 @@
 <div class="stats-overlay">
   <div class="stats-page">
     <div class="header">
-      <h1>{viewingUsername ? `${viewingUsername}'s Stats` : 'Your Stats'}</h1>
       {#if isAdmin && !loading && stats}
         <button 
           class="refresh-button" 
