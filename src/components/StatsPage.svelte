@@ -250,10 +250,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: var(--color-background-dark);
     z-index: 1000;
     overflow-y: scroll;
@@ -312,6 +310,9 @@
     border-radius: 10px;
     box-shadow: var(--shadow-default);
     touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .refresh-button:hover:not(:disabled) {
@@ -325,9 +326,6 @@
 
   .refresh-icon {
     font-size: 1.3em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     line-height: 1;
   }
 
