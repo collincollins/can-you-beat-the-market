@@ -31,10 +31,33 @@ exports.handler = async (event, context) => {
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
+    const chartDataCacheCollection = database.collection('chartDataCache');
 
     // read the realMode parameter from the query string.
     // (if realMode is "true", use the real mode pipeline; otherwise, use simulation mode.)
     const { realMode } = event.queryStringParameters || {};
+    
+    const cacheId = realMode === "true" ? 'realMode' : 'simulatedMode';
+    
+    // Check cache first
+    const cachedData = await chartDataCacheCollection.findOne({ _id: cacheId });
+    const now = new Date();
+    const sixHoursAgo = new Date(now - 6 * 60 * 60 * 1000);
+    const isCacheValid = cachedData && new Date(cachedData.updatedAt) > sixHoursAgo;
+    
+    if (isCacheValid) {
+      console.log(`Using cached chart data for ${cacheId}, updated at:`, cachedData.updatedAt);
+      return {
+        statusCode: 200,
+        body: JSON.stringify(cachedData.data),
+        headers: {
+          'X-Cache-Date': cachedData.updatedAt.toISOString()
+        }
+      };
+    }
+    
+    // Cache miss or stale - recalculate
+    console.log(`Cache stale or missing for ${cacheId}, recalculating...`);
 
     let pipeline = [];
 
@@ -120,9 +143,30 @@ exports.handler = async (event, context) => {
     }
     const visitorDocs = await visitorsCollection.aggregate(pipeline).toArray();
 
+    // Update cache
+    const cacheDoc = {
+      _id: cacheId,
+      updatedAt: now,
+      expiresAt: new Date(now.getTime() + 6 * 60 * 60 * 1000),
+      totalGames: visitorDocs.length,
+      data: visitorDocs
+    };
+
+    await chartDataCacheCollection.updateOne(
+      { _id: cacheId },
+      { $set: cacheDoc },
+      { upsert: true }
+    );
+
+    console.log(`Chart data cache updated for ${cacheId} with ${visitorDocs.length} games`);
+
     return {
       statusCode: 200,
       body: JSON.stringify(visitorDocs),
+      headers: {
+        'X-Cache-Date': now.toISOString(),
+        'X-Cache-Status': 'MISS'
+      }
     };
   } catch (error) {
     console.error('Error in getVisitorDocuments function:', error);

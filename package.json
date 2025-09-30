@@ -23,6 +23,7 @@
     "vite": "^6.0.5"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.7",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-annotation": "^3.1.0",

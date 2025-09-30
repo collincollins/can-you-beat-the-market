@@ -53,6 +53,10 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
+    // Get userId from request body if provided
+    const payload = event.body ? JSON.parse(event.body) : {};
+    const userId = payload.userId || null;
+
     // get the user's IP and hash it.
     const userIP = getUserIP(event);
     const visitorFingerprint = hashIP(userIP);
@@ -64,6 +68,7 @@ exports.handler = async (event, context) => {
       visitorFingerprint,    // the hashed IP, to later correlate multiple documents
       visitDate: now,        // the timestamp when the visitor loaded the site
       preDataHaul: false,    // indicating that this is not old/preDataHaul data.
+      userId: userId,        // userId if user is logged in, null otherwise
       // pre-update defaults:
       hasStarted: false,         // will be set to true when the user clicks "start simulation"
       durationOfGame: null,      // to be updated later with the game duration
@@ -90,7 +95,8 @@ exports.handler = async (event, context) => {
         statusCode: 200,
         body: JSON.stringify({
           message: 'Visitor document created.',
-          documentId: insertResult.insertedId
+          documentId: insertResult.insertedId,
+          visitorFingerprint: visitorFingerprint
         }),
       };
     } else {

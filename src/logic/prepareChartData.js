@@ -7,7 +7,7 @@
 function linearRegression(x, y) {
   const n = x.length;
   if (n === 0) {
-    return { slope: 0, intercept: 0 };
+    return { slope: 0, intercept: 0, slopeUncertainty: 0 };
   }
 
   // means
@@ -24,7 +24,17 @@ function linearRegression(x, y) {
   const slope = denominator === 0 ? 0 : numerator / denominator;
   const intercept = meanY - slope * meanX;
 
-  return { slope, intercept };
+  // Calculate slope uncertainty (standard error)
+  let residualSumSquares = 0;
+  for (let i = 0; i < n; i++) {
+    const predicted = slope * x[i] + intercept;
+    residualSumSquares += (y[i] - predicted) ** 2;
+  }
+  
+  const residualVariance = n > 2 ? residualSumSquares / (n - 2) : 0;
+  const slopeUncertainty = denominator > 0 ? Math.sqrt(residualVariance / denominator) : 0;
+
+  return { slope, intercept, slopeUncertainty };
 }
 
 /**
@@ -67,7 +77,7 @@ export function preComputeChartData(rawVisitorDocs) {
     // Step 3: Regression
     const xValues = cleanedData.map(d => d.x);
     const yValues = cleanedData.map(d => d.y);
-    const { slope, intercept } = linearRegression(xValues, yValues);
+    const { slope, intercept, slopeUncertainty } = linearRegression(xValues, yValues);
 
     // Step 4: Generate points for the line
     let xMin = Math.min(...xValues);
@@ -103,6 +113,7 @@ export function preComputeChartData(rawVisitorDocs) {
     cleanedData,
     meanData,
     slope,
+    slopeUncertainty,
     intercept,
     regressionPoints,
     // for chart config:

@@ -97,8 +97,7 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ message: 'Visitor document updated successfully.' }),
       };
     } else {
-        //DELETEIT
-        console.error('Failed to update visitor document:', result);
+      console.error('Failed to update visitor document:', result);
       return {
         statusCode: 500,
         body: JSON.stringify({ message: 'Failed to update visitor document.' }),

@@ -13,6 +13,8 @@ import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivit
 import Sp500Chart from './components/Sp500Chart.svelte';
 import Controls from './components/Controls.svelte';
 import UsernameModal from './components/UsernameModal.svelte';
+import LoginModal from './components/LoginModal.svelte';
+import StatsPage from './components/StatsPage.svelte';
 
 // import simulation functions and shared state stores
 import {
@@ -69,6 +71,12 @@ let showModal = false; // controls visibility of the UsernameModal (for high sco
 let restartDisabled = false; // controls whether the restart button is temporarily disabled
 let slowMo = false; // indicates if the simulation is running in slow-motion mode
 let realMode = true;
+
+// login/auth state
+let showLoginModal = false;
+let showStatsPage = false;
+let currentUser = null; // {userId, username}
+let visitorFingerprint = null; // store the hashed IP for linking sessions
 
 // user portfolio and market data initialization
 let portfolio = {
@@ -137,15 +145,50 @@ $: canSell = portfolio.shares > 0;
 // LIFECYCLE HOOKS
 // ========================
 onMount(async () => {
+    // 0. Check if user is logged in and validate they still exist in the database
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            
+            // Validate that the user still exists in the database
+            const validateResponse = await fetch('/.netlify/functions/validateUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: parsedUser.userId })
+            });
+            
+            const validateResult = await validateResponse.json();
+            
+            // If user doesn't exist, clear localStorage
+            if (!validateResponse.ok || !validateResult.valid) {
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+            } else {
+                currentUser = parsedUser;
+            }
+        } catch (e) {
+            console.error('Error validating user:', e);
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+        }
+    }
+
     // 1. create a new visitor document on page load for tracking session data.
     try {
         const response = await fetch('/.netlify/functions/createVisitorDocument', {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUser?.userId || null })
         });
         const result = await response.json();
         if (result.documentId) {
             visitorDocId = result.documentId;
             localStorage.setItem('visitorDocId', visitorDocId);
+        }
+        // Store visitorFingerprint from the session for later linking
+        if (result.visitorFingerprint) {
+            visitorFingerprint = result.visitorFingerprint;
         }
     } catch (error) {
         console.error('Error creating visitor document:', error);
@@ -214,7 +257,6 @@ async function handleUsernameSubmit(event) {
             score: updatedHighScore.score,
             playerName: updatedHighScore.playerName,
         });
-        console.log(`Updated local store with: ${updatedHighScore.playerName}, ${updatedHighScore.score}`);
     } else {
         alert('Failed to record your high score. Please try again.');
     }
@@ -271,6 +313,19 @@ async function startSimulationHandler() {
             '/.netlify/functions/getVisitorDocuments?realMode=false';
 
         const res = await fetch(url);
+        
+        // Log cache information
+        const cacheDate = res.headers?.get('X-Cache-Date');
+        const cacheStatus = res.headers?.get('X-Cache-Status');
+        if (cacheDate) {
+            const dataAgeMinutes = Math.round((Date.now() - new Date(cacheDate).getTime()) / (1000 * 60));
+            const refreshAtMinutes = 360; // 6 hours in minutes
+            const mode = realMode ? 'Real Mode' : 'Simulated Mode';
+            const timeUntilRefresh = refreshAtMinutes - dataAgeMinutes;
+            const refreshMsg = timeUntilRefresh > 0 ? `Next refresh in ${timeUntilRefresh} min` : 'Refreshing now...';
+            console.log(`Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - ${refreshMsg}`);
+        }
+        
         const json = await res.json();
         // store the result in visitorDataStore
         visitorDataStore.set(json);
@@ -418,8 +473,7 @@ async function endSimulation() {
             },
             body: JSON.stringify(postUpdatePayload)
         });
-        const updateResult = await resUpdate.json();
-        console.log('Update result:', updateResult.message);
+        await resUpdate.json();
     } catch (error) {
         console.error('Error updating visitor document:', error);
         // Optionally, you might decide to abort further operations here.
@@ -431,41 +485,38 @@ async function endSimulation() {
     if (!simulationValidFlag) {
         streakForUpdate = 0;
         consecutiveWins.set(0);
-        console.log(`Simulation invalid (duration: ${durationInSeconds.toFixed(2)}s). Resetting consecutive wins to 0.`);
     } else {
         // only update the streak if the portfolio outperformed buy-and-hold.
         if (portfolioVal > buyHoldFinal) {
             streakForUpdate = consecutiveWinsValue + 1;
             consecutiveWins.set(streakForUpdate);
-            console.log(`Consecutive Wins increased to: ${streakForUpdate}`);
 
-            // fetch the current high score.
+            // fetch the current high score once
             const newestDBRecord = await fetchHighScore();
-            console.log('Fetched current DB high score:', newestDBRecord);
 
             if (streakForUpdate > newestDBRecord.score) {
                 showModal = true;
+            } else {
+                // Update high score store with fetched data (no need to fetch again)
+                highScore.set({
+                    score: newestDBRecord.score,
+                    playerName: newestDBRecord.playerName,
+                });
             }
         } else {
             streakForUpdate = 0;
             consecutiveWins.set(0);
-            console.log('Consecutive Wins reset to 0 (performance not sufficient).');
-        }
-    }
-
-    // only update the high score store if the modal is not shown.
-    if (!showModal) {
-        try {
-            const updatedHighScore = await fetchHighScore();
-            highScore.set({
-                score: updatedHighScore.score,
-                playerName: updatedHighScore.playerName,
-            });
-            if (streakForUpdate > updatedHighScore.score) {
-                console.log('Updated high score store with:', updatedHighScore);
+            
+            // Fetch high score to update display
+            try {
+                const updatedHighScore = await fetchHighScore();
+                highScore.set({
+                    score: updatedHighScore.score,
+                    playerName: updatedHighScore.playerName,
+                });
+            } catch (error) {
+                console.error('Error fetching updated high score:', error);
             }
-        } catch (error) {
-            console.error('Error fetching updated high score:', error);
         }
     }
 
@@ -503,14 +554,15 @@ function restartSimulation() {
 
     // create a new visitor document for the new game session
     fetch('/.netlify/functions/createVisitorDocument', {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUser?.userId || null })
         })
         .then(response => response.json())
         .then(result => {
             if (result.documentId) {
                 visitorDocId = result.documentId;
                 localStorage.setItem('visitorDocId', visitorDocId);
-                console.log('Visitor document successfully created.');
             } else {
                 console.error('Failed to create new visitor document.');
             }
@@ -527,6 +579,101 @@ function handleBuy() {
 
 function handleSell() {
     sellShares();
+}
+
+// login/signup handlers
+function handleLoginClick() {
+    showLoginModal = true;
+}
+
+async function handleLoginSubmit(event) {
+    const { username, password, isSignup } = event.detail;
+    
+    try {
+        if (isSignup) {
+            // Create new user
+            const response = await fetch('/.netlify/functions/createUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username,
+                    password,
+                    visitorFingerprint 
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                alert(error.message || 'Failed to create account');
+                return;
+            }
+            
+            const result = await response.json();
+            currentUser = { userId: result.userId, username: result.username };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Link current session data to the new user
+            if (visitorFingerprint) {
+                await fetch('/.netlify/functions/linkSessionToUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: currentUser.userId,
+                        visitorFingerprint 
+                    })
+                });
+            }
+            
+            showLoginModal = false;
+        } else {
+            // Login existing user
+            const response = await fetch('/.netlify/functions/loginUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                alert(error.message || 'Login failed');
+                return;
+            }
+            
+            const result = await response.json();
+            currentUser = { userId: result.userId, username: result.username };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Link current session data to the existing user
+            if (visitorFingerprint) {
+                await fetch('/.netlify/functions/linkSessionToUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: currentUser.userId,
+                        visitorFingerprint 
+                    })
+                });
+            }
+            
+            showLoginModal = false;
+        }
+    } catch (error) {
+        console.error('Error during login/signup:', error);
+        alert('An error occurred. Please try again.');
+    }
+}
+
+function handleLoginClose() {
+    showLoginModal = false;
+}
+
+// stats page handlers
+function handleStatsClick() {
+    showStatsPage = true;
+}
+
+function handleStatsClose() {
+    showStatsPage = false;
 }
 </script>
 
@@ -548,6 +695,14 @@ function handleSell() {
     font-size: 0.5em;
     padding: 8px;
     margin-bottom: 0px;
+}
+
+.header-buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
 }
 
 .help-description-container {
@@ -759,6 +914,33 @@ function handleSell() {
     padding-left: 10px;
     padding-right: 25px;
 }
+
+.app {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.new-feature {
+    background-color: var(--color-success) !important;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.new-feature:hover {
+    background-color: #016101 !important;
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 2px 2px 0px black;
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 3px 3px 0px black;
+    }
+}
 </style>
 
 <div class="app">
@@ -834,7 +1016,16 @@ function handleSell() {
       </label>
     </div>
 
-    <div>
+    <div class="header-buttons-container">
+      {#if !currentUser}
+        <button class="help-icon button start new-feature" on:click={handleLoginClick} aria-label="Login">
+          Account
+        </button>
+      {:else}
+        <button class="help-icon button start new-feature" on:click={handleStatsClick} aria-label="Stats">
+          Stats
+        </button>
+      {/if}
       <button class="help-icon button start" on:click={toggleHelp} aria-label="Help">
         {isHelpVisible ? "Hide Help" : "Show Help"}
       </button>
@@ -1000,9 +1191,6 @@ function handleSell() {
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
-      <p style="font-size: 6px;">
-        Honorable mention to VladStopStalking with 6,942,069,421 wins
-      </p>
     </div>
 
   {/if}
@@ -1042,6 +1230,16 @@ function handleSell() {
   <!-- Username Modal for High Score Submission -->
   {#if showModal}
     <UsernameModal on:submit={handleUsernameSubmit} />
+  {/if}
+
+  <!-- Login/Signup Modal -->
+  {#if showLoginModal}
+    <LoginModal on:submit={handleLoginSubmit} on:close={handleLoginClose} />
+  {/if}
+
+  <!-- Stats Page -->
+  {#if showStatsPage}
+    <StatsPage {currentUser} onClose={handleStatsClose} />
   {/if}
 
 </div>
