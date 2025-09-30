@@ -278,8 +278,8 @@ function createChart() {
 
     // set the result note based on the slope.
     const slopeDisplay = slopeUncertainty > 0 
-      ? `(${slope.toFixed(2)} ± ${slopeUncertainty.toFixed(2)}) %/trade`
-      : `${slope.toFixed(2)} %/trade`;
+      ? `(${slope.toFixed(2)} ± ${slopeUncertainty.toFixed(2)}) [%/trade]`
+      : `${slope.toFixed(2)} [%/trade]`;
     
     if (slope < 0) {
         resultNote = `Slope ${slopeDisplay}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;

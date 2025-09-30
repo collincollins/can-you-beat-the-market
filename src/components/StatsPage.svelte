@@ -187,7 +187,7 @@
           <h3>Performance</h3>
           <div class="stat-grid">
             <div class="stat-card" class:positive={parseFloat(stats.avgExcessCAGR) > 0} class:negative={parseFloat(stats.avgExcessCAGR) < 0}>
-              <div class="stat-value">{formatPercent(stats.avgExcessCAGR)}{#if stats.avgExcessCAGRUncertainty} ± {stats.avgExcessCAGRUncertainty}%{/if}</div>
+              <div class="stat-value">{#if stats.avgExcessCAGRUncertainty}({stats.avgExcessCAGR} ± {stats.avgExcessCAGRUncertainty}) [%]{:else}{formatPercent(stats.avgExcessCAGR)}{/if}</div>
               <div class="stat-label">Avg Excess Return</div>
             </div>
             <div class="stat-card" class:negative={parseFloat(stats.worstExcessCAGR) < 0}>
@@ -224,7 +224,7 @@
                   The Reality of Market Timing:
                 </p>
                 <p class="insight" style="font-size: 0.95em; font-weight: bold; margin-bottom: 12px;">
-                  Only <strong style="font-size: 1.3em; color: var(--color-danger);">{stats.globalWinRate}% ± {stats.globalWinRateUncertainty}%</strong> of all games beat buy-and-hold
+                  Only <strong style="font-size: 1.3em; color: var(--color-danger);">({stats.globalWinRate} ± {stats.globalWinRateUncertainty}) [%]</strong> of all games beat buy-and-hold
                 </p>
                 
                 <p class="insight" style="font-size: 0.7em; margin-bottom: 8px; font-weight: bold;">
