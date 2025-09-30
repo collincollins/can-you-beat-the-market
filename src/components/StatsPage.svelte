@@ -189,11 +189,11 @@
             <h3>Trading Style</h3>
             <div class="stat-card insight-card">
               {#if parseFloat(stats.avgTrades) < 2}
-                <p class="insight">🛡️ <strong>Conservative Trader</strong> - You make few trades and tend to hold positions.</p>
+                <p class="insight"><strong>Conservative Trader</strong> - You make few trades and tend to hold positions.</p>
               {:else if parseFloat(stats.avgTrades) < 5}
-                <p class="insight">⚖️ <strong>Balanced Trader</strong> - You make a moderate number of trades.</p>
+                <p class="insight"><strong>Balanced Trader</strong> - You make a moderate number of trades.</p>
               {:else}
-                <p class="insight">⚡ <strong>Active Trader</strong> - You make frequent trades and actively manage positions.</p>
+                <p class="insight"><strong>Active Trader</strong> - You make frequent trades and actively manage positions.</p>
               {/if}
             </div>
           </div>
@@ -205,9 +205,9 @@
             <h3>Performance Insight</h3>
             <div class="stat-card insight-card">
               {#if parseFloat(stats.avgExcessCAGR) > 0}
-                <p class="insight">📈 On average, you beat buy-and-hold by <strong>{stats.avgExcessCAGR}%</strong> annually!</p>
+                <p class="insight">On average, you beat buy-and-hold by <strong>{stats.avgExcessCAGR}%</strong> annually!</p>
               {:else}
-                <p class="insight">📊 On average, buy-and-hold outperforms your strategy by <strong>{Math.abs(stats.avgExcessCAGR)}%</strong> annually. Consider reducing trading frequency.</p>
+                <p class="insight">On average, buy-and-hold outperforms your strategy by <strong>{Math.abs(stats.avgExcessCAGR)}%</strong> annually. Consider reducing trading frequency.</p>
               {/if}
             </div>
           </div>
