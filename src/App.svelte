@@ -145,13 +145,34 @@ $: canSell = portfolio.shares > 0;
 // LIFECYCLE HOOKS
 // ========================
 onMount(async () => {
-    // 0. Check if user is logged in
+    // 0. Check if user is logged in and validate they still exist in the database
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
         try {
-            currentUser = JSON.parse(storedUser);
+            const parsedUser = JSON.parse(storedUser);
+            
+            // Validate that the user still exists in the database
+            const validateResponse = await fetch('/.netlify/functions/validateUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: parsedUser.userId })
+            });
+            
+            const validateResult = await validateResponse.json();
+            
+            // If user doesn't exist, clear localStorage
+            if (!validateResponse.ok || !validateResult.valid) {
+                console.log('User no longer exists in database, clearing session');
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+            } else {
+                currentUser = parsedUser;
+                console.log('User validated:', parsedUser.username);
+            }
         } catch (e) {
+            console.error('Error validating user:', e);
             localStorage.removeItem('currentUser');
+            currentUser = null;
         }
     }
 
