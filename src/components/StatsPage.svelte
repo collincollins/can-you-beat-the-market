@@ -331,8 +331,10 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: calc(var(--vh, 1vh) * 100);
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background: var(--color-background-dark);
     z-index: 1000;
     overflow-y: scroll;
@@ -345,7 +347,7 @@
     max-width: 700px;
     width: 93%;
     margin: 0 auto;
-    margin-left: calc(50% - 46.5% - 10px);
+    transform: translateX(-10px);
     padding-bottom: 40px;
   }
 
