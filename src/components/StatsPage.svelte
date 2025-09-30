@@ -15,19 +15,26 @@
       return;
     }
 
+    console.log('Fetching stats for:', currentUser.username);
+
     try {
       const response = await fetch(`/.netlify/functions/getUserStats?username=${encodeURIComponent(currentUser.username)}`);
       
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch stats');
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.message || 'Failed to fetch stats');
       }
       
       const data = await response.json();
+      console.log('Stats data received:', data);
       stats = data;
       loading = false;
     } catch (err) {
       console.error('Error fetching stats:', err);
-      error = 'Failed to load stats';
+      error = `Failed to load stats: ${err.message}`;
       loading = false;
     }
   });
@@ -58,6 +65,12 @@
       <div class="error">{error}</div>
     {:else if stats}
       <div class="stats-container">
+        <!-- Debug Info -->
+        <div class="stat-card" style="font-size: 0.6em; text-align: left;">
+          <strong>Debug:</strong> userId: {stats.userId}<br>
+          Raw stats: {JSON.stringify(stats, null, 2).substring(0, 200)}...
+        </div>
+
         <!-- User Info -->
         <div class="stat-card header-card">
           <h2>{stats.username}</h2>
