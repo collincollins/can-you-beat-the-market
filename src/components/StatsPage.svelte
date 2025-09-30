@@ -17,21 +17,15 @@
       return;
     }
 
-    console.log('Fetching stats for:', currentUser.username);
-
     try {
       const response = await fetch(`/.netlify/functions/getUserStats?username=${encodeURIComponent(currentUser.username)}&t=${Date.now()}`);
       
-      console.log('Response status:', response.status);
-      
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error response:', errorData);
         throw new Error(errorData.message || 'Failed to fetch stats');
       }
       
       const data = await response.json();
-      console.log('Stats data received:', data);
       stats = data;
       loading = false;
       refreshing = false;
@@ -94,7 +88,6 @@
       });
 
       const result = await response.json();
-      console.log('Link result:', result);
       
       if (response.ok) {
         alert(`Successfully linked ${result.gamesLinked} games to your account!`);
@@ -228,6 +221,34 @@
               {:else}
                 <p class="insight">On average, buy-and-hold outperforms your strategy by <strong>{Math.abs(stats.avgExcessCAGR)}%</strong> annually. Consider reducing trading frequency.</p>
               {/if}
+            </div>
+            
+            <!-- Global Comparison & Percentile -->
+            {#if stats.validGames > 0}
+              <div class="stat-card insight-card" style="margin-top: 10px;">
+                <p class="insight">
+                  Global average excess return: <strong>{stats.globalAvgExcessCAGR}%</strong>
+                  <br>
+                  You perform better than <strong>{stats.percentileRank}%</strong> of all players
+                </p>
+              </div>
+            {/if}
+          </div>
+        {/if}
+
+        <!-- Time Stats -->
+        {#if stats.validGames > 0}
+          <div class="stat-section">
+            <h3>Time Played</h3>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-value">{stats.totalGameTimeMinutes}</div>
+                <div class="stat-label">Minutes (Real Time)</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{stats.totalRealTimeYears}</div>
+                <div class="stat-label">Years (Market Time)</div>
+              </div>
             </div>
           </div>
         {/if}

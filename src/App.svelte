@@ -162,12 +162,10 @@ onMount(async () => {
             
             // If user doesn't exist, clear localStorage
             if (!validateResponse.ok || !validateResult.valid) {
-                console.log('User no longer exists in database, clearing session');
                 localStorage.removeItem('currentUser');
                 currentUser = null;
             } else {
                 currentUser = parsedUser;
-                console.log('User validated:', parsedUser.username);
             }
         } catch (e) {
             console.error('Error validating user:', e);
@@ -259,7 +257,6 @@ async function handleUsernameSubmit(event) {
             score: updatedHighScore.score,
             playerName: updatedHighScore.playerName,
         });
-        console.log(`Updated local store with: ${updatedHighScore.playerName}, ${updatedHighScore.score}`);
     } else {
         alert('Failed to record your high score. Please try again.');
     }
@@ -463,8 +460,7 @@ async function endSimulation() {
             },
             body: JSON.stringify(postUpdatePayload)
         });
-        const updateResult = await resUpdate.json();
-        console.log('Update result:', updateResult.message);
+        await resUpdate.json();
     } catch (error) {
         console.error('Error updating visitor document:', error);
         // Optionally, you might decide to abort further operations here.
@@ -476,17 +472,14 @@ async function endSimulation() {
     if (!simulationValidFlag) {
         streakForUpdate = 0;
         consecutiveWins.set(0);
-        console.log(`Simulation invalid (duration: ${durationInSeconds.toFixed(2)}s). Resetting consecutive wins to 0.`);
     } else {
         // only update the streak if the portfolio outperformed buy-and-hold.
         if (portfolioVal > buyHoldFinal) {
             streakForUpdate = consecutiveWinsValue + 1;
             consecutiveWins.set(streakForUpdate);
-            console.log(`Consecutive Wins increased to: ${streakForUpdate}`);
 
             // fetch the current high score.
             const newestDBRecord = await fetchHighScore();
-            console.log('Fetched current DB high score:', newestDBRecord);
 
             if (streakForUpdate > newestDBRecord.score) {
                 showModal = true;
@@ -494,7 +487,6 @@ async function endSimulation() {
         } else {
             streakForUpdate = 0;
             consecutiveWins.set(0);
-            console.log('Consecutive Wins reset to 0 (performance not sufficient).');
         }
     }
 
@@ -506,9 +498,6 @@ async function endSimulation() {
                 score: updatedHighScore.score,
                 playerName: updatedHighScore.playerName,
             });
-            if (streakForUpdate > updatedHighScore.score) {
-                console.log('Updated high score store with:', updatedHighScore);
-            }
         } catch (error) {
             console.error('Error fetching updated high score:', error);
         }
@@ -557,7 +546,6 @@ function restartSimulation() {
             if (result.documentId) {
                 visitorDocId = result.documentId;
                 localStorage.setItem('visitorDocId', visitorDocId);
-                console.log('Visitor document successfully created.');
             } else {
                 console.error('Failed to create new visitor document.');
             }
@@ -620,7 +608,6 @@ async function handleLoginSubmit(event) {
             }
             
             showLoginModal = false;
-            console.log(`Signed up as ${result.username}`);
         } else {
             // Login existing user
             const response = await fetch('/.netlify/functions/loginUser', {
@@ -652,7 +639,6 @@ async function handleLoginSubmit(event) {
             }
             
             showLoginModal = false;
-            console.log(`Logged in as ${result.username}`);
         }
     } catch (error) {
         console.error('Error during login/signup:', error);
