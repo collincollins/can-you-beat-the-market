@@ -295,7 +295,7 @@
     border: 2px solid black;
     color: white;
     padding: 8px 12px;
-    font-size: 1em;
+    font-size: 0.7em;
     cursor: pointer;
     border-radius: 10px;
     box-shadow: var(--shadow-default);
