@@ -318,8 +318,10 @@ async function startSimulationHandler() {
         const cacheDate = res.headers.get('X-Cache-Date');
         const cacheStatus = res.headers.get('X-Cache-Status');
         if (cacheDate) {
-            const dataAge = Math.round((Date.now() - new Date(cacheDate).getTime()) / (1000 * 60));
-            console.log(`Chart data ${cacheStatus === 'MISS' ? 'refreshed' : 'from cache'} - Data age: ${dataAge} minutes (${new Date(cacheDate).toLocaleString()})`);
+            const dataAgeMinutes = Math.round((Date.now() - new Date(cacheDate).getTime()) / (1000 * 60));
+            const refreshAtMinutes = 360; // 6 hours in minutes
+            const mode = realMode ? 'Real Mode' : 'Simulated Mode';
+            console.log(`📊 Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - Next refresh in ${refreshAtMinutes - dataAgeMinutes} min`);
         }
         
         const json = await res.json();

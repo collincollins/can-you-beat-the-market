@@ -29,8 +29,9 @@
       
       // Log global stats cache info if available
       if (data.globalStatsCacheDate) {
-        const cacheAge = Math.round((Date.now() - new Date(data.globalStatsCacheDate).getTime()) / (1000 * 60 * 60));
-        console.log(`📈 Global stats data age: ${cacheAge} hours (${new Date(data.globalStatsCacheDate).toLocaleString()})`);
+        const cacheAgeHours = Math.round((Date.now() - new Date(data.globalStatsCacheDate).getTime()) / (1000 * 60 * 60));
+        const refreshAtHours = 24;
+        console.log(`📈 Global Stats: ${cacheAgeHours}/${refreshAtHours} hrs (cached) - Next refresh in ${refreshAtHours - cacheAgeHours} hrs`);
       }
       
       stats = data;
