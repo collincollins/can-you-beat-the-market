@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
 // Simple profanity filter
-const badWords = ['fuck', 'shit', 'ass', 'bitch', 'damn', 'crap', 'piss', 'dick', 'cock', 'pussy', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'cunt', 'twat', 'retard'];
+const badWords = ['fuck', 'shit', 'ass', 'bitch', 'damn', 'crap', 'piss', 'dick', 'cock', 'pussy', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'cunt', 'twat', 'retard', 'hoe', 'nazi', 'shithead', 'shitbag', 'shitass', 'shitface', 'shithead', 'shitass', 'shitface', 'hate', 'kill', 'die', 'murder', 'rape', 'torture'];
 const isProfane = (text) => {
   const lower = text.toLowerCase();
   return badWords.some(word => lower.includes(word));
