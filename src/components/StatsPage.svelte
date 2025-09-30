@@ -280,7 +280,7 @@
     max-width: 700px;
     width: 93%;
     margin: 0 auto;
-    margin-left: calc(50% - 46.5% - 5px);
+    margin-left: calc(50% - 46.5% - 15px);
     padding-bottom: 40px;
   }
 
