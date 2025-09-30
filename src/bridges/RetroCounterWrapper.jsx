@@ -23,6 +23,17 @@ function RetroCounterWC(props) {
     // function to increment the hit count and retrieve the updated visitor count
     const updateVisitorCount = async () => {
       try {
+        // Check cache first (5 minute cache)
+        const cached = localStorage.getItem('visitorCountCache');
+        if (cached) {
+          const { count, timestamp } = JSON.parse(cached);
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          if (timestamp > fiveMinutesAgo) {
+            setVisitorCount(count);
+            return;
+          }
+        }
+
         // fetch the count of unique visitors
         const response = await fetch('/.netlify/functions/getVisitorCount', {
           method: 'GET',
@@ -33,6 +44,12 @@ function RetroCounterWC(props) {
         
         const data = await response.json();
         setVisitorCount(data.count);
+        
+        // Cache the result
+        localStorage.setItem('visitorCountCache', JSON.stringify({
+          count: data.count,
+          timestamp: Date.now()
+        }));
         } catch (error) {
         console.error('Error fetching visitor count:', error);
         }

@@ -31,7 +31,9 @@
       if (data.globalStatsCacheDate) {
         const cacheAgeHours = Math.round((Date.now() - new Date(data.globalStatsCacheDate).getTime()) / (1000 * 60 * 60));
         const refreshAtHours = 24;
-        console.log(`Global Stats: ${cacheAgeHours}/${refreshAtHours} hrs (cached) - Next refresh in ${refreshAtHours - cacheAgeHours} hrs`);
+        const timeUntilRefresh = refreshAtHours - cacheAgeHours;
+        const refreshMsg = timeUntilRefresh > 0 ? `Next refresh in ${timeUntilRefresh} hrs` : 'Refreshing now...';
+        console.log(`Global Stats: ${cacheAgeHours}/${refreshAtHours} hrs (cached) - ${refreshMsg}`);
       }
       
       stats = data;
@@ -203,22 +205,6 @@
           </div>
         </div>
 
-        <!-- Trading Style Insight -->
-        {#if stats.avgTrades}
-          <div class="stat-section">
-            <h3>Trading Style</h3>
-            <div class="stat-card insight-card">
-              {#if parseFloat(stats.avgTrades) < 2}
-                <p class="insight"><strong>Conservative Trader</strong> - You make few trades and tend to hold positions.</p>
-              {:else if parseFloat(stats.avgTrades) < 5}
-                <p class="insight"><strong>Balanced Trader</strong> - You make a moderate number of trades.</p>
-              {:else}
-                <p class="insight"><strong>Active Trader</strong> - You make frequent trades and actively manage positions.</p>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
         <!-- Performance Insight -->
         {#if parseFloat(stats.avgExcessCAGR) !== 0}
           <div class="stat-section">
@@ -231,6 +217,18 @@
               {/if}
             </div>
             
+            <!-- Global Win Rate (Prominent) -->
+            {#if stats.globalWinRate}
+              <div class="stat-card" style="margin-top: 10px; background-color: #fff3cd; border-color: #ffc107; border-width: 3px;">
+                <p class="insight" style="font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">
+                  The Reality of Market Timing:
+                </p>
+                <p class="insight" style="font-size: 0.95em; font-weight: bold;">
+                  Only <strong style="font-size: 1.3em; color: var(--color-danger);">{stats.globalWinRate}%</strong> of all players beat buy-and-hold
+                </p>
+              </div>
+            {/if}
+
             <!-- Global Comparison & Percentile -->
             {#if stats.validGames > 0}
               <div class="stat-card insight-card" style="margin-top: 10px;">

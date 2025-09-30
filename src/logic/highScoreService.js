@@ -15,7 +15,6 @@ export async function fetchHighScore() {
   }
   
   export async function updateHighScore(playerName, score) {
-    console.log("Updating high score with:", { playerName, score });
     try {
       const response = await fetch('/.netlify/functions/setHighScore', {
         method: 'POST',
@@ -29,8 +28,7 @@ export async function fetchHighScore() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
   
-      const data = await response.json();
-      console.log(data.message);
+      await response.json();
       return true;
     } catch (error) {
       console.error('Error updating high score:', error);

@@ -147,6 +147,11 @@ exports.handler = async (event, context) => {
     
     const globalAvgExcessCAGR = cachedGlobalStats.globalAvgExcessCAGR || 0;
     
+    // Calculate global win rate (percentage of all games that beat buy-and-hold)
+    const globalWinRate = cachedGlobalStats.allExcessReturns && cachedGlobalStats.allExcessReturns.length > 0
+      ? ((cachedGlobalStats.allExcessReturns.filter(excess => excess > 0).length / cachedGlobalStats.allExcessReturns.length) * 100).toFixed(1)
+      : 0;
+    
     const stats = {
       username: user.username,
       userId: user.userId,
@@ -173,6 +178,7 @@ exports.handler = async (event, context) => {
       totalBuys,
       totalSells,
       globalAvgExcessCAGR: globalAvgExcessCAGR.toFixed(2),
+      globalWinRate,
       percentileRank,
       globalStatsCacheDate: cachedGlobalStats?.updatedAt,
       recentGames: games.sort((a, b) => new Date(b.visitDate) - new Date(a.visitDate)).slice(0, 10)

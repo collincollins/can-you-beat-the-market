@@ -315,13 +315,15 @@ async function startSimulationHandler() {
         const res = await fetch(url);
         
         // Log cache information
-        const cacheDate = res.headers.get('X-Cache-Date');
-        const cacheStatus = res.headers.get('X-Cache-Status');
+        const cacheDate = res.headers?.get('X-Cache-Date');
+        const cacheStatus = res.headers?.get('X-Cache-Status');
         if (cacheDate) {
             const dataAgeMinutes = Math.round((Date.now() - new Date(cacheDate).getTime()) / (1000 * 60));
             const refreshAtMinutes = 360; // 6 hours in minutes
             const mode = realMode ? 'Real Mode' : 'Simulated Mode';
-            console.log(`Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - Next refresh in ${refreshAtMinutes - dataAgeMinutes} min`);
+            const timeUntilRefresh = refreshAtMinutes - dataAgeMinutes;
+            const refreshMsg = timeUntilRefresh > 0 ? `Next refresh in ${timeUntilRefresh} min` : 'Refreshing now...';
+            console.log(`Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - ${refreshMsg}`);
         }
         
         const json = await res.json();
@@ -489,28 +491,32 @@ async function endSimulation() {
             streakForUpdate = consecutiveWinsValue + 1;
             consecutiveWins.set(streakForUpdate);
 
-            // fetch the current high score.
+            // fetch the current high score once
             const newestDBRecord = await fetchHighScore();
 
             if (streakForUpdate > newestDBRecord.score) {
                 showModal = true;
+            } else {
+                // Update high score store with fetched data (no need to fetch again)
+                highScore.set({
+                    score: newestDBRecord.score,
+                    playerName: newestDBRecord.playerName,
+                });
             }
         } else {
             streakForUpdate = 0;
             consecutiveWins.set(0);
-        }
-    }
-
-    // only update the high score store if the modal is not shown.
-    if (!showModal) {
-        try {
-            const updatedHighScore = await fetchHighScore();
-            highScore.set({
-                score: updatedHighScore.score,
-                playerName: updatedHighScore.playerName,
-            });
-        } catch (error) {
-            console.error('Error fetching updated high score:', error);
+            
+            // Fetch high score to update display
+            try {
+                const updatedHighScore = await fetchHighScore();
+                highScore.set({
+                    score: updatedHighScore.score,
+                    playerName: updatedHighScore.playerName,
+                });
+            } catch (error) {
+                console.error('Error fetching updated high score:', error);
+            }
         }
     }
 
