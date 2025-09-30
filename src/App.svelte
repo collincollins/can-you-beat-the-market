@@ -923,24 +923,22 @@ function handleStatsClose() {
 
 .new-feature {
     background-color: var(--color-success) !important;
-    animation: pulse 1.5s ease-in-out infinite !important;
+    animation: pulse 2s ease-in-out infinite;
 }
 
 .new-feature:hover {
     background-color: #016101 !important;
-    animation: none !important;
+    animation: none;
 }
 
 @keyframes pulse {
     0%, 100% {
         transform: scale(1);
         box-shadow: 2px 2px 0px black;
-        opacity: 1;
     }
     50% {
-        transform: scale(1.08);
-        box-shadow: 4px 4px 0px black;
-        opacity: 0.9;
+        transform: scale(1.05);
+        box-shadow: 3px 3px 0px black;
     }
 }
 </style>
