@@ -914,6 +914,12 @@ function handleStatsClose() {
     padding-left: 10px;
     padding-right: 25px;
 }
+
+.app {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
 </style>
 
 <div class="app">
