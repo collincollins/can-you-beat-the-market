@@ -33,6 +33,7 @@ exports.handler = async (event, context) => {
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
+    const usersCollection = database.collection('users');
 
     const { userId, visitorFingerprint } = JSON.parse(event.body);
 
@@ -55,6 +56,23 @@ exports.handler = async (event, context) => {
       },
       { $set: { userId, linkedAt: new Date() } }
     );
+    
+    // Update user's firstGameDate if we linked any games
+    if (result.modifiedCount > 0) {
+      // Find the oldest game for this user
+      const oldestGame = await visitorsCollection
+        .find({ userId })
+        .sort({ visitDate: 1 })
+        .limit(1)
+        .toArray();
+      
+      if (oldestGame.length > 0 && oldestGame[0].visitDate) {
+        await usersCollection.updateOne(
+          { userId },
+          { $set: { firstGameDate: oldestGame[0].visitDate } }
+        );
+      }
+    }
 
     return {
       statusCode: 200,

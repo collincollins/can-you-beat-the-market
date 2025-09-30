@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
 
     // Get all users
     const allUsers = await usersCollection.find({})
-      .project({ username: 1, userId: 1, createdAt: 1 })
+      .project({ username: 1, userId: 1, createdAt: 1, firstGameDate: 1 })
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -63,7 +63,7 @@ exports.handler = async (event, context) => {
         return {
           username: user.username,
           userId: user.userId,
-          createdAt: user.createdAt,
+          createdAt: user.firstGameDate || user.createdAt,
           validGames: gameCount
         };
       })
