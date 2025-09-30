@@ -236,18 +236,30 @@
           </div>
         {/if}
 
-        <!-- Time Stats -->
+        <!-- Cumulative Stats -->
         {#if stats.validGames > 0}
           <div class="stat-section">
-            <h3>Time Played</h3>
+            <h3>Cumulative Stats</h3>
             <div class="stat-grid">
               <div class="stat-card">
                 <div class="stat-value">{stats.totalGameTimeMinutes}</div>
-                <div class="stat-label">Minutes (Real Time)</div>
+                <div class="stat-label">Minutes<br>(Real Time)</div>
               </div>
               <div class="stat-card">
                 <div class="stat-value">{stats.totalRealTimeYears}</div>
-                <div class="stat-label">Years (Market Time)</div>
+                <div class="stat-label">Years<br>(Market Time)</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{stats.totalTrades}</div>
+                <div class="stat-label">Total<br>Trades</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{stats.totalBuys}</div>
+                <div class="stat-label">Total<br>Buys</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{stats.totalSells}</div>
+                <div class="stat-label">Total<br>Sells</div>
               </div>
             </div>
           </div>
@@ -428,6 +440,16 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+
+  .stat-section:has(.stat-grid > :nth-child(5)) .stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 500px) {
+    .stat-section:has(.stat-grid > :nth-child(5)) .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   .stat-value {

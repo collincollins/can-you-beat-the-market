@@ -34,6 +34,7 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const usersCollection = database.collection('users');
     const visitorsCollection = database.collection('visitors');
+    const globalStatsCollection = database.collection('globalStats');
 
     // Get username from query parameter
     const username = event.queryStringParameters?.username;
@@ -65,7 +66,7 @@ exports.handler = async (event, context) => {
     const validGames = games.filter(g => g.valid === true);
     const wins = validGames.filter(g => g.win === true);
     
-    // Calculate time-based stats
+    // Calculate time-based and cumulative stats
     const totalGameTimeSeconds = validGames.reduce((sum, g) => sum + (g.durationOfGame || 0), 0);
     const totalGameTimeMinutes = Math.floor(totalGameTimeSeconds / 60);
     const totalRealTimeMinutes = validGames.reduce((sum, g) => {
@@ -73,23 +74,64 @@ exports.handler = async (event, context) => {
       return sum + (3 * 365.25 * 24 * 60); // 3 years in minutes
     }, 0);
     const totalRealTimeYears = (totalRealTimeMinutes / (365.25 * 24 * 60)).toFixed(1);
-
-    // Get global stats for comparison (all valid games from all users)
-    const allValidGames = await visitorsCollection.find({ valid: true }).toArray();
-    const globalAvgExcessCAGR = allValidGames.length > 0
-      ? allValidGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / allValidGames.length
-      : 0;
     
-    // Calculate percentile ranking
-    let percentileRank = 0;
-    if (validGames.length > 0 && allValidGames.length > 0) {
-      const userAvgExcess = validGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / validGames.length;
-      const betterThanCount = allValidGames.filter(g => {
-        const gameExcess = g.portfolioCAGR - g.buyHoldCAGR;
-        return gameExcess < userAvgExcess;
-      }).length;
-      percentileRank = ((betterThanCount / allValidGames.length) * 100).toFixed(1);
+    const totalBuys = validGames.reduce((sum, g) => sum + (g.buys || 0), 0);
+    const totalSells = validGames.reduce((sum, g) => sum + (g.sells || 0), 0);
+    const totalTrades = totalBuys + totalSells;
+
+    // Get or update global stats cache
+    let cachedGlobalStats = await globalStatsCollection.findOne({ _id: 'current' });
+    
+    // Check if cache is stale (older than 24 hours) or doesn't exist
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const isStale = !cachedGlobalStats || new Date(cachedGlobalStats.updatedAt) < oneDayAgo;
+    
+    if (isStale) {
+      // Update the cache by calculating from all valid games
+      const allValidGames = await visitorsCollection.find({ valid: true }).toArray();
+      
+      const globalAvgExcessCAGR = allValidGames.length > 0
+        ? allValidGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / allValidGames.length
+        : 0;
+
+      const allExcessReturns = allValidGames.map(g => g.portfolioCAGR - g.buyHoldCAGR).sort((a, b) => a - b);
+
+      cachedGlobalStats = {
+        _id: 'current',
+        updatedAt: now,
+        totalValidGames: allValidGames.length,
+        globalAvgExcessCAGR,
+        allExcessReturns
+      };
+
+      // Save to cache
+      await globalStatsCollection.updateOne(
+        { _id: 'current' },
+        { $set: cachedGlobalStats },
+        { upsert: true }
+      );
     }
+    
+    // Calculate percentile ranking using cached data
+    let percentileRank = 0;
+    if (validGames.length > 0 && cachedGlobalStats.allExcessReturns && cachedGlobalStats.allExcessReturns.length > 0) {
+      const userAvgExcess = validGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / validGames.length;
+      
+      // Binary search to find position in sorted array
+      let betterThanCount = 0;
+      for (let excess of cachedGlobalStats.allExcessReturns) {
+        if (excess < userAvgExcess) {
+          betterThanCount++;
+        } else {
+          break;
+        }
+      }
+      
+      percentileRank = ((betterThanCount / cachedGlobalStats.allExcessReturns.length) * 100).toFixed(1);
+    }
+    
+    const globalAvgExcessCAGR = cachedGlobalStats.globalAvgExcessCAGR || 0;
     
     const stats = {
       username: user.username,
@@ -113,6 +155,9 @@ exports.handler = async (event, context) => {
         : 0,
       totalGameTimeMinutes,
       totalRealTimeYears,
+      totalTrades,
+      totalBuys,
+      totalSells,
       globalAvgExcessCAGR: globalAvgExcessCAGR.toFixed(2),
       percentileRank,
       recentGames: games.sort((a, b) => new Date(b.visitDate) - new Date(a.visitDate)).slice(0, 10)
