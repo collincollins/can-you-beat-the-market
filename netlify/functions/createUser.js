@@ -3,6 +3,7 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const Filter = require('bad-words');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -42,6 +43,15 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Invalid username' }),
+      };
+    }
+
+    // Check for profanity
+    const filter = new Filter();
+    if (filter.isProfane(username)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Username contains inappropriate language' }),
       };
     }
 

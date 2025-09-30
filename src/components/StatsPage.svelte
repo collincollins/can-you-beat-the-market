@@ -9,16 +9,23 @@
   let error = null;
   let linking = false;
   let refreshing = false;
+  let isAdmin = false;
+  let allUsers = [];
+  let viewingUsername = null; // Username currently being viewed (for admin)
 
-  async function fetchStats() {
-    if (!currentUser?.username) {
+  async function fetchStats(usernameToFetch = null) {
+    const targetUsername = usernameToFetch || currentUser?.username;
+    
+    if (!targetUsername) {
       error = 'No user logged in';
       loading = false;
       return;
     }
 
+    viewingUsername = targetUsername;
+
     try {
-      const response = await fetch(`/.netlify/functions/getUserStats?username=${encodeURIComponent(currentUser.username)}&t=${Date.now()}`);
+      const response = await fetch(`/.netlify/functions/getUserStats?username=${encodeURIComponent(targetUsername)}&t=${Date.now()}`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -52,7 +59,7 @@
     document.documentElement.style.setProperty('--vh', `${vh}px`);
   }
 
-  onMount(() => {
+  onMount(async () => {
     // Set viewport height for iOS
     setViewportHeight();
     window.addEventListener('resize', setViewportHeight);
@@ -61,6 +68,21 @@
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
+    
+    // Check if user is admin (username is "collin")
+    if (currentUser?.username?.toLowerCase() === 'collin') {
+      isAdmin = true;
+      
+      // Fetch all users for admin view
+      try {
+        const response = await fetch(`/.netlify/functions/getAllUsers?username=${encodeURIComponent(currentUser.username)}`);
+        if (response.ok) {
+          allUsers = await response.json();
+        }
+      } catch (err) {
+        console.error('Error fetching all users:', err);
+      }
+    }
     
     fetchStats();
   });
@@ -119,10 +141,19 @@
 <div class="stats-overlay">
   <div class="stats-page">
     <div class="header">
-      <h1>Your Stats</h1>
+      <h1>{isAdmin && viewingUsername ? `${viewingUsername}'s Stats` : 'Your Stats'}</h1>
+      {#if isAdmin && viewingUsername}
+        <button 
+          class="refresh-button" 
+          on:click={() => { viewingUsername = null; allUsers = []; loading = true; onMount(); }}
+          title="Back to user list"
+        >
+          ←
+        </button>
+      {/if}
       <button 
         class="refresh-button" 
-        on:click={() => { refreshing = true; loading = true; fetchStats(); }}
+        on:click={() => { refreshing = true; loading = true; fetchStats(viewingUsername); }}
         disabled={refreshing || loading}
         title="Refresh stats"
       >
@@ -131,8 +162,21 @@
       <button class="close-button" on:click={onClose}>✕</button>
     </div>
 
-    {#if loading}
-      <div class="loading">Loading your stats...</div>
+    {#if isAdmin && !viewingUsername}
+      <!-- Admin User List -->
+      <div class="admin-panel">
+        <h2 style="font-size: 1em; margin-bottom: 15px;">All Users ({allUsers.length})</h2>
+        <div class="user-list">
+          {#each allUsers as user}
+            <button class="user-list-item" on:click={() => { loading = true; fetchStats(user.username); }}>
+              <span class="user-name">{user.username}</span>
+              <span class="user-info">{user.validGames} games • {formatDate(user.createdAt)}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {:else if loading}
+      <div class="loading">Loading stats...</div>
     {:else if error}
       <div class="error">{error}</div>
     {:else if stats}
@@ -631,5 +675,50 @@
 
   .probability-table tbody tr:hover {
     background-color: #f5f5f5;
+  }
+
+  .admin-panel {
+    padding: 10px;
+  }
+
+  .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .user-list-item {
+    font-family: 'Press Start 2P', cursive;
+    background-color: var(--color-background-card);
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 12px 15px;
+    box-shadow: var(--shadow-light);
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+
+  .user-list-item:hover {
+    background-color: #e0e4ed;
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px black;
+  }
+
+  .user-name {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: var(--color-primary);
+  }
+
+  .user-info {
+    font-size: 0.6em;
+    color: var(--color-neutral);
   }
 </style>
