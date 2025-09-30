@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   
   export let currentUser;
   export let onClose;
@@ -43,7 +43,16 @@
     }
   }
 
-  onMount(fetchStats);
+  onMount(() => {
+    // Prevent body scroll when stats page is open
+    document.body.style.overflow = 'hidden';
+    fetchStats();
+  });
+
+  onDestroy(() => {
+    // Restore body scroll when stats page closes
+    document.body.style.overflow = '';
+  });
 
   function formatPercent(num) {
     return num >= 0 ? `+${num}%` : `${num}%`;
@@ -140,12 +149,12 @@
               <div class="stat-label">Total Games</div>
             </div>
             <div class="stat-card">
-              <div class="stat-value">{stats.validGames}</div>
-              <div class="stat-label">Valid Games</div>
-            </div>
-            <div class="stat-card">
               <div class="stat-value">{stats.wins}</div>
               <div class="stat-label">Wins</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{stats.validGames}</div>
+              <div class="stat-label">Valid Games</div>
             </div>
             <div class="stat-card">
               <div class="stat-value">{stats.winRate}%</div>
@@ -162,10 +171,6 @@
               <div class="stat-value">{formatPercent(stats.avgExcessCAGR)}</div>
               <div class="stat-label">Avg Excess Return</div>
             </div>
-            <div class="stat-card" class:positive={parseFloat(stats.bestExcessCAGR) > 0}>
-              <div class="stat-value">{formatPercent(stats.bestExcessCAGR)}</div>
-              <div class="stat-label">Best Excess Return</div>
-            </div>
             <div class="stat-card" class:negative={parseFloat(stats.worstExcessCAGR) < 0}>
               <div class="stat-value">{formatPercent(stats.worstExcessCAGR)}</div>
               <div class="stat-label">Worst Excess Return</div>
@@ -173,6 +178,10 @@
             <div class="stat-card">
               <div class="stat-value">{stats.avgTrades}</div>
               <div class="stat-label">Avg Trades/Game</div>
+            </div>
+            <div class="stat-card" class:positive={parseFloat(stats.bestExcessCAGR) > 0}>
+              <div class="stat-value">{formatPercent(stats.bestExcessCAGR)}</div>
+              <div class="stat-label">Best Excess Return</div>
             </div>
           </div>
         </div>
@@ -241,6 +250,8 @@
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
     background: var(--color-background-dark);
@@ -314,8 +325,10 @@
 
   .refresh-icon {
     font-size: 1.3em;
-    display: inline-block;
-    line-height: 0.8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
 
   .loading, .error {
@@ -441,6 +454,11 @@
   .game-card.win {
     border-color: var(--color-success);
     background-color: #e8f5e9;
+  }
+
+  .game-card:not(.win) {
+    background-color: #ffebee;
+    border-color: var(--color-danger);
   }
 
   .game-date {
