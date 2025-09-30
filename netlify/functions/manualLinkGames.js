@@ -1,4 +1,5 @@
-// netlify/functions/linkSessionToUser.js
+// netlify/functions/manualLinkGames.js
+// Manual function to link games to a user - useful for fixing existing data
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
@@ -32,42 +33,56 @@ exports.handler = async (event, context) => {
         : 'canyoubeatthemarket';
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
+    const usersCollection = database.collection('users');
     const visitorsCollection = database.collection('visitors');
 
-    const { userId, visitorFingerprint } = JSON.parse(event.body);
+    const { username } = JSON.parse(event.body);
 
-    if (!userId || !visitorFingerprint) {
+    if (!username) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Missing userId or visitorFingerprint' }),
+        body: JSON.stringify({ message: 'Username required' }),
       };
     }
 
-    // Update all documents with this visitorFingerprint that don't have a userId
-    // This includes documents where userId is null or doesn't exist
+    // Find the user
+    const user = await usersCollection.findOne({
+      username: { $regex: new RegExp(`^${username}$`, 'i') }
+    });
+
+    if (!user) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: 'User not found' }),
+      };
+    }
+
+    // Link all games with the user's visitorFingerprint that don't have a userId
     const result = await visitorsCollection.updateMany(
       { 
-        visitorFingerprint, 
+        visitorFingerprint: user.visitorFingerprint,
         $or: [
           { userId: { $exists: false } },
           { userId: null }
         ]
       },
-      { $set: { userId, linkedAt: new Date() } }
+      { $set: { userId: user.userId, linkedAt: new Date() } }
     );
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: 'Session linked to user successfully',
-        documentsUpdated: result.modifiedCount
+        message: 'Games linked successfully',
+        username: user.username,
+        userId: user.userId,
+        gamesLinked: result.modifiedCount
       }),
     };
   } catch (error) {
-    console.error('Error in linkSessionToUser function:', error);
+    console.error('Error in manualLinkGames function:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Internal Server Error' }),
+      body: JSON.stringify({ message: 'Internal Server Error', error: error.message }),
     };
   }
 };
