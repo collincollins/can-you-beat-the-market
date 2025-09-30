@@ -82,12 +82,12 @@
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     
-    // Check if user is admin (username is "collin")
+    // Check if user is admin (username is "collin") - do this after loading personal stats
     if (currentUser?.username?.toLowerCase() === 'collin') {
       isAdmin = true;
-      await fetchAllUsers();
     }
     
+    // Always load personal stats first
     fetchStats();
   });
 
@@ -145,8 +145,8 @@
 <div class="stats-overlay">
   <div class="stats-page">
     <div class="header">
-      <h1>{isAdmin && viewingUsername ? `${viewingUsername}'s Stats` : 'Your Stats'}</h1>
-      {#if isAdmin && viewingUsername}
+      <h1>{viewingUsername ? `${viewingUsername}'s Stats` : 'Your Stats'}</h1>
+      {#if isAdmin && !loading && stats}
         <button 
           class="refresh-button" 
           on:click={async () => { 
@@ -156,9 +156,9 @@
             await fetchAllUsers();
             loading = false;
           }}
-          title="Back to user list"
+          title="View all users"
         >
-          ←
+          👥
         </button>
       {/if}
       <button 
