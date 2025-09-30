@@ -224,7 +224,7 @@
                   The Reality of Market Timing:
                 </p>
                 <p class="insight" style="font-size: 0.95em; font-weight: bold; margin-bottom: 12px;">
-                  Only <strong style="font-size: 1.3em; color: var(--color-danger);">{stats.globalWinRate}%</strong> of all players beat buy-and-hold
+                  Only <strong style="font-size: 1.3em; color: var(--color-danger);">{stats.globalWinRate}%</strong> of all games beat buy-and-hold
                 </p>
                 
                 <p class="insight" style="font-size: 0.7em; margin-bottom: 8px; font-weight: bold;">
