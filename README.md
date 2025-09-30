@@ -56,12 +56,12 @@ To minimize MongoDB costs while maintaining data accuracy, the application imple
 - **Chart Data Cache**: Refreshes every 6 hours
   - Stores pre-aggregated chart data for both real and simulated modes
   - First game after cache expiry triggers refresh, all others use cached data
-  - Console logs show cache age: "📊 Chart data from cache - Data age: X minutes"
+  - Console logs show cache age: "Chart data from cache - Data age: X minutes"
   
 - **Global Stats Cache**: Refreshes every 24 hours  
   - Stores global average excess CAGR and all returns for percentile calculations
   - Auto-updates on first stats page view after expiry
-  - Console logs show: "📈 Global stats data age: X hours"
+  - Console logs show: "Global stats data age: X hours"
 
 ### Database Indexes
 Run the index creation script once after setting up MongoDB:
