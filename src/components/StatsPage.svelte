@@ -309,9 +309,9 @@
                       <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 10)).toLocaleString()}</td>
                     </tr>
                     <tr>
-                      <td>20×</td>
-                      <td>{(Math.pow(stats.globalWinRate / 100, 20) * 100).toFixed(8)}%</td>
-                      <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 20)).toLocaleString()}</td>
+                      <td>15×</td>
+                      <td>{(Math.pow(stats.globalWinRate / 100, 15) * 100).toFixed(7)}%</td>
+                      <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 15)).toLocaleString()}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -355,7 +355,7 @@
           <div class="stat-section">
             <h3>Recent Games</h3>
             <div class="recent-games">
-              {#each stats.recentGames.slice(0, 5) as game}
+              {#each stats.recentGames.slice(0, 20) as game}
                 {#if game.valid}
                   <div class="game-card" class:win={game.win}>
                     <div class="game-date">{formatDate(game.visitDate)}</div>
@@ -411,13 +411,6 @@
     margin-bottom: 15px;
     flex-wrap: wrap;
     gap: 10px;
-  }
-
-  .header h1 {
-    font-size: 1.2em;
-    color: var(--color-primary);
-    margin: 0;
-    flex: 1;
   }
 
   .close-button {
