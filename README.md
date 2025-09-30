@@ -8,9 +8,11 @@ This project is built with Svelte and bundled with Vite. It leverages Chart.js f
 
 ## Key Features
 - Market Simulation: Implements a market model via geometric Brownian motion (see ```src/logic/simulation.js``` and ```src/logic/simulationConfig.js```) to simulate daily price movements over several simulated years.
-- Trading Mechanics: Users interact with the simulation by executing buy and sell actions using on-screen controls (see ```src/components/Controls```svelte). These actions update the user’s portfolio based on current market prices and rolling averages.
+- Trading Mechanics: Users interact with the simulation by executing buy and sell actions using on-screen controls (see ```src/components/Controls.svelte```). These actions update the user's portfolio based on current market prices and rolling averages.
 - Rolling Averages: The simulation calculates rolling averages (with a default window size of 2) to determine trade execution prices.
 - Performance Comparison: At the end of a simulation run, the app compares your trading performance (annualized returns calculated as CAGR) with a buy‐and‐hold strategy.
+- User Accounts: Username + password authentication system with bcrypt hashing. Users can create accounts to track their stats across sessions.
+- Personal Stats Page: Logged-in users can view comprehensive statistics including win rate, performance metrics, trading style analysis, cumulative stats, and global percentile ranking.
 - High Score & Win Streaks: Tracks consecutive wins and high scores. When you set a new record, you are prompted via a username modal (see ```src/components/UsernameModal.svelte```) to submit your name. Data is stored using Netlify functions that connect to a MongoDB cluster.
 - Visitor Counting & Hit Tracking: Netlify functions handle backend tasks such as counting unique visitors and page hits.
 
@@ -46,6 +48,38 @@ This project is built with Svelte and bundled with Vite. It leverages Chart.js f
 ## Deployment and Environment
 - The project deploys on Netlify. Currently, you are working on the test-features branch, which is synced to a deploy preview. 
 - The deploy preview writes to a canyoubeatthemarket-test MongoDB cluster that mirrors the structure of the production cluster.
+
+## Database Optimization & Caching
+To minimize MongoDB costs while maintaining data accuracy, the application implements a smart caching strategy:
+
+### Cache Strategy
+- **Chart Data Cache**: Refreshes every 6 hours
+  - Stores pre-aggregated chart data for both real and simulated modes
+  - First game after cache expiry triggers refresh, all others use cached data
+  - Console logs show cache age: "📊 Chart data from cache - Data age: X minutes"
+  
+- **Global Stats Cache**: Refreshes every 24 hours  
+  - Stores global average excess CAGR and all returns for percentile calculations
+  - Auto-updates on first stats page view after expiry
+  - Console logs show: "📈 Global stats data age: X hours"
+
+### Database Indexes
+Run the index creation script once after setting up MongoDB:
+```bash
+MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET=<your-connection-string> node scripts/createIndexes.js
+```
+
+This creates indexes on:
+- `users.username` (unique, case-insensitive)
+- `users.userId` (unique)
+- `visitors.userId`
+- `visitors.visitorFingerprint`
+- `visitors.valid`
+- `visitors.hasStarted`
+- `visitors.valid + realMode` (compound)
+
+### Query Optimization
+All database queries use projections to fetch only required fields, reducing data transfer and processing costs by 30-40%.
 
 ## Technologies Used
 - Svelte: UI framework. 

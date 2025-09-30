@@ -313,6 +313,15 @@ async function startSimulationHandler() {
             '/.netlify/functions/getVisitorDocuments?realMode=false';
 
         const res = await fetch(url);
+        
+        // Log cache information
+        const cacheDate = res.headers.get('X-Cache-Date');
+        const cacheStatus = res.headers.get('X-Cache-Status');
+        if (cacheDate) {
+            const dataAge = Math.round((Date.now() - new Date(cacheDate).getTime()) / (1000 * 60));
+            console.log(`📊 Chart data ${cacheStatus === 'MISS' ? 'refreshed' : 'from cache'} - Data age: ${dataAge} minutes (${new Date(cacheDate).toLocaleString()})`);
+        }
+        
         const json = await res.json();
         // store the result in visitorDataStore
         visitorDataStore.set(json);
@@ -1146,9 +1155,6 @@ function handleStatsClose() {
       <h2 style="margin-bottom: 0px; margin-top: 5px;">High Score</h2>
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
-      </p>
-      <p style="font-size: 6px;">
-        Honorable mention to VladStopStalking with 6,942,069,421 wins
       </p>
     </div>
 

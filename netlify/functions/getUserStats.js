@@ -58,8 +58,22 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get all games for this user
-    const games = await visitorsCollection.find({ userId: user.userId }).toArray();
+    // Get all games for this user (only fetch needed fields)
+    const games = await visitorsCollection.find({ userId: user.userId })
+      .project({
+        hasStarted: 1,
+        valid: 1,
+        win: 1,
+        durationOfGame: 1,
+        portfolioCAGR: 1,
+        buyHoldCAGR: 1,
+        buys: 1,
+        sells: 1,
+        visitDate: 1,
+        realMode: 1,
+        winStreak: 1
+      })
+      .toArray();
 
     // Calculate stats
     const startedGames = games.filter(g => g.hasStarted === true);
@@ -160,6 +174,7 @@ exports.handler = async (event, context) => {
       totalSells,
       globalAvgExcessCAGR: globalAvgExcessCAGR.toFixed(2),
       percentileRank,
+      globalStatsCacheDate: cachedGlobalStats?.updatedAt,
       recentGames: games.sort((a, b) => new Date(b.visitDate) - new Date(a.visitDate)).slice(0, 10)
     };
 

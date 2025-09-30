@@ -26,6 +26,13 @@
       }
       
       const data = await response.json();
+      
+      // Log global stats cache info if available
+      if (data.globalStatsCacheDate) {
+        const cacheAge = Math.round((Date.now() - new Date(data.globalStatsCacheDate).getTime()) / (1000 * 60 * 60));
+        console.log(`📈 Global stats data age: ${cacheAge} hours (${new Date(data.globalStatsCacheDate).toLocaleString()})`);
+      }
+      
       stats = data;
       loading = false;
       refreshing = false;
