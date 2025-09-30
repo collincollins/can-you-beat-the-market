@@ -61,6 +61,7 @@ exports.handler = async (event, context) => {
     const games = await visitorsCollection.find({ userId: user.userId }).toArray();
 
     // Calculate stats
+    const startedGames = games.filter(g => g.hasStarted === true);
     const validGames = games.filter(g => g.valid === true);
     const wins = validGames.filter(g => g.win === true);
     
@@ -68,7 +69,7 @@ exports.handler = async (event, context) => {
       username: user.username,
       userId: user.userId,
       accountCreated: user.createdAt,
-      totalGames: games.length,
+      totalGames: startedGames.length,
       validGames: validGames.length,
       wins: wins.length,
       winRate: validGames.length > 0 ? (wins.length / validGames.length * 100).toFixed(2) : 0,
