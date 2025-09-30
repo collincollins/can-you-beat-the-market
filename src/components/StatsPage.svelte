@@ -43,15 +43,31 @@
     }
   }
 
+  function setViewportHeight() {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+
   onMount(() => {
+    // Set viewport height for iOS
+    setViewportHeight();
+    window.addEventListener('resize', setViewportHeight);
+    
     // Prevent body scroll when stats page is open
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    
     fetchStats();
   });
 
   onDestroy(() => {
     // Restore body scroll when stats page closes
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    
+    window.removeEventListener('resize', setViewportHeight);
   });
 
   function formatPercent(num) {
@@ -251,18 +267,20 @@
     top: 0;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     background: var(--color-background-dark);
     z-index: 1000;
     overflow-y: scroll;
     padding: 10px;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .stats-page {
     max-width: 700px;
     width: 93%;
     margin: 0 auto;
+    margin-left: calc(50% - 46.5% - 5px);
     padding-bottom: 40px;
   }
 
@@ -327,6 +345,8 @@
   .refresh-icon {
     font-size: 1.3em;
     line-height: 1;
+    position: relative;
+    top: -3px;
   }
 
   .loading, .error {
