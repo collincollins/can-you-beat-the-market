@@ -220,12 +220,48 @@
             <!-- Global Win Rate (Prominent) -->
             {#if stats.globalWinRate}
               <div class="stat-card" style="margin-top: 10px; background-color: #fff3cd; border-color: #ffc107; border-width: 3px;">
-                <p class="insight" style="font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">
+                <p class="insight" style="font-size: 0.85em; font-weight: bold; margin-bottom: 8px;">
                   The Reality of Market Timing:
                 </p>
-                <p class="insight" style="font-size: 0.95em; font-weight: bold;">
+                <p class="insight" style="font-size: 0.95em; font-weight: bold; margin-bottom: 12px;">
                   Only <strong style="font-size: 1.3em; color: var(--color-danger);">{stats.globalWinRate}%</strong> of all players beat buy-and-hold
                 </p>
+                
+                <p class="insight" style="font-size: 0.7em; margin-bottom: 8px; font-weight: bold;">
+                  Odds of beating buy-and-hold consecutively:
+                </p>
+                
+                <table class="probability-table">
+                  <thead>
+                    <tr>
+                      <th>Times</th>
+                      <th>Probability</th>
+                      <th>1 in</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>2×</td>
+                      <td>{(Math.pow(stats.globalWinRate / 100, 2) * 100).toFixed(2)}%</td>
+                      <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 2)).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td>5×</td>
+                      <td>{(Math.pow(stats.globalWinRate / 100, 5) * 100).toFixed(3)}%</td>
+                      <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 5)).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td>10×</td>
+                      <td>{(Math.pow(stats.globalWinRate / 100, 10) * 100).toFixed(5)}%</td>
+                      <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 10)).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td>20×</td>
+                      <td>{(Math.pow(stats.globalWinRate / 100, 20) * 100).toFixed(8)}%</td>
+                      <td>{Math.round(1 / Math.pow(stats.globalWinRate / 100, 20)).toLocaleString()}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             {/if}
 
@@ -576,5 +612,32 @@
   .link-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  .probability-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+    font-size: 0.75em;
+  }
+
+  .probability-table th,
+  .probability-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid #000;
+  }
+
+  .probability-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+
+  .probability-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+
+  .probability-table tbody tr:hover {
+    background-color: #f5f5f5;
   }
 </style>
