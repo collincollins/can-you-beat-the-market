@@ -13,6 +13,19 @@
   let allUsers = [];
   let viewingUsername = null; // Username currently being viewed (for admin)
 
+  async function fetchAllUsers() {
+    if (currentUser?.username?.toLowerCase() === 'collin') {
+      try {
+        const response = await fetch(`/.netlify/functions/getAllUsers?username=${encodeURIComponent(currentUser.username)}`);
+        if (response.ok) {
+          allUsers = await response.json();
+        }
+      } catch (err) {
+        console.error('Error fetching all users:', err);
+      }
+    }
+  }
+
   async function fetchStats(usernameToFetch = null) {
     const targetUsername = usernameToFetch || currentUser?.username;
     
@@ -72,16 +85,7 @@
     // Check if user is admin (username is "collin")
     if (currentUser?.username?.toLowerCase() === 'collin') {
       isAdmin = true;
-      
-      // Fetch all users for admin view
-      try {
-        const response = await fetch(`/.netlify/functions/getAllUsers?username=${encodeURIComponent(currentUser.username)}`);
-        if (response.ok) {
-          allUsers = await response.json();
-        }
-      } catch (err) {
-        console.error('Error fetching all users:', err);
-      }
+      await fetchAllUsers();
     }
     
     fetchStats();
@@ -145,7 +149,13 @@
       {#if isAdmin && viewingUsername}
         <button 
           class="refresh-button" 
-          on:click={() => { viewingUsername = null; allUsers = []; loading = true; onMount(); }}
+          on:click={async () => { 
+            viewingUsername = null; 
+            stats = null;
+            loading = true;
+            await fetchAllUsers();
+            loading = false;
+          }}
           title="Back to user list"
         >
           ←
