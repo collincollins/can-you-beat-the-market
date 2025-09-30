@@ -148,9 +148,17 @@ exports.handler = async (event, context) => {
     const globalAvgExcessCAGR = cachedGlobalStats.globalAvgExcessCAGR || 0;
     
     // Calculate global win rate (percentage of all games that beat buy-and-hold)
-    const globalWinRate = cachedGlobalStats.allExcessReturns && cachedGlobalStats.allExcessReturns.length > 0
-      ? ((cachedGlobalStats.allExcessReturns.filter(excess => excess > 0).length / cachedGlobalStats.allExcessReturns.length) * 100).toFixed(1)
-      : 0;
+    let globalWinRate = 0;
+    let globalWinRateUncertainty = 0;
+    if (cachedGlobalStats.allExcessReturns && cachedGlobalStats.allExcessReturns.length > 0) {
+      const n = cachedGlobalStats.allExcessReturns.length;
+      const wins = cachedGlobalStats.allExcessReturns.filter(excess => excess > 0).length;
+      const p = wins / n;
+      globalWinRate = (p * 100).toFixed(1);
+      // Standard error for proportion: sqrt(p * (1-p) / n)
+      const se = Math.sqrt(p * (1 - p) / n);
+      globalWinRateUncertainty = (se * 100).toFixed(2);
+    }
     
     const stats = {
       username: user.username,
@@ -162,6 +170,15 @@ exports.handler = async (event, context) => {
       winRate: validGames.length > 0 ? (wins.length / validGames.length * 100).toFixed(2) : 0,
       avgExcessCAGR: validGames.length > 0 
         ? (validGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / validGames.length).toFixed(2)
+        : 0,
+      avgExcessCAGRUncertainty: validGames.length > 0
+        ? (() => {
+            const excesses = validGames.map(g => g.portfolioCAGR - g.buyHoldCAGR);
+            const mean = excesses.reduce((sum, val) => sum + val, 0) / excesses.length;
+            const variance = excesses.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / excesses.length;
+            const standardError = Math.sqrt(variance / excesses.length);
+            return standardError.toFixed(2);
+          })()
         : 0,
       bestExcessCAGR: validGames.length > 0
         ? Math.max(...validGames.map(g => g.portfolioCAGR - g.buyHoldCAGR)).toFixed(2)
@@ -179,9 +196,13 @@ exports.handler = async (event, context) => {
       totalSells,
       globalAvgExcessCAGR: globalAvgExcessCAGR.toFixed(2),
       globalWinRate,
+      globalWinRateUncertainty,
       percentileRank,
       globalStatsCacheDate: cachedGlobalStats?.updatedAt,
-      recentGames: games.sort((a, b) => new Date(b.visitDate) - new Date(a.visitDate)).slice(0, 10)
+      recentGames: games
+        .filter(g => g.valid === true)
+        .sort((a, b) => new Date(b.visitDate) - new Date(a.visitDate))
+        .slice(0, 10)
     };
 
     return {

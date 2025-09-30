@@ -110,6 +110,7 @@ function createChart() {
         cleanedData,
         meanData,
         slope,
+        slopeUncertainty,
         intercept,
         regressionPoints,
         xTickMin,
@@ -276,12 +277,16 @@ function createChart() {
     });
 
     // set the result note based on the slope.
+    const slopeDisplay = slopeUncertainty > 0 
+      ? `(${slope.toFixed(2)} ± ${slopeUncertainty.toFixed(2)}) %/trade`
+      : `${slope.toFixed(2)} %/trade`;
+    
     if (slope < 0) {
-        resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
+        resultNote = `Slope ${slopeDisplay}: The trend suggests that as trading frequency increases, performance tends to lag further behind a simple buy‑and‑hold approach.`;
     } else if (slope > 0) {
-        resultNote = `Slope ${slope.toFixed(2)}: The trend suggests that as trading frequency increases, performance may improve relative to a buy‑and‑hold strategy.`;
+        resultNote = `Slope ${slopeDisplay}: The trend suggests that as trading frequency increases, performance may improve relative to a buy‑and‑hold strategy.`;
     } else {
-        resultNote = `Slope ${slope.toFixed(2)}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
+        resultNote = `Slope ${slopeDisplay}: There is no clear relationship between how often you trade and your performance compared to simply holding the investment.`;
     }
 }
 </script>
