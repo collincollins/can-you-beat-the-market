@@ -357,7 +357,7 @@
   }
 
   .stat-card.header-card {
-    background-color: #ccd0dcd9;
+    background-color: var(--color-background-card);
   }
 
   .stat-card h2 {
