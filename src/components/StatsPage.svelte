@@ -31,7 +31,7 @@
       if (data.globalStatsCacheDate) {
         const cacheAgeHours = Math.round((Date.now() - new Date(data.globalStatsCacheDate).getTime()) / (1000 * 60 * 60));
         const refreshAtHours = 24;
-        console.log(`📈 Global Stats: ${cacheAgeHours}/${refreshAtHours} hrs (cached) - Next refresh in ${refreshAtHours - cacheAgeHours} hrs`);
+        console.log(`Global Stats: ${cacheAgeHours}/${refreshAtHours} hrs (cached) - Next refresh in ${refreshAtHours - cacheAgeHours} hrs`);
       }
       
       stats = data;
