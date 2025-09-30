@@ -7,6 +7,7 @@
   let stats = null;
   let loading = true;
   let error = null;
+  let linking = false;
 
   onMount(async () => {
     if (!currentUser?.username) {
@@ -50,6 +51,35 @@
       year: 'numeric' 
     });
   }
+
+  async function linkGamesManually() {
+    if (!currentUser?.username) return;
+    
+    linking = true;
+    try {
+      const response = await fetch('/.netlify/functions/manualLinkGames', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser.username })
+      });
+
+      const result = await response.json();
+      console.log('Link result:', result);
+      
+      if (response.ok) {
+        alert(`Successfully linked ${result.gamesLinked} games to your account!`);
+        // Reload stats
+        location.reload();
+      } else {
+        alert(`Error: ${result.message}`);
+      }
+    } catch (err) {
+      console.error('Error linking games:', err);
+      alert('Failed to link games. Check console for details.');
+    } finally {
+      linking = false;
+    }
+  }
 </script>
 
 <div class="stats-overlay">
@@ -64,6 +94,22 @@
     {:else if error}
       <div class="error">{error}</div>
     {:else if stats}
+      <!-- Show link button if no games found -->
+      {#if stats.totalGames === 0}
+        <div class="stat-card" style="background-color: #fff3cd; border-color: #ffc107;">
+          <h3 style="font-size: 0.8em; margin-bottom: 10px;">No Games Found</h3>
+          <p style="font-size: 0.7em; margin-bottom: 15px;">
+            If you played games before logging in, click below to link them to your account.
+          </p>
+          <button 
+            class="link-button" 
+            on:click={linkGamesManually}
+            disabled={linking}
+          >
+            {linking ? 'Linking...' : 'Link My Games'}
+          </button>
+        </div>
+      {/if}
       <div class="stats-container">
         <!-- Debug Info -->
         <div class="stat-card" style="font-size: 0.6em; text-align: left;">
@@ -386,5 +432,27 @@
     gap: 10px;
     font-size: 0.85em;
     flex: 0 0 auto;
+  }
+
+  .link-button {
+    font-family: 'Press Start 2P', cursive;
+    background-color: var(--color-button-default);
+    border: 2px solid black;
+    color: white;
+    padding: 10px 20px;
+    font-size: 0.8em;
+    cursor: pointer;
+    border-radius: 10px;
+    box-shadow: var(--shadow-default);
+    touch-action: manipulation;
+  }
+
+  .link-button:hover:not(:disabled) {
+    background-color: var(--color-button-hover);
+  }
+
+  .link-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>
