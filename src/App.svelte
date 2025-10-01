@@ -485,6 +485,17 @@ async function endSimulation() {
     if (!simulationValidFlag) {
         streakForUpdate = 0;
         consecutiveWins.set(0);
+        
+        // Fetch high score to update display even when simulation is invalid
+        try {
+            const updatedHighScore = await fetchHighScore();
+            highScore.set({
+                score: updatedHighScore.score,
+                playerName: updatedHighScore.playerName,
+            });
+        } catch (error) {
+            console.error('Error fetching updated high score:', error);
+        }
     } else {
         // only update the streak if the portfolio outperformed buy-and-hold.
         if (portfolioVal > buyHoldFinal) {
