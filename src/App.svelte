@@ -1223,7 +1223,7 @@ function handleStatsClose() {
       <retro-counter></retro-counter>
     </div>
     <div>
-      <p style="margin-top: 0px; font-size: 0.5em;">made by collin and claude</p>
+      <p style="margin-top: 0px; font-size: 0.5em;">made by collin</p>
     </div>
   </div>
 
