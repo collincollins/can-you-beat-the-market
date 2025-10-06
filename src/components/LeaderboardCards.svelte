@@ -33,7 +33,19 @@
   }
 </script>
 
-{#if !loading && leaderboard}
+{#if loading}
+  <div class="leaderboard-grid">
+    <!-- Skeleton loaders -->
+    {#each Array(6) as _, i}
+      <div class="stat-card skeleton">
+        <div class="skeleton-username"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-value"></div>
+        <div class="skeleton-games"></div>
+      </div>
+    {/each}
+  </div>
+{:else if leaderboard}
   <div class="leaderboard-grid">
     <!-- Biggest Winner -->
     <div class="stat-card">
@@ -55,14 +67,16 @@
     <div class="stat-card">
       <div class="stat-username">{leaderboard.dayTrader?.username || 'Anonymous'}</div>
       <div class="stat-title">Day trader</div>
-      <div class="stat-value">{leaderboard.dayTrader?.trades} trades</div>
+      <div class="stat-value">{leaderboard.dayTrader?.avgTrades?.toFixed(1)} trades/game</div>
+      <div class="stat-games">({leaderboard.dayTrader?.totalGames} games)</div>
     </div>
 
     <!-- Diamond Hands -->
     <div class="stat-card">
       <div class="stat-username">{leaderboard.diamondHands?.username || 'Anonymous'}</div>
       <div class="stat-title">Diamond hands</div>
-      <div class="stat-value">{leaderboard.diamondHands?.daysPerTrade} days/trade</div>
+      <div class="stat-value">{leaderboard.diamondHands?.avgTrades?.toFixed(1)} trades/game</div>
+      <div class="stat-games">({leaderboard.diamondHands?.totalGames} games)</div>
     </div>
 
     <!-- Most Average -->
@@ -138,6 +152,54 @@
     font-size: 0.6em;
     color: var(--color-neutral);
     margin-top: 2px;
+  }
+
+  /* Skeleton loader styles */
+  .stat-card.skeleton {
+    pointer-events: none;
+  }
+
+  .skeleton-username,
+  .skeleton-title,
+  .skeleton-value,
+  .skeleton-games {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  .skeleton-username {
+    height: 1.6em;
+    width: 70%;
+    margin: 0 auto;
+  }
+
+  .skeleton-title {
+    height: 0.9em;
+    width: 50%;
+    margin: 5px auto 0;
+  }
+
+  .skeleton-value {
+    height: 1em;
+    width: 60%;
+    margin: 8px auto 0;
+  }
+
+  .skeleton-games {
+    height: 0.7em;
+    width: 40%;
+    margin: 5px auto 0;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
 </style>
 

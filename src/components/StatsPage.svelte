@@ -185,7 +185,52 @@
         </div>
       </div>
     {:else if loading}
-      <div class="loading">Loading stats...</div>
+      <div class="stats-container">
+        <!-- Skeleton loaders -->
+        <div class="stat-card header-card skeleton">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-subtitle"></div>
+        </div>
+        
+        <!-- Overview skeleton -->
+        <div class="stat-section">
+          <h3 style="opacity: 0.5;">Overview</h3>
+          <div class="stat-grid">
+            {#each Array(4) as _}
+              <div class="stat-card skeleton">
+                <div class="skeleton-value"></div>
+                <div class="skeleton-label"></div>
+              </div>
+            {/each}
+          </div>
+        </div>
+        
+        <!-- Performance skeleton -->
+        <div class="stat-section">
+          <h3 style="opacity: 0.5;">Performance</h3>
+          <div class="stat-grid">
+            {#each Array(4) as _}
+              <div class="stat-card skeleton">
+                <div class="skeleton-value"></div>
+                <div class="skeleton-label"></div>
+              </div>
+            {/each}
+          </div>
+        </div>
+        
+        <!-- Cumulative stats skeleton -->
+        <div class="stat-section">
+          <h3 style="opacity: 0.5;">Cumulative Stats</h3>
+          <div class="stat-grid">
+            {#each Array(5) as _}
+              <div class="stat-card skeleton">
+                <div class="skeleton-value"></div>
+                <div class="skeleton-label"></div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
     {:else if error}
       <div class="error">{error}</div>
     {:else if stats}
@@ -722,5 +767,53 @@
   .user-info {
     font-size: 0.6em;
     color: var(--color-neutral);
+  }
+
+  /* Skeleton loader styles */
+  .stat-card.skeleton {
+    pointer-events: none;
+  }
+
+  .skeleton-title,
+  .skeleton-subtitle,
+  .skeleton-value,
+  .skeleton-label {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  .skeleton-title {
+    height: 2em;
+    width: 60%;
+    margin: 0 auto 10px;
+  }
+
+  .skeleton-subtitle {
+    height: 1em;
+    width: 40%;
+    margin: 0 auto;
+  }
+
+  .skeleton-value {
+    height: 2.2em;
+    width: 70%;
+    margin: 0 auto 8px;
+  }
+
+  .skeleton-label {
+    height: 1em;
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
 </style>

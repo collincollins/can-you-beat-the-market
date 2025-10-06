@@ -167,17 +167,18 @@ exports.handler = async (event, context) => {
       user.totalDuration += doc.durationOfGame;
     });
 
-    // Calculate average stats per user
-    const userArray = Object.values(userStats).map(user => ({
-      username: user.username,
-      avgExcessReturn: user.totalExcessReturn / user.totalGames,
-      totalGames: user.totalGames,
-      avgTrades: user.totalTrades / user.totalGames,
-      totalTrades: user.totalTrades,
-      daysPerTrade: user.totalDuration / user.totalTrades
-    }));
+    // Calculate average stats per user and filter to 10+ games
+    const userArray = Object.values(userStats)
+      .map(user => ({
+        username: user.username,
+        avgExcessReturn: user.totalExcessReturn / user.totalGames,
+        totalGames: user.totalGames,
+        avgTrades: user.totalTrades / user.totalGames,
+        totalTrades: user.totalTrades
+      }))
+      .filter(user => user.totalGames >= 10);
 
-    console.log(`Aggregated stats for ${userArray.length} unique users`);
+    console.log(`Aggregated stats for ${userArray.length} unique users with 10+ games`);
 
     // Calculate mean excess return for "most average" calculation
     const meanExcessReturn = userArray.length > 0
@@ -196,14 +197,14 @@ exports.handler = async (event, context) => {
         ? userArray.reduce((min, user) => user.avgExcessReturn < min.avgExcessReturn ? user : min)
         : null,
       
-      // Day Trader - most total trades across all games
+      // Day Trader - highest average trades per game
       dayTrader: userArray.length > 0
-        ? userArray.reduce((max, user) => user.totalTrades > max.totalTrades ? user : max)
+        ? userArray.reduce((max, user) => user.avgTrades > max.avgTrades ? user : max)
         : null,
       
-      // Diamond Hands - highest market days per trade ratio (cumulative)
+      // Diamond Hands - fewest average trades per game (most patient)
       diamondHands: userArray.length > 0
-        ? userArray.reduce((max, user) => user.daysPerTrade > max.daysPerTrade ? user : max)
+        ? userArray.reduce((min, user) => user.avgTrades < min.avgTrades ? user : min)
         : null,
       
       // Most Average - average excess return closest to the mean
@@ -238,9 +239,9 @@ exports.handler = async (event, context) => {
         simplifiedLeaderboard[key] = {
           username: value.username,
           excessReturn: value.avgExcessReturn, // Average across all their games
-          trades: value.totalTrades, // Total trades across all games
-          totalGames: value.totalGames, // How many games they played
-          ...(value.daysPerTrade && { daysPerTrade: Math.round(value.daysPerTrade) })
+          avgTrades: value.avgTrades, // Average trades per game
+          totalTrades: value.totalTrades, // Total trades across all games (for Day Trader)
+          totalGames: value.totalGames // How many games they played
         };
       } else {
         simplifiedLeaderboard[key] = null;
