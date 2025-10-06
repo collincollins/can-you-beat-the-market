@@ -131,9 +131,9 @@ exports.handler = async (event, context) => {
         },
         {
           $project: {
-            _id: 1,
-            portfolioCAGR: 1,
-            buyHoldCAGR: 1,
+            _id: 0,
+            portfolioCAGR: { $round: ["$portfolioCAGR", 3] },
+            buyHoldCAGR: { $round: ["$buyHoldCAGR", 3] },
             totalTrades: 1
           }
         }
@@ -171,9 +171,9 @@ exports.handler = async (event, context) => {
         },
         {
           $project: {
-            _id: 1,
-            portfolioCAGR: 1,
-            buyHoldCAGR: 1,
+            _id: 0,
+            portfolioCAGR: { $round: ["$portfolioCAGR", 3] },
+            buyHoldCAGR: { $round: ["$buyHoldCAGR", 3] },
             totalTrades: 1
           }
         }
