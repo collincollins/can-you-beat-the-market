@@ -332,28 +332,8 @@ async function startSimulationHandler() {
             console.log(`Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - ${refreshMsg}`);
         }
         
-        // Check if response is gzipped (base64 encoded)
-        const contentEncoding = res.headers?.get('Content-Encoding');
-        let json;
-        
-        if (contentEncoding === 'gzip') {
-            // Decode base64 and decompress
-            const base64Data = await res.text();
-            const binaryString = atob(base64Data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            // Decompress using DecompressionStream (modern browsers)
-            const decompressedStream = new Response(
-                new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
-            );
-            json = await decompressedStream.json();
-        } else {
-            // Plain JSON response
-            json = await res.json();
-        }
+        // Browser automatically decompresses when Content-Encoding: gzip is set
+        const json = await res.json();
         
         // Validate that json is an array before proceeding
         if (!Array.isArray(json)) {
