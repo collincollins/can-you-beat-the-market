@@ -49,6 +49,12 @@ function linearRegression(x, y) {
  */
 
 export function preComputeChartData(rawVisitorDocs) {
+    // Validate input is an array
+    if (!Array.isArray(rawVisitorDocs)) {
+        console.error('preComputeChartData received non-array input:', rawVisitorDocs);
+        rawVisitorDocs = [];
+    }
+    
     // 1. Convert raw docs into { x: totalTrades, y: excessCAGR }
     const cleanedData = rawVisitorDocs.map(doc => {
         const totalTrades = doc.totalTrades
