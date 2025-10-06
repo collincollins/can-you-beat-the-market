@@ -280,8 +280,21 @@
           </div>
         </div>
 
-        <!-- Performance Stats -->
-        <div class="stat-section">
+        {#if stats.validGames < 5}
+          <!-- Not enough games warning -->
+          <div class="stat-card" style="background-color: #fff3cd; border-color: #ffc107; margin-top: 15px;">
+            <h3 style="font-size: 0.8em; margin-bottom: 10px;">Not Enough Data</h3>
+            <p style="font-size: 0.7em;">
+              You need at least <strong>5 valid games</strong> to see detailed performance statistics. 
+              You currently have <strong>{stats.validGames}</strong> valid game{stats.validGames === 1 ? '' : 's'}.
+            </p>
+            <p style="font-size: 0.7em; margin-top: 10px;">
+              Keep playing to unlock your full stats!
+            </p>
+          </div>
+        {:else}
+          <!-- Performance Stats -->
+          <div class="stat-section">
           <h3>Performance</h3>
           <div class="stat-grid">
             <div class="stat-card" class:positive={parseFloat(stats.avgExcessCAGR) > 0} class:negative={parseFloat(stats.avgExcessCAGR) < 0}>
@@ -303,8 +316,8 @@
           </div>
         </div>
 
-        <!-- Performance Insight -->
-        {#if parseFloat(stats.avgExcessCAGR) !== 0}
+          <!-- Performance Insight -->
+          {#if parseFloat(stats.avgExcessCAGR) !== 0}
           <div class="stat-section">
             <h3>Performance Insight</h3>
             <div class="stat-card insight-card">
@@ -363,11 +376,11 @@
               </div>
             {/if}
 
-          </div>
-        {/if}
+            </div>
+          {/if}
 
-        <!-- Cumulative Stats -->
-        {#if stats.validGames > 0}
+          <!-- Cumulative Stats -->
+          {#if stats.validGames > 0}
           <div class="stat-section">
             <h3>Cumulative Stats</h3>
             <div class="stat-grid">
@@ -392,11 +405,11 @@
                 <div class="stat-label">Total<br>Sells</div>
               </div>
             </div>
-          </div>
-        {/if}
+            </div>
+          {/if}
 
-        <!-- Recent Games -->
-        {#if stats.recentGames && stats.recentGames.length > 0}
+          <!-- Recent Games -->
+          {#if stats.recentGames && stats.recentGames.length > 0}
           <div class="stat-section">
             <h3>Recent Games</h3>
             <div class="recent-games">
@@ -417,7 +430,8 @@
                 {/if}
               {/each}
             </div>
-          </div>
+            </div>
+          {/if}
         {/if}
       </div>
     {/if}
@@ -507,7 +521,7 @@
     top: -3px;
   }
 
-  .loading, .error {
+  .error {
     text-align: center;
     padding: 20px;
     font-size: 0.7em;
