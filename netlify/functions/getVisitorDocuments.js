@@ -32,7 +32,6 @@ async function connectToDatabase() {
 
   try {
     await client.connect();
-    // Database name based on deployment context
     const dbName = process.env.CONTEXT === 'deploy-preview'
       ? 'canyoubeatthemarket-test'
       : 'canyoubeatthemarket';

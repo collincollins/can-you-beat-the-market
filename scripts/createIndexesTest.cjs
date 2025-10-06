@@ -10,7 +10,7 @@ const client = new MongoClient(uri);
 async function createIndexes() {
   try {
     await client.connect();
-    console.log('Connected to MongoDB (TEST)');
+    console.log('Connected to MongoDB (TEST CLUSTER)');
 
     const database = client.db('canyoubeatthemarket-test');
     
@@ -49,7 +49,7 @@ async function createIndexes() {
     
     console.log('✓ Created indexes on visitors collection');
 
-    console.log('\nAll indexes created successfully in TEST database!');
+    console.log('\nAll indexes created successfully on TEST CLUSTER!');
     
   } catch (error) {
     console.error('Error creating indexes:', error);

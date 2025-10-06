@@ -112,8 +112,8 @@ async function copyDatabase() {
     
     console.log('\n✨ Database copy complete!\n');
     console.log('Summary:');
-    console.log(`- Source: canyoubeatthemarket (production)`);
-    console.log(`- Destination: canyoubeatthemarket-test`);
+    console.log(`- Source: canyoubeatthemarket (production cluster)`);
+    console.log(`- Destination: canyoubeatthemarket-test (test cluster)`);
     console.log(`- Collections copied: ${collections.length}`);
     
   } catch (error) {
