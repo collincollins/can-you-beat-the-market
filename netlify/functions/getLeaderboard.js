@@ -146,59 +146,87 @@ exports.handler = async (event, context) => {
     const registeredDocs = docs.filter(d => d.username);
     console.log(`Found ${registeredDocs.length} games from registered users`);
 
+    // Group by user and calculate cumulative statistics
+    const userStats = {};
+    registeredDocs.forEach(doc => {
+      if (!userStats[doc.username]) {
+        userStats[doc.username] = {
+          username: doc.username,
+          games: [],
+          totalGames: 0,
+          totalExcessReturn: 0,
+          totalTrades: 0,
+          totalDuration: 0
+        };
+      }
+      const user = userStats[doc.username];
+      user.games.push(doc);
+      user.totalGames++;
+      user.totalExcessReturn += doc.excessReturn;
+      user.totalTrades += doc.totalTrades;
+      user.totalDuration += doc.durationOfGame;
+    });
+
+    // Calculate average stats per user
+    const userArray = Object.values(userStats).map(user => ({
+      username: user.username,
+      avgExcessReturn: user.totalExcessReturn / user.totalGames,
+      totalGames: user.totalGames,
+      avgTrades: user.totalTrades / user.totalGames,
+      totalTrades: user.totalTrades,
+      daysPerTrade: user.totalDuration / user.totalTrades
+    }));
+
+    console.log(`Aggregated stats for ${userArray.length} unique users`);
+
     // Calculate mean excess return for "most average" calculation
-    const meanExcessReturn = registeredDocs.length > 0
-      ? registeredDocs.reduce((sum, doc) => sum + doc.excessReturn, 0) / registeredDocs.length
+    const meanExcessReturn = userArray.length > 0
+      ? userArray.reduce((sum, user) => sum + user.avgExcessReturn, 0) / userArray.length
       : 0;
     
-    // Calculate leaderboard stats
+    // Calculate leaderboard stats (based on cumulative user performance)
     const leaderboard = {
-      // Biggest Winner - highest excess return
-      biggestWinner: registeredDocs.length > 0 
-        ? registeredDocs.reduce((max, doc) => doc.excessReturn > max.excessReturn ? doc : max)
+      // Biggest Winner - highest average excess return across all games
+      biggestWinner: userArray.length > 0 
+        ? userArray.reduce((max, user) => user.avgExcessReturn > max.avgExcessReturn ? user : max)
         : null,
       
-      // Biggest Loser - lowest excess return
-      biggestLoser: registeredDocs.length > 0
-        ? registeredDocs.reduce((min, doc) => doc.excessReturn < min.excessReturn ? doc : min)
+      // Biggest Loser - lowest average excess return across all games
+      biggestLoser: userArray.length > 0
+        ? userArray.reduce((min, user) => user.avgExcessReturn < min.avgExcessReturn ? user : min)
         : null,
       
-      // Day Trader - most trades
-      dayTrader: registeredDocs.length > 0
-        ? registeredDocs.reduce((max, doc) => doc.totalTrades > max.totalTrades ? doc : max)
+      // Day Trader - most total trades across all games
+      dayTrader: userArray.length > 0
+        ? userArray.reduce((max, user) => user.totalTrades > max.totalTrades ? user : max)
         : null,
       
-      // Diamond Hands - highest market days per trade ratio
-      diamondHands: registeredDocs.length > 0
-        ? registeredDocs
-            .map(doc => ({ 
-              ...doc, 
-              daysPerTrade: doc.durationOfGame / doc.totalTrades 
+      // Diamond Hands - highest market days per trade ratio (cumulative)
+      diamondHands: userArray.length > 0
+        ? userArray.reduce((max, user) => user.daysPerTrade > max.daysPerTrade ? user : max)
+        : null,
+      
+      // Most Average - average excess return closest to the mean
+      mostAverage: userArray.length > 0
+        ? userArray
+            .map(user => ({
+              ...user,
+              distanceFromMean: Math.abs(user.avgExcessReturn - meanExcessReturn)
             }))
-            .reduce((max, doc) => doc.daysPerTrade > (max.daysPerTrade || 0) ? doc : max)
-        : null,
-      
-      // Most Average - excess return closest to the mean
-      mostAverage: registeredDocs.length > 0
-        ? registeredDocs
-            .map(doc => ({
-              ...doc,
-              distanceFromMean: Math.abs(doc.excessReturn - meanExcessReturn)
-            }))
-            .reduce((closest, doc) => 
-              doc.distanceFromMean < (closest.distanceFromMean || Infinity) ? doc : closest
+            .reduce((closest, user) => 
+              user.distanceFromMean < (closest.distanceFromMean || Infinity) ? user : closest
             )
         : null,
       
-      // Coin Flipper - excess return closest to 0
-      coinFlipper: registeredDocs.length > 0
-        ? registeredDocs
-            .map(doc => ({
-              ...doc,
-              distanceFromZero: Math.abs(doc.excessReturn)
+      // Coin Flipper - average excess return closest to 0
+      coinFlipper: userArray.length > 0
+        ? userArray
+            .map(user => ({
+              ...user,
+              distanceFromZero: Math.abs(user.avgExcessReturn)
             }))
-            .reduce((closest, doc) => 
-              doc.distanceFromZero < (closest.distanceFromZero || Infinity) ? doc : closest
+            .reduce((closest, user) => 
+              user.distanceFromZero < (closest.distanceFromZero || Infinity) ? user : closest
             )
         : null
     };
@@ -209,8 +237,9 @@ exports.handler = async (event, context) => {
       if (value) {
         simplifiedLeaderboard[key] = {
           username: value.username,
-          excessReturn: value.excessReturn,
-          trades: value.totalTrades,
+          excessReturn: value.avgExcessReturn, // Average across all their games
+          trades: value.totalTrades, // Total trades across all games
+          totalGames: value.totalGames, // How many games they played
           ...(value.daysPerTrade && { daysPerTrade: Math.round(value.daysPerTrade) })
         };
       } else {
