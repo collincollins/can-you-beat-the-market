@@ -167,7 +167,7 @@ exports.handler = async (event, context) => {
       user.totalDuration += doc.durationOfGame;
     });
 
-    // Calculate average stats per user and filter to 10+ games
+    // Calculate average stats per user and filter to 5+ games
     const userArray = Object.values(userStats)
       .map(user => ({
         username: user.username,
@@ -176,9 +176,9 @@ exports.handler = async (event, context) => {
         avgTrades: user.totalTrades / user.totalGames,
         totalTrades: user.totalTrades
       }))
-      .filter(user => user.totalGames >= 10);
+      .filter(user => user.totalGames >= 5);
 
-    console.log(`Aggregated stats for ${userArray.length} unique users with 10+ games`);
+    console.log(`Aggregated stats for ${userArray.length} unique users with 5+ games`);
 
     // Calculate mean excess return for "most average" calculation
     const meanExcessReturn = userArray.length > 0
