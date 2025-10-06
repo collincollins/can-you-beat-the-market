@@ -35,6 +35,23 @@ async function createIndexes() {
     await visitorsCollection.createIndex({ valid: 1 });
     await visitorsCollection.createIndex({ valid: 1, realMode: 1 });
     await visitorsCollection.createIndex({ hasStarted: 1 });
+    
+    // Indexes for chart data aggregation queries (getVisitorDocuments function)
+    // These are critical for performance when filtering games for chart display
+    await visitorsCollection.createIndex({ 
+      durationOfGame: 1, 
+      realMode: 1, 
+      buys: 1, 
+      sells: 1 
+    });
+    await visitorsCollection.createIndex({ 
+      durationOfGame: 1, 
+      buys: 1, 
+      sells: 1, 
+      portfolioCAGR: 1, 
+      buyHoldCAGR: 1 
+    });
+    
     console.log('✓ Created indexes on visitors collection');
 
     console.log('\nAll indexes created successfully!');
