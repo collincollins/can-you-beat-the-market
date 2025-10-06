@@ -8,6 +8,7 @@ import {
     onMount,
     onDestroy
 } from 'svelte';
+import pako from 'pako';
 import MarketChart from './components/MarketChart.svelte';
 import ExcessCagrVsTradingActivity from './components/ExcessCagrVsTradingActivity.svelte';
 import Sp500Chart from './components/Sp500Chart.svelte';
@@ -332,8 +333,20 @@ async function startSimulationHandler() {
             console.log(`Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - ${refreshMsg}`);
         }
         
-        // Browser automatically decompresses when Content-Encoding: gzip is set
-        const json = await res.json();
+        // Check if response is gzipped
+        const contentEncoding = res.headers?.get('Content-Encoding');
+        let json;
+        
+        if (contentEncoding === 'gzip') {
+            // Response is base64-encoded gzipped data
+            // Netlify decodes base64, browser receives raw gzipped binary
+            const arrayBuffer = await res.arrayBuffer();
+            const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: 'string' });
+            json = JSON.parse(decompressed);
+        } else {
+            // Plain JSON response
+            json = await res.json();
+        }
         
         // Validate that json is an array before proceeding
         if (!Array.isArray(json)) {
