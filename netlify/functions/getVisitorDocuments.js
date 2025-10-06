@@ -5,11 +5,46 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: { version: ServerApiVersion.v1, deprecationErrors: true },
+  maxPoolSize: 10,
+  minPoolSize: 1,
+  maxIdleTimeMS: 30000,
+  connectTimeoutMS: 10000,
+  serverSelectionTimeoutMS: 10000,
 });
 
-let isConnected = false;
+let cachedDb = null;
+
+async function connectToDatabase() {
+  if (cachedDb) {
+    // Verify the connection is still alive
+    try {
+      await cachedDb.admin().ping();
+      return cachedDb;
+    } catch (error) {
+      console.log('Cached connection is stale, reconnecting...');
+      cachedDb = null;
+    }
+  }
+
+  try {
+    await client.connect();
+    cachedDb = client.db(
+      process.env.CONTEXT === 'deploy-preview'
+        ? 'canyoubeatthemarket-test'
+        : 'canyoubeatthemarket'
+    );
+    console.log('Successfully connected to MongoDB');
+    return cachedDb;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+}
 
 exports.handler = async (event, context) => {
+  // Don't wait for empty event loop (allows connection reuse)
+  context.callbackWaitsForEmptyEventLoop = false;
+
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
@@ -18,18 +53,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    if (!isConnected) {
-      await client.connect();
-      isConnected = true;
-    }
-
-    // determine the appropriate database name.
-    const defaultDbName =
-      process.env.CONTEXT === 'deploy-preview'
-        ? 'canyoubeatthemarket-test'
-        : 'canyoubeatthemarket';
-    const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
-    const database = client.db(dbName);
+    const database = await connectToDatabase();
     const visitorsCollection = database.collection('visitors');
     const chartDataCacheCollection = database.collection('chartDataCache');
 
@@ -141,7 +165,11 @@ exports.handler = async (event, context) => {
         }
       ];
     }
-    const visitorDocs = await visitorsCollection.aggregate(pipeline).toArray();
+    
+    // Add timeout to prevent long-running queries
+    const visitorDocs = await visitorsCollection
+      .aggregate(pipeline, { maxTimeMS: 25000 })
+      .toArray();
 
     // Update cache
     const cacheDoc = {
@@ -170,9 +198,25 @@ exports.handler = async (event, context) => {
     };
   } catch (error) {
     console.error('Error in getVisitorDocuments function:', error);
+    
+    // Provide more specific error messages
+    let statusCode = 500;
+    let errorMessage = 'Internal Server Error';
+    
+    if (error.name === 'MongoServerError' && error.code === 50) {
+      statusCode = 504;
+      errorMessage = 'Database query timeout - the query took too long to execute';
+    } else if (error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
+      statusCode = 503;
+      errorMessage = 'Database connection error - please try again';
+    }
+    
     return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Internal Server Error' }),
+      statusCode,
+      body: JSON.stringify({ 
+        message: errorMessage,
+        error: process.env.CONTEXT === 'deploy-preview' ? error.message : undefined
+      }),
     };
   }
 };

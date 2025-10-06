@@ -314,6 +314,11 @@ async function startSimulationHandler() {
 
         const res = await fetch(url);
         
+        // Check if the response is successful
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         // Log cache information
         const cacheDate = res.headers?.get('X-Cache-Date');
         const cacheStatus = res.headers?.get('X-Cache-Status');
@@ -327,6 +332,12 @@ async function startSimulationHandler() {
         }
         
         const json = await res.json();
+        
+        // Validate that json is an array before proceeding
+        if (!Array.isArray(json)) {
+            throw new Error('Invalid data format: expected an array');
+        }
+        
         // store the result in visitorDataStore
         visitorDataStore.set(json);
 
@@ -336,6 +347,20 @@ async function startSimulationHandler() {
 
     } catch (error) {
         console.error('Error pre-fetching visitor documents:', error);
+        // Set empty arrays as fallback to prevent further errors
+        visitorDataStore.set([]);
+        precomputedChartDataStore.set({
+            cleanedData: [],
+            meanData: [],
+            regressionPoints: [],
+            slope: 0,
+            intercept: 0,
+            slopeUncertainty: 0,
+            yMin: 0,
+            yMax: 0,
+            xMin: 0,
+            xMax: 0
+        });
     }
 
     // PRE-FETCH S&P 500 DATA IN BACKGROUND (only in real mode, will be cached after first fetch)
@@ -485,6 +510,17 @@ async function endSimulation() {
     if (!simulationValidFlag) {
         streakForUpdate = 0;
         consecutiveWins.set(0);
+        
+        // Fetch high score to update display even when simulation is invalid
+        try {
+            const updatedHighScore = await fetchHighScore();
+            highScore.set({
+                score: updatedHighScore.score,
+                playerName: updatedHighScore.playerName,
+            });
+        } catch (error) {
+            console.error('Error fetching updated high score:', error);
+        }
     } else {
         // only update the streak if the portfolio outperformed buy-and-hold.
         if (portfolioVal > buyHoldFinal) {
