@@ -27,11 +27,12 @@ async function connectToDatabase() {
 
   try {
     await client.connect();
-    const dbName = process.env.CONTEXT === 'deploy-preview'
-      ? 'canyoubeatthemarket-test'
-      : 'canyoubeatthemarket';
+    // Branch deploys and deploy-previews use test database
+    const isTestEnv = process.env.CONTEXT === 'deploy-preview' || 
+                      process.env.CONTEXT === 'branch-deploy';
+    const dbName = isTestEnv ? 'canyoubeatthemarket-test' : 'canyoubeatthemarket';
     cachedDb = client.db(dbName);
-    console.log(`Successfully connected to MongoDB: ${dbName}`);
+    console.log(`Successfully connected to MongoDB: ${dbName} (context: ${process.env.CONTEXT})`);
     return cachedDb;
   } catch (error) {
     console.error('MongoDB connection error:', error);
