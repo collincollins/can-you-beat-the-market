@@ -67,16 +67,28 @@
     <div class="stat-card">
       <div class="stat-username">{leaderboard.dayTrader?.username || 'Anonymous'}</div>
       <div class="stat-title">Day trader</div>
-      <div class="stat-value">{leaderboard.dayTrader?.avgTrades?.toFixed(1)} trades/game</div>
-      <div class="stat-games">({leaderboard.dayTrader?.totalGames} games)</div>
+      <div class="stat-value">
+        {#if leaderboard.dayTrader?.avgTrades}
+          {leaderboard.dayTrader.avgTrades.toFixed(1)} trades/game
+        {:else}
+          N/A
+        {/if}
+      </div>
+      <div class="stat-games">({leaderboard.dayTrader?.totalGames || 0} games)</div>
     </div>
 
     <!-- Diamond Hands -->
     <div class="stat-card">
       <div class="stat-username">{leaderboard.diamondHands?.username || 'Anonymous'}</div>
       <div class="stat-title">Diamond hands</div>
-      <div class="stat-value">{leaderboard.diamondHands?.avgTrades?.toFixed(1)} trades/game</div>
-      <div class="stat-games">({leaderboard.diamondHands?.totalGames} games)</div>
+      <div class="stat-value">
+        {#if leaderboard.diamondHands?.avgTrades}
+          {leaderboard.diamondHands.avgTrades.toFixed(1)} trades/game
+        {:else}
+          N/A
+        {/if}
+      </div>
+      <div class="stat-games">({leaderboard.diamondHands?.totalGames || 0} games)</div>
     </div>
 
     <!-- Most Average -->

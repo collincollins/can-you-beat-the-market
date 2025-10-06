@@ -55,14 +55,14 @@ exports.handler = async (event, context) => {
     const visitorsCollection = database.collection('visitors');
     const leaderboardCacheCollection = database.collection('leaderboardCache');
 
-    const { realMode } = event.queryStringParameters || {};
+    const { realMode, force } = event.queryStringParameters || {};
     const cacheId = realMode === "true" ? 'realMode' : 'simulatedMode';
     
-    // Check cache first (6 hour TTL)
+    // Check cache first (6 hour TTL) unless force refresh is requested
     const cachedData = await leaderboardCacheCollection.findOne({ _id: cacheId });
     const now = new Date();
     const sixHoursAgo = new Date(now - 6 * 60 * 60 * 1000);
-    const isCacheValid = cachedData && new Date(cachedData.updatedAt) > sixHoursAgo;
+    const isCacheValid = cachedData && new Date(cachedData.updatedAt) > sixHoursAgo && force !== 'true';
     
     if (isCacheValid) {
       console.log(`Using cached leaderboard for ${cacheId}`);
@@ -70,6 +70,10 @@ exports.handler = async (event, context) => {
         statusCode: 200,
         body: JSON.stringify(cachedData.data),
       };
+    }
+    
+    if (force === 'true') {
+      console.log(`Force refresh requested for ${cacheId}`);
     }
 
     console.log(`Regenerating leaderboard cache for ${cacheId}...`);
