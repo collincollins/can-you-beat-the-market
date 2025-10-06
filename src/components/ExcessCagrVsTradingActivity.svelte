@@ -2,7 +2,8 @@
 <script>
 import {
     onMount,
-    onDestroy
+    onDestroy,
+    tick
 } from 'svelte';
 import {
     Chart,
@@ -63,12 +64,14 @@ let precomputedData = {
 };
 
 // subscribe to the precomputedChartDataStore
-const unsubscribe = precomputedChartDataStore.subscribe(value => {
+const unsubscribe = precomputedChartDataStore.subscribe(async value => {
     precomputedData = value;
     
     // Check if we have data
     if (value.cleanedData && value.cleanedData.length > 0) {
         isLoading = false;
+        // Wait for DOM to update before creating chart
+        await tick();
     }
 
     createChart();
