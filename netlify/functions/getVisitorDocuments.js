@@ -86,10 +86,10 @@ exports.handler = async (event, context) => {
         body: compressed.toString('base64'),
         headers: {
           'X-Cache-Date': cachedData.updatedAt.toISOString(),
-          'Content-Encoding': 'gzip',
+          'X-Compressed': 'gzip',
           'Content-Type': 'application/json'
         },
-        isBase64Encoded: true
+        isBase64Encoded: false
       };
     }
     
@@ -213,10 +213,10 @@ exports.handler = async (event, context) => {
       headers: {
         'X-Cache-Date': now.toISOString(),
         'X-Cache-Status': 'MISS',
-        'Content-Encoding': 'gzip',
+        'X-Compressed': 'gzip',
         'Content-Type': 'application/json'
       },
-      isBase64Encoded: true
+      isBase64Encoded: false
     };
   } catch (error) {
     console.error('Error in getVisitorDocuments function:', error);

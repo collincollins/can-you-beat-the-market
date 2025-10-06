@@ -333,16 +333,29 @@ async function startSimulationHandler() {
             console.log(`Chart Data [${mode}]: ${dataAgeMinutes}/${refreshAtMinutes} min (${cacheStatus === 'MISS' ? 'REFRESHED' : 'cached'}) - ${refreshMsg}`);
         }
         
-        // Check if response is gzipped
-        const contentEncoding = res.headers?.get('Content-Encoding');
+        // Check if response is compressed (custom header to avoid browser interference)
+        const isCompressed = res.headers?.get('X-Compressed');
         let json;
         
-        if (contentEncoding === 'gzip') {
+        if (isCompressed === 'gzip') {
             // Response is base64-encoded gzipped data
-            // Netlify decodes base64, browser receives raw gzipped binary
-            const arrayBuffer = await res.arrayBuffer();
-            const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: 'string' });
+            const base64Data = await res.text();
+            console.log(`Received compressed data: ${base64Data.length} chars base64`);
+            
+            // Decode base64 to binary
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            console.log(`Decompressing ${bytes.length} bytes...`);
+            
+            // Decompress with pako
+            const decompressed = pako.ungzip(bytes, { to: 'string' });
             json = JSON.parse(decompressed);
+            
+            console.log(`✓ Decompressed successfully: ${json.length} items`);
         } else {
             // Plain JSON response
             json = await res.json();
