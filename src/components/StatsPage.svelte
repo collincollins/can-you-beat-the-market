@@ -185,7 +185,52 @@
         </div>
       </div>
     {:else if loading}
-      <div class="loading">Loading stats...</div>
+      <div class="stats-container">
+        <!-- Skeleton loaders -->
+        <div class="stat-card header-card skeleton">
+          <div class="skeleton-title"></div>
+          <div class="skeleton-subtitle"></div>
+        </div>
+        
+        <!-- Overview skeleton -->
+        <div class="stat-section">
+          <h3 style="opacity: 0.5;">Overview</h3>
+          <div class="stat-grid">
+            {#each Array(4) as _}
+              <div class="stat-card skeleton">
+                <div class="skeleton-value"></div>
+                <div class="skeleton-label"></div>
+              </div>
+            {/each}
+          </div>
+        </div>
+        
+        <!-- Performance skeleton -->
+        <div class="stat-section">
+          <h3 style="opacity: 0.5;">Performance</h3>
+          <div class="stat-grid">
+            {#each Array(4) as _}
+              <div class="stat-card skeleton">
+                <div class="skeleton-value"></div>
+                <div class="skeleton-label"></div>
+              </div>
+            {/each}
+          </div>
+        </div>
+        
+        <!-- Cumulative stats skeleton -->
+        <div class="stat-section">
+          <h3 style="opacity: 0.5;">Cumulative Stats</h3>
+          <div class="stat-grid">
+            {#each Array(5) as _}
+              <div class="stat-card skeleton">
+                <div class="skeleton-value"></div>
+                <div class="skeleton-label"></div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
     {:else if error}
       <div class="error">{error}</div>
     {:else if stats}
@@ -235,8 +280,21 @@
           </div>
         </div>
 
-        <!-- Performance Stats -->
-        <div class="stat-section">
+        {#if stats.validGames < 5}
+          <!-- Not enough games warning -->
+          <div class="stat-card" style="background-color: #fff3cd; border-color: #ffc107; margin-top: 15px;">
+            <h3 style="font-size: 0.8em; margin-bottom: 10px;">Not Enough Data</h3>
+            <p style="font-size: 0.7em;">
+              You need at least <strong>5 valid games</strong> to see detailed performance statistics. 
+              You currently have <strong>{stats.validGames}</strong> valid game{stats.validGames === 1 ? '' : 's'}.
+            </p>
+            <p style="font-size: 0.7em; margin-top: 10px;">
+              Keep playing to unlock your full stats!
+            </p>
+          </div>
+        {:else}
+          <!-- Performance Stats -->
+          <div class="stat-section">
           <h3>Performance</h3>
           <div class="stat-grid">
             <div class="stat-card" class:positive={parseFloat(stats.avgExcessCAGR) > 0} class:negative={parseFloat(stats.avgExcessCAGR) < 0}>
@@ -258,8 +316,8 @@
           </div>
         </div>
 
-        <!-- Performance Insight -->
-        {#if parseFloat(stats.avgExcessCAGR) !== 0}
+          <!-- Performance Insight -->
+          {#if parseFloat(stats.avgExcessCAGR) !== 0}
           <div class="stat-section">
             <h3>Performance Insight</h3>
             <div class="stat-card insight-card">
@@ -318,11 +376,11 @@
               </div>
             {/if}
 
-          </div>
-        {/if}
+            </div>
+          {/if}
 
-        <!-- Cumulative Stats -->
-        {#if stats.validGames > 0}
+          <!-- Cumulative Stats -->
+          {#if stats.validGames > 0}
           <div class="stat-section">
             <h3>Cumulative Stats</h3>
             <div class="stat-grid">
@@ -347,11 +405,11 @@
                 <div class="stat-label">Total<br>Sells</div>
               </div>
             </div>
-          </div>
-        {/if}
+            </div>
+          {/if}
 
-        <!-- Recent Games -->
-        {#if stats.recentGames && stats.recentGames.length > 0}
+          <!-- Recent Games -->
+          {#if stats.recentGames && stats.recentGames.length > 0}
           <div class="stat-section">
             <h3>Recent Games</h3>
             <div class="recent-games">
@@ -372,7 +430,8 @@
                 {/if}
               {/each}
             </div>
-          </div>
+            </div>
+          {/if}
         {/if}
       </div>
     {/if}
@@ -462,7 +521,7 @@
     top: -3px;
   }
 
-  .loading, .error {
+  .error {
     text-align: center;
     padding: 20px;
     font-size: 0.7em;
@@ -722,5 +781,53 @@
   .user-info {
     font-size: 0.6em;
     color: var(--color-neutral);
+  }
+
+  /* Skeleton loader styles */
+  .stat-card.skeleton {
+    pointer-events: none;
+  }
+
+  .skeleton-title,
+  .skeleton-subtitle,
+  .skeleton-value,
+  .skeleton-label {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  .skeleton-title {
+    height: 2em;
+    width: 60%;
+    margin: 0 auto 10px;
+  }
+
+  .skeleton-subtitle {
+    height: 1em;
+    width: 40%;
+    margin: 0 auto;
+  }
+
+  .skeleton-value {
+    height: 2.2em;
+    width: 70%;
+    margin: 0 auto 8px;
+  }
+
+  .skeleton-label {
+    height: 1em;
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
 </style>

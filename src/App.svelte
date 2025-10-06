@@ -15,6 +15,7 @@ import Controls from './components/Controls.svelte';
 import UsernameModal from './components/UsernameModal.svelte';
 import LoginModal from './components/LoginModal.svelte';
 import StatsPage from './components/StatsPage.svelte';
+import LeaderboardCards from './components/LeaderboardCards.svelte';
 
 // import simulation functions and shared state stores
 import {
@@ -1227,6 +1228,12 @@ function handleStatsClose() {
       <p>
         {highScorePlayer} has the most consecutive wins with {currentHighScore}
       </p>
+    </div>
+
+    <!-- Leaderboard Cards -->
+    <div class="card" style="max-width: 680px; padding: 15px;">
+      <h2 style="margin-bottom: 10px; margin-top: 5px; text-align: center;">Leaderboard</h2>
+      <LeaderboardCards {realMode} />
     </div>
 
   {/if}

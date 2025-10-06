@@ -2,7 +2,8 @@
 <script>
 import {
     onMount,
-    onDestroy
+    onDestroy,
+    tick
 } from 'svelte';
 import {
     Chart,
@@ -43,6 +44,7 @@ export let resultNote = '';
 
 let chart;
 let canvasElement;
+let isLoading = true;
 
 // We'll keep a copy of the precomputed data
 let precomputedData = {
@@ -62,8 +64,15 @@ let precomputedData = {
 };
 
 // subscribe to the precomputedChartDataStore
-const unsubscribe = precomputedChartDataStore.subscribe(value => {
+const unsubscribe = precomputedChartDataStore.subscribe(async value => {
     precomputedData = value;
+    
+    // Check if we have data
+    if (value.cleanedData && value.cleanedData.length > 0) {
+        isLoading = false;
+        // Wait for DOM to update before creating chart
+        await tick();
+    }
 
     createChart();
 });
@@ -301,8 +310,31 @@ function createChart() {
     padding-bottom: 10px;
     height: 350px;
 }
+
+.chart-skeleton {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 10px;
+    border: 2px solid black;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
 </style>
 
 <div class="chart-container">
-    <canvas bind:this={canvasElement}></canvas>
+    {#if isLoading}
+        <div class="chart-skeleton"></div>
+    {:else}
+        <canvas bind:this={canvasElement}></canvas>
+    {/if}
 </div>
