@@ -1,6 +1,10 @@
 // netlify/functions/getVisitorDocuments.js
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const zlib = require('zlib');
+const { promisify } = require('util');
+
+const gzip = promisify(zlib.gzip);
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -71,12 +75,22 @@ exports.handler = async (event, context) => {
     
     if (isCacheValid) {
       console.log(`Using cached chart data for ${cacheId}, updated at:`, cachedData.updatedAt);
+      
+      // Compress the response to stay under Lambda's 6MB limit
+      const jsonString = JSON.stringify(cachedData.data);
+      const compressed = await gzip(jsonString);
+      
+      console.log(`Response size: ${jsonString.length} bytes uncompressed, ${compressed.length} bytes compressed`);
+      
       return {
         statusCode: 200,
-        body: JSON.stringify(cachedData.data),
+        body: compressed.toString('base64'),
         headers: {
-          'X-Cache-Date': cachedData.updatedAt.toISOString()
-        }
+          'X-Cache-Date': cachedData.updatedAt.toISOString(),
+          'Content-Encoding': 'gzip',
+          'Content-Type': 'application/json'
+        },
+        isBase64Encoded: true
       };
     }
     
@@ -188,13 +202,22 @@ exports.handler = async (event, context) => {
 
     console.log(`Chart data cache updated for ${cacheId} with ${visitorDocs.length} games`);
 
+    // Compress the response to stay under Lambda's 6MB limit
+    const jsonString = JSON.stringify(visitorDocs);
+    const compressed = await gzip(jsonString);
+    
+    console.log(`Response size: ${jsonString.length} bytes uncompressed, ${compressed.length} bytes compressed`);
+
     return {
       statusCode: 200,
-      body: JSON.stringify(visitorDocs),
+      body: compressed.toString('base64'),
       headers: {
         'X-Cache-Date': now.toISOString(),
-        'X-Cache-Status': 'MISS'
-      }
+        'X-Cache-Status': 'MISS',
+        'Content-Encoding': 'gzip',
+        'Content-Type': 'application/json'
+      },
+      isBase64Encoded: true
     };
   } catch (error) {
     console.error('Error in getVisitorDocuments function:', error);
