@@ -36,8 +36,11 @@ exports.handler = async (event, context) => {
     const visitorsCollection = database.collection('visitors');
     const globalStatsCollection = database.collection('globalStats');
 
-    // Calculate global stats from all valid games
-    const allValidGames = await visitorsCollection.find({ valid: true }).toArray();
+    // Calculate global stats from all valid games (only fetch needed fields)
+    const allValidGames = await visitorsCollection
+      .find({ valid: true })
+      .project({ portfolioCAGR: 1, buyHoldCAGR: 1, _id: 0 })
+      .toArray();
     
     const globalAvgExcessCAGR = allValidGames.length > 0
       ? allValidGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / allValidGames.length

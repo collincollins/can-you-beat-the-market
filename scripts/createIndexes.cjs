@@ -36,6 +36,13 @@ async function createIndexes() {
     await visitorsCollection.createIndex({ valid: 1, realMode: 1 });
     await visitorsCollection.createIndex({ hasStarted: 1 });
     
+    // Compound index for leaderboard aggregations
+    await visitorsCollection.createIndex({ 
+      userId: 1, 
+      valid: 1,
+      durationOfGame: 1 
+    });
+    
     // Indexes for chart data aggregation queries (getVisitorDocuments function)
     // These are critical for performance when filtering games for chart display
     await visitorsCollection.createIndex({ 

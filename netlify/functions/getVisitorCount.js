@@ -35,9 +35,19 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
 
-    // Count the total number of unique visitor documents.
-    const uniqueVisitors = await visitorsCollection.distinct("visitorFingerprint");
-    const count = uniqueVisitors.length;
+    // Count the total number of unique visitor documents using aggregation
+    const result = await visitorsCollection.aggregate([
+      {
+        $group: {
+          _id: '$visitorFingerprint'
+        }
+      },
+      {
+        $count: 'count'
+      }
+    ]).toArray();
+
+    const count = result[0]?.count || 0;
 
     return {
       statusCode: 200,
