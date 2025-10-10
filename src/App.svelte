@@ -978,6 +978,13 @@ function handleStatsClose() {
         box-shadow: 3px 3px 0px black;
     }
 }
+
+@media (max-width: 450px) {
+  .leaderboard-card {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+}
 </style>
 
 <div class="app">
@@ -1231,7 +1238,7 @@ function handleStatsClose() {
     </div>
 
     <!-- Leaderboard Cards -->
-    <div class="card" style="max-width: 680px; padding: 15px;">
+    <div class="card leaderboard-card" style="max-width: 680px; padding: 15px;">
       <h2 style="margin-bottom: 10px; margin-top: 5px; text-align: center;">Leaderboard</h2>
       <LeaderboardCards {realMode} />
     </div>
