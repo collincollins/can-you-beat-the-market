@@ -47,27 +47,44 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get all users
-    const allUsers = await usersCollection.find({})
-      .project({ username: 1, userId: 1, createdAt: 1, firstGameDate: 1 })
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    // Get game counts for each user
-    const usersWithCounts = await Promise.all(
-      allUsers.map(async (user) => {
-        const gameCount = await visitorsCollection.countDocuments({ 
-          userId: user.userId,
-          valid: true
-        });
-        return {
-          username: user.username,
-          userId: user.userId,
-          createdAt: user.firstGameDate || user.createdAt,
-          validGames: gameCount
-        };
-      })
-    );
+    // Get all users with game counts in single aggregation (avoids N+1 query problem)
+    const usersWithCounts = await usersCollection.aggregate([
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $lookup: {
+          from: 'visitors',
+          let: { userId: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$userId', '$$userId'] },
+                    { $eq: ['$valid', true] }
+                  ]
+                }
+              }
+            },
+            {
+              $count: 'count'
+            }
+          ],
+          as: 'gameStats'
+        }
+      },
+      {
+        $project: {
+          username: 1,
+          userId: 1,
+          createdAt: { $ifNull: ['$firstGameDate', '$createdAt'] },
+          validGames: {
+            $ifNull: [{ $arrayElemAt: ['$gameStats.count', 0] }, 0]
+          }
+        }
+      }
+    ]).toArray();
 
     return {
       statusCode: 200,

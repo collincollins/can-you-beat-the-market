@@ -115,8 +115,17 @@ exports.handler = async (event, context) => {
       {
         $lookup: {
           from: 'users',
-          localField: 'userId',
-          foreignField: 'userId',
+          let: { userId: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$userId', '$$userId'] }
+              }
+            },
+            {
+              $project: { username: 1, _id: 0 }
+            }
+          ],
           as: 'userInfo'
         }
       },
@@ -132,6 +141,11 @@ exports.handler = async (event, context) => {
         }
       },
       {
+        $match: {
+          username: { $ne: null }
+        }
+      },
+      {
         $project: {
           username: 1,
           totalTrades: 1,
@@ -143,11 +157,7 @@ exports.handler = async (event, context) => {
       }
     ];
 
-    const docs = await visitorsCollection.aggregate(pipeline).toArray();
-    console.log(`Found ${docs.length} eligible games for leaderboard`);
-
-    // Filter to only include games with usernames (registered users)
-    const registeredDocs = docs.filter(d => d.username);
+    const registeredDocs = await visitorsCollection.aggregate(pipeline).toArray();
     console.log(`Found ${registeredDocs.length} games from registered users`);
 
     // Group by user and calculate cumulative statistics
