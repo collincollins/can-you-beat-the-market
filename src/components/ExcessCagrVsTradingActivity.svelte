@@ -278,8 +278,8 @@ function createChart() {
                             family: "Press Start 2P"
                         }
                     },
-                    min: yTickMin,
-                    max: yTickMax,
+                    min: -50,
+                    max: 50,
                 }
             }
         }

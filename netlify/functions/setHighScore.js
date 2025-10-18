@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
   try {
     // parse the incoming data.
     const data = JSON.parse(event.body);
-    const { playerName, score } = data;
+    const { playerName, score, userId } = data;
 
     console.log('Received high score submission.');
 
@@ -54,6 +54,15 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Invalid input data.' }),
+      };
+    }
+    
+    // Require userId for high score submission (logged-in users only)
+    if (!userId) {
+      console.log('High score submission requires logged-in user.');
+      return {
+        statusCode: 403,
+        body: JSON.stringify({ message: 'Must be logged in to submit high score.' }),
       };
     }
 
@@ -99,6 +108,7 @@ exports.handler = async (event, context) => {
         $set: {
           updatedAt: new Date(),
           playerName: playerName.trim(),
+          userId: userId,
           visitorFingerprint: visitorFingerprint  // save hashed IP here.
         },
         $max: { score: score },
@@ -112,6 +122,7 @@ exports.handler = async (event, context) => {
     await highScoreHistoryCollection.insertOne({
       playerName: playerName.trim(),
       score,
+      userId: userId,
       visitorFingerprint: visitorFingerprint,  // save hashed IP for history as well.
       submittedAt: new Date()
     });
