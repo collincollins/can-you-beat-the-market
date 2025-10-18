@@ -532,7 +532,25 @@ async function endSimulation() {
             const newestDBRecord = await fetchHighScore();
 
             if (streakForUpdate > newestDBRecord.score) {
-                showModal = true;
+                if (currentUser) {
+                    // Automatically submit with user's username and userId
+                    const success = await updateHighScore(currentUser.username, streakForUpdate, currentUser.userId);
+                    if (success) {
+                        const updatedHighScore = await fetchHighScore();
+                        highScore.set({
+                            score: updatedHighScore.score,
+                            playerName: updatedHighScore.playerName,
+                        });
+                    }
+                } else {
+                    // High score achieved but user not logged in
+                    console.log('High score achieved! Log in to record it.');
+                    // Still update display with current high score
+                    highScore.set({
+                        score: newestDBRecord.score,
+                        playerName: newestDBRecord.playerName,
+                    });
+                }
             } else {
                 // Update high score store with fetched data (no need to fetch again)
                 highScore.set({

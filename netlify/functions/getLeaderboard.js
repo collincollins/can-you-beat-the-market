@@ -115,34 +115,25 @@ exports.handler = async (event, context) => {
       {
         $lookup: {
           from: 'users',
-          let: { userId: '$userId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ['$userId', '$$userId'] }
-              }
-            },
-            {
-              $project: { username: 1, _id: 0 }
-            }
-          ],
+          localField: 'userId',
+          foreignField: 'userId',
           as: 'userInfo'
         }
       },
       {
+        $unwind: {
+          path: '$userInfo',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
         $addFields: {
-          username: {
-            $cond: {
-              if: { $gt: [{ $size: "$userInfo" }, 0] },
-              then: { $arrayElemAt: ["$userInfo.username", 0] },
-              else: null
-            }
-          }
+          username: '$userInfo.username'
         }
       },
       {
         $match: {
-          username: { $ne: null }
+          username: { $ne: null, $exists: true }
         }
       },
       {
