@@ -295,8 +295,8 @@ function createChart() {
                             family: "Press Start 2P"
                         }
                     },
-                    min: -50,
-                    max: 50,
+                    min: -20,
+                    max: 20,
                 }
             }
         }
