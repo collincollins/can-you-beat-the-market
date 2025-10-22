@@ -182,7 +182,9 @@ function createChart() {
         order: 2,
     });
 
-    let totalPoints = cleanedData.length + meanData.length;
+    // Use totalGames from precomputedData if available (new aggregated format)
+    // Otherwise count the actual data points (old format)
+    let totalPoints = precomputedData.totalGames || cleanedData.length;
 
     // if the user's game is valid, add the "You" datapoint.
     if (userGame) {
@@ -206,7 +208,7 @@ function createChart() {
             type: 'scatter',
             order: 1, // draw this on top
         });
-        totalPoints += 1;
+        // Don't add to totalPoints - it's already the total games analyzed
     }
 
     // create the Chart.js chart.
