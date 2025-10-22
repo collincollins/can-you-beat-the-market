@@ -139,6 +139,48 @@ function createChart() {
     // define the datasets with explicit drawing order.
     const datasets = [];
     
+    // Background shading areas (green above 0, red below 0)
+    const xMin = meanData.length > 0 ? Math.min(...meanData.map(p => p.x)) : 3;
+    const xMax = meanData.length > 0 ? Math.max(...meanData.map(p => p.x)) : 25;
+    
+    // Green area above y=0 (beating the market)
+    datasets.push({
+        label: '', // No label in legend
+        data: [
+            { x: xMin, y: 0 },
+            { x: xMax, y: 0 },
+            { x: xMax, y: 10 },
+            { x: xMin, y: 10 }
+        ],
+        backgroundColor: 'rgba(0, 139, 2, 0.1)', // 10% opacity green
+        borderWidth: 0,
+        fill: true,
+        pointRadius: 0,
+        type: 'line',
+        order: 10, // Draw first (behind everything)
+        showLine: true,
+        tension: 0
+    });
+    
+    // Red area below y=0 (losing to the market)
+    datasets.push({
+        label: '', // No label in legend
+        data: [
+            { x: xMin, y: 0 },
+            { x: xMax, y: 0 },
+            { x: xMax, y: -10 },
+            { x: xMin, y: -10 }
+        ],
+        backgroundColor: 'rgba(244, 67, 54, 0.1)', // 10% opacity red
+        borderWidth: 0,
+        fill: true,
+        pointRadius: 0,
+        type: 'line',
+        order: 9, // Draw early (behind everything except green)
+        showLine: true,
+        tension: 0
+    });
+    
     // Only show individual game points if we have them (old format)
     // In new optimized format, cleanedData is empty to save bandwidth
     if (cleanedData && cleanedData.length > 0) {
@@ -239,6 +281,10 @@ function createChart() {
                         font: {
                             size: 8,
                             family: "'Press Start 2P'"
+                        },
+                        filter: function(legendItem) {
+                            // Hide empty labels (background shading areas)
+                            return legendItem.text !== '';
                         }
                     }
                 },
