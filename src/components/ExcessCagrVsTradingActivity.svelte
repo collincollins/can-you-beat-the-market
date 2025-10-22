@@ -221,6 +221,27 @@ function createChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                // Custom plugin to draw background shading
+                backgroundShading: {
+                    beforeDatasetsDraw: (chart) => {
+                        const { ctx, chartArea: { left, right, top, bottom }, scales: { x, y } } = chart;
+                        
+                        // Calculate y=0 position in pixels
+                        const yZero = y.getPixelForValue(0);
+                        
+                        // Green area above y=0
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(0, 139, 2, 0.1)';
+                        ctx.fillRect(left, top, right - left, yZero - top);
+                        ctx.restore();
+                        
+                        // Red area below y=0
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(244, 67, 54, 0.1)';
+                        ctx.fillRect(left, yZero, right - left, bottom - yZero);
+                        ctx.restore();
+                    }
+                },
                 title: {
                     display: true,
                     text: ['Excess Return vs. Trading Activity',
@@ -303,7 +324,28 @@ function createChart() {
                     max: 10,
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'backgroundShading',
+            beforeDatasetsDraw: (chart) => {
+                const { ctx, chartArea: { left, right, top, bottom }, scales: { x, y } } = chart;
+                
+                // Calculate y=0 position in pixels
+                const yZero = y.getPixelForValue(0);
+                
+                // Green area above y=0
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 139, 2, 0.1)';
+                ctx.fillRect(left, top, right - left, yZero - top);
+                ctx.restore();
+                
+                // Red area below y=0
+                ctx.save();
+                ctx.fillStyle = 'rgba(244, 67, 54, 0.1)';
+                ctx.fillRect(left, yZero, right - left, bottom - yZero);
+                ctx.restore();
+            }
+        }]
     });
 
     // set the result note based on the slope.
@@ -330,13 +372,6 @@ function createChart() {
     max-width: 1000px;
     padding-bottom: 10px;
     height: 350px;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 139, 2, 0.1) 0%,     /* Green at top */
-        rgba(0, 139, 2, 0.1) 50%,    /* Green to middle */
-        rgba(244, 67, 54, 0.1) 50%,  /* Red from middle */
-        rgba(244, 67, 54, 0.1) 100%  /* Red to bottom */
-    );
 }
 
 .chart-skeleton {
