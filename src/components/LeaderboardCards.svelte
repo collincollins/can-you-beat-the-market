@@ -5,6 +5,7 @@
 
   let leaderboard = null;
   let loading = true;
+  let lastRealMode = undefined;
 
   async function fetchLeaderboard() {
     try {
@@ -24,10 +25,12 @@
   }
 
   onMount(() => {
+    lastRealMode = realMode;
     fetchLeaderboard();
   });
 
-  $: if (realMode !== undefined) {
+  $: if (realMode !== undefined && realMode !== lastRealMode) {
+    lastRealMode = realMode;
     loading = true;
     fetchLeaderboard();
   }
