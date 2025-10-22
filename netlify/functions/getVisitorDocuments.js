@@ -6,6 +6,34 @@ const { promisify } = require('util');
 
 const gzip = promisify(zlib.gzip);
 
+/**
+ * Calculate linear regression from data points
+ * Returns slope, intercept, and slope uncertainty
+ */
+function calculateRegression(data) {
+  const n = data.length;
+  if (n < 2) return { slope: 0, intercept: 0, slopeUncertainty: 0 };
+  
+  const sumX = data.reduce((sum, p) => sum + p.x, 0);
+  const sumY = data.reduce((sum, p) => sum + p.y, 0);
+  const sumXY = data.reduce((sum, p) => sum + (p.x * p.y), 0);
+  const sumX2 = data.reduce((sum, p) => sum + (p.x * p.x), 0);
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  
+  // Calculate uncertainty
+  const predictions = data.map(p => slope * p.x + intercept);
+  const residuals = data.map((p, i) => p.y - predictions[i]);
+  const rss = residuals.reduce((sum, r) => sum + r * r, 0);
+  const variance = rss / (n - 2);
+  const xMean = sumX / n;
+  const sxx = sumX2 - (sumX * sumX) / n;
+  const slopeUncertainty = Math.sqrt(variance / sxx);
+  
+  return { slope, intercept, slopeUncertainty };
+}
+
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
   serverApi: { version: ServerApiVersion.v1, deprecationErrors: true },
@@ -63,15 +91,19 @@ exports.handler = async (event, context) => {
 
     // read the realMode parameter from the query string.
     // (if realMode is "true", use the real mode pipeline; otherwise, use simulation mode.)
-    const { realMode } = event.queryStringParameters || {};
+    const { realMode, force } = event.queryStringParameters || {};
     
     const cacheId = realMode === "true" ? 'realMode' : 'simulatedMode';
     
-    // Check cache first
+    // Check cache first (unless force refresh requested)
     const cachedData = await chartDataCacheCollection.findOne({ _id: cacheId });
     const now = new Date();
     const sixHoursAgo = new Date(now - 6 * 60 * 60 * 1000);
-    const isCacheValid = cachedData && new Date(cachedData.updatedAt) > sixHoursAgo;
+    const isCacheValid = cachedData && new Date(cachedData.updatedAt) > sixHoursAgo && force !== 'true';
+    
+    if (force === 'true') {
+      console.log(`Force refresh requested for ${cacheId}`);
+    }
     
     if (isCacheValid) {
       console.log(`Using cached chart data for ${cacheId}, updated at:`, cachedData.updatedAt);
@@ -180,10 +212,60 @@ exports.handler = async (event, context) => {
       ];
     }
     
+    // DEPRECATED APPROACH - kept for reference
+    // Old approach: Return all individual games (433 KB per response)
+    // This was causing $28/month in bandwidth costs
+    // const visitorDocs = await visitorsCollection
+    //   .aggregate(pipeline, { maxTimeMS: 25000 })
+    //   .toArray();
+    
+    // NEW APPROACH: Return only aggregated means (reduces payload by 99.9%)
     // Add timeout to prevent long-running queries
     const visitorDocs = await visitorsCollection
       .aggregate(pipeline, { maxTimeMS: 25000 })
       .toArray();
+
+    // Group by trade count and calculate means
+    const tradeGroups = {};
+    visitorDocs.forEach(doc => {
+      const trades = doc.totalTrades;
+      if (!tradeGroups[trades]) {
+        tradeGroups[trades] = {
+          x: trades,
+          excessReturns: [],
+          count: 0
+        };
+      }
+      const excessReturn = doc.portfolioCAGR - doc.buyHoldCAGR;
+      tradeGroups[trades].excessReturns.push(excessReturn);
+      tradeGroups[trades].count++;
+    });
+
+    // Calculate means for each trade count
+    const meanData = Object.values(tradeGroups).map(group => ({
+      x: group.x,
+      y: group.excessReturns.reduce((sum, val) => sum + val, 0) / group.count,
+      count: group.count
+    })).sort((a, b) => a.x - b.x);
+
+    // Calculate regression from means
+    const { slope, intercept, slopeUncertainty } = calculateRegression(meanData);
+
+    // Create aggregated response
+    const aggregatedData = {
+      meanData,
+      regression: {
+        slope,
+        intercept,
+        slopeUncertainty,
+        points: [
+          { x: meanData[0].x, y: slope * meanData[0].x + intercept },
+          { x: meanData[meanData.length - 1].x, y: slope * meanData[meanData.length - 1].x + intercept }
+        ]
+      },
+      totalGames: visitorDocs.length,
+      isAggregated: true // flag to indicate new format
+    };
 
     // Update cache
     const cacheDoc = {
@@ -191,7 +273,7 @@ exports.handler = async (event, context) => {
       updatedAt: now,
       expiresAt: new Date(now.getTime() + 6 * 60 * 60 * 1000),
       totalGames: visitorDocs.length,
-      data: visitorDocs
+      data: aggregatedData
     };
 
     await chartDataCacheCollection.updateOne(
@@ -200,13 +282,13 @@ exports.handler = async (event, context) => {
       { upsert: true }
     );
 
-    console.log(`Chart data cache updated for ${cacheId} with ${visitorDocs.length} games`);
+    console.log(`Chart data cache updated for ${cacheId} with ${visitorDocs.length} games (aggregated to ${meanData.length} points)`);
 
-    // Compress the response to stay under Lambda's 6MB limit
-    const jsonString = JSON.stringify(visitorDocs);
+    // Compress the response
+    const jsonString = JSON.stringify(aggregatedData);
     const compressed = await gzip(jsonString);
     
-    console.log(`Response size: ${jsonString.length} bytes uncompressed, ${compressed.length} bytes compressed`);
+    console.log(`Response size: ${jsonString.length} bytes uncompressed, ${compressed.length} bytes compressed (was ~433KB before optimization)`);
 
     return {
       statusCode: 200,

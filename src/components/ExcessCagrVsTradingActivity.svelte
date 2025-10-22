@@ -67,8 +67,12 @@ let precomputedData = {
 const unsubscribe = precomputedChartDataStore.subscribe(async value => {
     precomputedData = value;
     
-    // Check if we have data
-    if (value.cleanedData && value.cleanedData.length > 0) {
+    // Check if we have data (either cleanedData OR meanData)
+    // In new aggregated format, cleanedData is empty but meanData has the averages
+    const hasData = (value.cleanedData && value.cleanedData.length > 0) || 
+                    (value.meanData && value.meanData.length > 0);
+    
+    if (hasData) {
         isLoading = false;
         // Wait for DOM to update before creating chart
         await tick();
@@ -109,7 +113,11 @@ function createChart() {
     }
 
     // If there's no data at all, bail out
-    if (!precomputedData.cleanedData || precomputedData.cleanedData.length === 0) {
+    // In new aggregated format, we only have meanData (cleanedData is empty to save bandwidth)
+    const hasMeanData = precomputedData.meanData && precomputedData.meanData.length > 0;
+    const hasCleanedData = precomputedData.cleanedData && precomputedData.cleanedData.length > 0;
+    
+    if (!hasMeanData && !hasCleanedData) {
         console.warn('No valid data available for the chart.');
         return;
     }
@@ -129,7 +137,12 @@ function createChart() {
     } = precomputedData;
   
     // define the datasets with explicit drawing order.
-    const datasets = [{
+    const datasets = [];
+    
+    // Only show individual game points if we have them (old format)
+    // In new optimized format, cleanedData is empty to save bandwidth
+    if (cleanedData && cleanedData.length > 0) {
+        datasets.push({
             label: 'Games',
             data: cleanedData,
             backgroundColor: 'rgba(184,190,206,0.5)', // blue like background
@@ -137,37 +150,41 @@ function createChart() {
             showLine: false,
             type: 'scatter',
             order: 4
-        },
-        // regression line: slightly thicker line and drawn beneath the mean points.
-        {
-            label: 'Fit ',
-            data: regressionPoints,
-            borderColor: '#f44336', // red
-            borderWidth: 3,
-            fill: false,
-            tension: 0,
-            pointRadius: 0,
-            type: 'line',
-            borderDash: [4, 4],
-            order: 3,
-            pointStyle: 'line'
-        },
-        // mean outcomes: red points with a black border drawn on top.
-        {
-            label: 'Avg ',
-            data: meanData,
-            backgroundColor: '#435b9f', // blue like button
-            borderColor: 'black',
-            borderWidth: 1.5,
-            pointRadius: 5,
-            pointHoverRadius: 6,
-            showLine: false,
-            type: 'scatter',
-            order: 2,
-        }
-    ];
+        });
+    }
+    
+    // regression line: slightly thicker line and drawn beneath the mean points.
+    datasets.push({
+        label: 'Fit ',
+        data: regressionPoints,
+        borderColor: '#f44336', // red
+        borderWidth: 3,
+        fill: false,
+        tension: 0,
+        pointRadius: 0,
+        type: 'line',
+        borderDash: [4, 4],
+        order: 3,
+        pointStyle: 'line'
+    });
+    
+    // mean outcomes: red points with a black border drawn on top.
+    datasets.push({
+        label: 'Avg ',
+        data: meanData,
+        backgroundColor: '#435b9f', // blue like button
+        borderColor: 'black',
+        borderWidth: 1.5,
+        pointRadius: 5,
+        pointHoverRadius: 6,
+        showLine: false,
+        type: 'scatter',
+        order: 2,
+    });
 
-    let totalPoints = cleanedData.length;
+    // Use totalGames from precomputedData if available (new aggregated format)
+    // Otherwise count the actual data points (old format)
+    let totalPoints = precomputedData.totalGames || cleanedData.length;
 
     // if the user's game is valid, add the "You" datapoint.
     if (userGame) {
@@ -191,7 +208,7 @@ function createChart() {
             type: 'scatter',
             order: 1, // draw this on top
         });
-        totalPoints += 1;
+        // Don't add to totalPoints - it's already the total games analyzed
     }
 
     // create the Chart.js chart.
@@ -204,6 +221,27 @@ function createChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                // Custom plugin to draw background shading
+                backgroundShading: {
+                    beforeDatasetsDraw: (chart) => {
+                        const { ctx, chartArea: { left, right, top, bottom }, scales: { x, y } } = chart;
+                        
+                        // Calculate y=0 position in pixels
+                        const yZero = y.getPixelForValue(0);
+                        
+                        // Green area above y=0
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(0, 139, 2, 0.1)';
+                        ctx.fillRect(left, top, right - left, yZero - top);
+                        ctx.restore();
+                        
+                        // Red area below y=0
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(244, 67, 54, 0.1)';
+                        ctx.fillRect(left, yZero, right - left, bottom - yZero);
+                        ctx.restore();
+                    }
+                },
                 title: {
                     display: true,
                     text: ['Excess Return vs. Trading Activity',
@@ -222,6 +260,10 @@ function createChart() {
                         font: {
                             size: 8,
                             family: "'Press Start 2P'"
+                        },
+                        filter: function(legendItem) {
+                            // Hide empty labels (background shading areas)
+                            return legendItem.text !== '';
                         }
                     }
                 },
@@ -278,11 +320,32 @@ function createChart() {
                             family: "Press Start 2P"
                         }
                     },
-                    min: -50,
-                    max: 50,
+                    min: -10,
+                    max: 10,
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'backgroundShading',
+            beforeDatasetsDraw: (chart) => {
+                const { ctx, chartArea: { left, right, top, bottom }, scales: { x, y } } = chart;
+                
+                // Calculate y=0 position in pixels
+                const yZero = y.getPixelForValue(0);
+                
+                // Green area above y=0
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 139, 2, 0.1)';
+                ctx.fillRect(left, top, right - left, yZero - top);
+                ctx.restore();
+                
+                // Red area below y=0
+                ctx.save();
+                ctx.fillStyle = 'rgba(244, 67, 54, 0.1)';
+                ctx.fillRect(left, yZero, right - left, bottom - yZero);
+                ctx.restore();
+            }
+        }]
     });
 
     // set the result note based on the slope.

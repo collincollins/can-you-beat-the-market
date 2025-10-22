@@ -133,3 +133,58 @@ export function preComputeChartData(rawVisitorDocs) {
     yTickMax: roughYMax
   };
 }
+
+/**
+ * Process pre-aggregated chart data from the new optimized endpoint
+ * This handles the new format that only returns mean points (not individual games)
+ */
+export function prepareAggregatedChartData(aggregatedData) {
+  // Data is already aggregated on the backend
+  const { meanData, regression, totalGames } = aggregatedData;
+  
+  if (!meanData || meanData.length === 0) {
+    return {
+      cleanedData: [],
+      meanData: [],
+      slope: 0,
+      intercept: 0,
+      slopeUncertainty: 0,
+      regressionPoints: [],
+      xMin: 0,
+      xMax: 0,
+      yMin: 0,
+      yMax: 0,
+      xTickMin: 0,
+      xTickMax: 25,
+      yTickMin: -10,
+      yTickMax: 10
+    };
+  }
+  
+  // Extract regression data
+  const { slope, intercept, slopeUncertainty, points: regressionPoints } = regression;
+  
+  // Calculate bounds
+  const xMin = Math.min(...meanData.map(p => p.x));
+  const xMax = Math.max(...meanData.map(p => p.x));
+  const yMin = Math.min(...meanData.map(p => p.y));
+  const yMax = Math.max(...meanData.map(p => p.y));
+  
+  return {
+    cleanedData: [], // No individual points in new format (reduces bandwidth by 99.9%)
+    meanData,
+    slope,
+    intercept,
+    slopeUncertainty,
+    regressionPoints,
+    xMin,
+    xMax,
+    yMin,
+    yMax,
+    xTickMin: xMin - 1,
+    xTickMax: xMax + 1,
+    yTickMin: -10,
+    yTickMax: 10,
+    totalGames // for display purposes
+  };
+}
