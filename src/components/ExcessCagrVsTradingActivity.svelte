@@ -139,50 +139,6 @@ function createChart() {
     // define the datasets with explicit drawing order.
     const datasets = [];
     
-    // Background shading areas (green above 0, red below 0)
-    const xMinVal = meanData.length > 0 ? Math.min(...meanData.map(p => p.x)) - 1 : 3;
-    const xMaxVal = meanData.length > 0 ? Math.max(...meanData.map(p => p.x)) + 1 : 25;
-    
-    // Green area above y=0 (beating the market)
-    datasets.push({
-        label: '', // No label in legend
-        data: [
-            { x: xMinVal, y: 0 },
-            { x: xMinVal, y: 10 },
-            { x: xMaxVal, y: 10 },
-            { x: xMaxVal, y: 0 },
-            { x: xMinVal, y: 0 }
-        ],
-        backgroundColor: 'rgba(0, 139, 2, 0.1)', // 10% opacity green
-        borderColor: 'rgba(0, 0, 0, 0)',
-        borderWidth: 0,
-        fill: true,
-        pointRadius: 0,
-        type: 'line',
-        order: 10, // Draw first (behind everything)
-        tension: 0
-    });
-    
-    // Red area below y=0 (losing to the market)
-    datasets.push({
-        label: '', // No label in legend
-        data: [
-            { x: xMinVal, y: 0 },
-            { x: xMinVal, y: -10 },
-            { x: xMaxVal, y: -10 },
-            { x: xMaxVal, y: 0 },
-            { x: xMinVal, y: 0 }
-        ],
-        backgroundColor: 'rgba(244, 67, 54, 0.1)', // 10% opacity red
-        borderColor: 'rgba(0, 0, 0, 0)',
-        borderWidth: 0,
-        fill: true,
-        pointRadius: 0,
-        type: 'line',
-        order: 9, // Draw early (behind everything except green)
-        tension: 0
-    });
-    
     // Only show individual game points if we have them (old format)
     // In new optimized format, cleanedData is empty to save bandwidth
     if (cleanedData && cleanedData.length > 0) {
@@ -374,6 +330,13 @@ function createChart() {
     max-width: 1000px;
     padding-bottom: 10px;
     height: 350px;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 139, 2, 0.1) 0%,     /* Green at top */
+        rgba(0, 139, 2, 0.1) 50%,    /* Green to middle */
+        rgba(244, 67, 54, 0.1) 50%,  /* Red from middle */
+        rgba(244, 67, 54, 0.1) 100%  /* Red to bottom */
+    );
 }
 
 .chart-skeleton {
