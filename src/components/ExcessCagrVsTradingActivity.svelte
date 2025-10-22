@@ -129,7 +129,12 @@ function createChart() {
     } = precomputedData;
   
     // define the datasets with explicit drawing order.
-    const datasets = [{
+    const datasets = [];
+    
+    // Only show individual game points if we have them (old format)
+    // In new optimized format, cleanedData is empty to save bandwidth
+    if (cleanedData && cleanedData.length > 0) {
+        datasets.push({
             label: 'Games',
             data: cleanedData,
             backgroundColor: 'rgba(184,190,206,0.5)', // blue like background
@@ -137,37 +142,39 @@ function createChart() {
             showLine: false,
             type: 'scatter',
             order: 4
-        },
-        // regression line: slightly thicker line and drawn beneath the mean points.
-        {
-            label: 'Fit ',
-            data: regressionPoints,
-            borderColor: '#f44336', // red
-            borderWidth: 3,
-            fill: false,
-            tension: 0,
-            pointRadius: 0,
-            type: 'line',
-            borderDash: [4, 4],
-            order: 3,
-            pointStyle: 'line'
-        },
-        // mean outcomes: red points with a black border drawn on top.
-        {
-            label: 'Avg ',
-            data: meanData,
-            backgroundColor: '#435b9f', // blue like button
-            borderColor: 'black',
-            borderWidth: 1.5,
-            pointRadius: 5,
-            pointHoverRadius: 6,
-            showLine: false,
-            type: 'scatter',
-            order: 2,
-        }
-    ];
+        });
+    }
+    
+    // regression line: slightly thicker line and drawn beneath the mean points.
+    datasets.push({
+        label: 'Fit ',
+        data: regressionPoints,
+        borderColor: '#f44336', // red
+        borderWidth: 3,
+        fill: false,
+        tension: 0,
+        pointRadius: 0,
+        type: 'line',
+        borderDash: [4, 4],
+        order: 3,
+        pointStyle: 'line'
+    });
+    
+    // mean outcomes: red points with a black border drawn on top.
+    datasets.push({
+        label: 'Avg ',
+        data: meanData,
+        backgroundColor: '#435b9f', // blue like button
+        borderColor: 'black',
+        borderWidth: 1.5,
+        pointRadius: 5,
+        pointHoverRadius: 6,
+        showLine: false,
+        type: 'scatter',
+        order: 2,
+    });
 
-    let totalPoints = cleanedData.length;
+    let totalPoints = cleanedData.length + meanData.length;
 
     // if the user's game is valid, add the "You" datapoint.
     if (userGame) {

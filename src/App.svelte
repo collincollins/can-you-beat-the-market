@@ -36,7 +36,8 @@ import {
     precomputedSp500ChartStore
 } from './logic/store';
 import {
-    preComputeChartData
+    preComputeChartData,
+    prepareAggregatedChartData
 } from './logic/prepareChartData';
 import {
     fetchAndPrepFullSp500
@@ -334,17 +335,21 @@ async function startSimulationHandler() {
         
         const json = await res.json();
         
-        // Validate that json is an array before proceeding
-        if (!Array.isArray(json)) {
-            throw new Error('Invalid data format: expected an array');
+        // Check if new aggregated format or old array format
+        if (json.isAggregated) {
+            // NEW FORMAT: Pre-aggregated data from backend (reduces bandwidth by 99.9%)
+            console.log(`Using aggregated chart data: ${json.totalGames} games → ${json.meanData.length} mean points`);
+            const chartData = prepareAggregatedChartData(json);
+            precomputedChartDataStore.set(chartData);
+        } else if (Array.isArray(json)) {
+            // OLD FORMAT: Individual games (backward compatibility)
+            console.log(`Using individual game data: ${json.length} games`);
+            visitorDataStore.set(json);
+            const chartData = preComputeChartData(json);
+            precomputedChartDataStore.set(chartData);
+        } else {
+            throw new Error('Invalid data format: expected aggregated object or array');
         }
-        
-        // store the result in visitorDataStore
-        visitorDataStore.set(json);
-
-        // PRE-COMPUTE CHART DATA, including regression, now
-        const chartData = preComputeChartData(json);
-        precomputedChartDataStore.set(chartData);
 
     } catch (error) {
         console.error('Error pre-fetching visitor documents:', error);
