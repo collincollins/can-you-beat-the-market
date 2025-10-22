@@ -67,8 +67,12 @@ let precomputedData = {
 const unsubscribe = precomputedChartDataStore.subscribe(async value => {
     precomputedData = value;
     
-    // Check if we have data
-    if (value.cleanedData && value.cleanedData.length > 0) {
+    // Check if we have data (either cleanedData OR meanData)
+    // In new aggregated format, cleanedData is empty but meanData has the averages
+    const hasData = (value.cleanedData && value.cleanedData.length > 0) || 
+                    (value.meanData && value.meanData.length > 0);
+    
+    if (hasData) {
         isLoading = false;
         // Wait for DOM to update before creating chart
         await tick();
