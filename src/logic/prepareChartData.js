@@ -156,8 +156,8 @@ export function prepareAggregatedChartData(aggregatedData) {
       yMax: 0,
       xTickMin: 0,
       xTickMax: 25,
-      yTickMin: -50,
-      yTickMax: 50
+      yTickMin: -10,
+      yTickMax: 10
     };
   }
   
@@ -183,8 +183,8 @@ export function prepareAggregatedChartData(aggregatedData) {
     yMax,
     xTickMin: xMin - 1,
     xTickMax: xMax + 1,
-    yTickMin: -20,
-    yTickMax: 20,
+    yTickMin: -10,
+    yTickMax: 10,
     totalGames // for display purposes
   };
 }
