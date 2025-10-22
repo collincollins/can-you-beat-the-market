@@ -109,7 +109,11 @@ function createChart() {
     }
 
     // If there's no data at all, bail out
-    if (!precomputedData.cleanedData || precomputedData.cleanedData.length === 0) {
+    // In new aggregated format, we only have meanData (cleanedData is empty to save bandwidth)
+    const hasMeanData = precomputedData.meanData && precomputedData.meanData.length > 0;
+    const hasCleanedData = precomputedData.cleanedData && precomputedData.cleanedData.length > 0;
+    
+    if (!hasMeanData && !hasCleanedData) {
         console.warn('No valid data available for the chart.');
         return;
     }
