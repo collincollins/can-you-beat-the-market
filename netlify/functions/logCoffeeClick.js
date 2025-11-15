@@ -13,9 +13,14 @@ const client = new MongoClient(uri, {
 
 let isConnected = false;
 
-// Function to hash the IP address using SHA-256.
+// Function to hash the IP address using SHA-256 with salt
+// SECURITY FIX: Add salt to match other functions (createVisitorDocument, setHighScore)
 const hashIP = (ip) => {
-  return crypto.createHash('sha256').update(ip).digest('hex');
+  const salt = process.env.VISITOR_SALT;
+  if (!salt) {
+    throw new Error('Missing environment variable: VISITOR_SALT');
+  }
+  return crypto.createHash('sha256').update(ip + salt).digest('hex');
 };
 
 // Function to extract the user's IP address from the request headers.
@@ -68,6 +73,15 @@ exports.handler = async (event, context) => {
     };
   } catch (error) {
     console.error('Error in logCoffeeClick function:', error);
+
+    // Check if it's a configuration error
+    if (error.message && error.message.includes('VISITOR_SALT')) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'Server configuration error' }),
+      };
+    }
+
     return {
       statusCode: 500,
       body: JSON.stringify({ message: 'Internal Server Error' }),
