@@ -1,7 +1,7 @@
 // __tests__/jsonParse.security.test.js
-// Test demonstrating unprotected JSON.parse() vulnerability across netlify functions
+// Test verifying proper JSON parsing error handling in netlify functions
 
-describe('JSON.parse() Security - Unhandled Exceptions', () => {
+describe('JSON Parsing Security - Proper Error Handling', () => {
   let createUserHandler;
   let loginUserHandler;
   let updateVisitorHandler;
@@ -57,101 +57,104 @@ describe('JSON.parse() Security - Unhandled Exceptions', () => {
     jest.clearAllMocks();
   });
 
-  describe('createUser.js - Malformed JSON', () => {
-    test('BEFORE FIX: Returns 500 instead of 400 for malformed JSON', async () => {
-      const malformedEvent = {
+  describe('Malformed JSON Handling', () => {
+    test('createUser: Returns 400 for malformed JSON', async () => {
+      const result = await createUserHandler({
         httpMethod: 'POST',
-        body: '{invalid json'  // Malformed JSON
-      };
+        body: '{invalid json'
+      }, {});
 
-      // BEFORE FIX: Returns generic 500 instead of proper 400 Bad Request
-      const result = await createUserHandler(malformedEvent, {});
-      expect(result.statusCode).toBe(500);
-      expect(result.body).toContain('Internal Server Error');
-      // Should be 400 with specific error message
+      expect(result.statusCode).toBe(400);
+      expect(result.body).toContain('Bad Request');
+      expect(result.body).toContain('Invalid JSON');
     });
 
-    test('BEFORE FIX: Returns 500 for null body', async () => {
-      const nullBodyEvent = {
-        httpMethod: 'POST',
-        body: null
-      };
-
-      const result = await createUserHandler(nullBodyEvent, {});
-      expect(result.statusCode).toBe(500);
-    });
-
-    test('BEFORE FIX: Returns 500 for undefined body', async () => {
-      const undefinedBodyEvent = {
-        httpMethod: 'POST',
-        body: undefined
-      };
-
-      const result = await createUserHandler(undefinedBodyEvent, {});
-      expect(result.statusCode).toBe(500);
-    });
-  });
-
-  describe('loginUser.js - Malformed JSON', () => {
-    test('BEFORE FIX: Returns 500 for malformed JSON', async () => {
-      const malformedEvent = {
+    test('loginUser: Returns 400 for malformed JSON', async () => {
+      const result = await loginUserHandler({
         httpMethod: 'POST',
         body: '{"username": incomplete'
-      };
+      }, {});
 
-      const result = await loginUserHandler(malformedEvent, {});
-      expect(result.statusCode).toBe(500);
-      expect(result.body).toContain('Internal Server Error');
+      expect(result.statusCode).toBe(400);
+      expect(result.body).toContain('Bad Request');
     });
 
-    test('BEFORE FIX: Returns 500 for trailing comma', async () => {
-      const trailingCommaEvent = {
-        httpMethod: 'POST',
-        body: '{"username": "test",}'  // Invalid JSON
-      };
-
-      const result = await loginUserHandler(trailingCommaEvent, {});
-      expect(result.statusCode).toBe(500);
-    });
-  });
-
-  describe('updateVisitorDocument.js - Malformed JSON', () => {
-    test('BEFORE FIX: Returns 500 for malformed JSON', async () => {
-      const malformedEvent = {
+    test('updateVisitor: Returns 400 for malformed JSON', async () => {
+      const result = await updateVisitorHandler({
         httpMethod: 'POST',
         body: '[not valid json}'
-      };
+      }, {});
 
-      const result = await updateVisitorHandler(malformedEvent, {});
-      expect(result.statusCode).toBe(500);
+      expect(result.statusCode).toBe(400);
     });
+  });
 
-    test('BEFORE FIX: Returns 500 for NaN in JSON', async () => {
-      const nanEvent = {
+  describe('Missing/Invalid Body Handling', () => {
+    test('createUser: Returns 400 for null body', async () => {
+      const result = await createUserHandler({
         httpMethod: 'POST',
-        body: '{"value": NaN}'  // NaN is not valid JSON
-      };
+        body: null
+      }, {});
 
-      const result = await updateVisitorHandler(nanEvent, {});
-      expect(result.statusCode).toBe(500);
+      expect(result.statusCode).toBe(400);
+      expect(result.body).toContain('Request body is missing');
+    });
+
+    test('loginUser: Returns 400 for undefined body', async () => {
+      const result = await loginUserHandler({
+        httpMethod: 'POST',
+        body: undefined
+      }, {});
+
+      expect(result.statusCode).toBe(400);
+    });
+
+    test('updateVisitor: Returns 400 for empty body', async () => {
+      const result = await updateVisitorHandler({
+        httpMethod: 'POST',
+        body: '   '  // Empty/whitespace only
+      }, {});
+
+      expect(result.statusCode).toBe(400);
+      expect(result.body).toContain('Request body is empty');
     });
   });
-});
 
-describe('AFTER FIX: Proper Error Handling', () => {
-  test('Should return 400 with descriptive error for malformed JSON', () => {
-    // AFTER FIX: Functions should:
-    // 1. Wrap JSON.parse() in try-catch
-    // 2. Return 400 Bad Request with clear error message
-    // 3. Log the error for debugging
-    // 4. NOT crash the function
+  describe('Error Logging', () => {
+    test('Should NOT log stack traces for client-side JSON errors', async () => {
+      // Verify that the functions don't log stack traces for client errors
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-    // This documents expected behavior after fix
-    expect(true).toBe(true);
+      await createUserHandler({
+        httpMethod: 'POST',
+        body: 'not json'
+      }, {});
+
+      // Should NOT log errors for client-side issues
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
   });
 
-  test('Should validate request body exists before parsing', () => {
-    // AFTER FIX: Check if body exists and is a string before parsing
-    expect(true).toBe(true);
+  describe('Edge Cases', () => {
+    test('Handles JSON with trailing comma', async () => {
+      const result = await createUserHandler({
+        httpMethod: 'POST',
+        body: '{"username": "test",}'
+      }, {});
+
+      expect(result.statusCode).toBe(400);
+      expect(result.body).toContain('Invalid JSON');
+    });
+
+    test('Handles JSON with NaN', async () => {
+      const result = await updateVisitorHandler({
+        httpMethod: 'POST',
+        body: '{"value": NaN}'
+      }, {});
+
+      expect(result.statusCode).toBe(400);
+    });
   });
 });

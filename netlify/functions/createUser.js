@@ -3,6 +3,7 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { safeParseJSON, createBadRequestResponse } = require('./utils/parseJSON');
 
 // Helper to escape regex special characters
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -33,6 +34,14 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // SECURITY FIX: Safely parse JSON with proper error handling
+    const parseResult = safeParseJSON(event.body);
+    if (!parseResult.success) {
+      return createBadRequestResponse(parseResult.error);
+    }
+
+    const { username, password, visitorFingerprint } = parseResult.data;
+
     if (!isConnected) {
       await client.connect();
       isConnected = true;
@@ -45,8 +54,6 @@ exports.handler = async (event, context) => {
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
     const usersCollection = database.collection('users');
-
-    const { username, password, visitorFingerprint } = JSON.parse(event.body);
 
     if (!username || typeof username !== 'string') {
       return {

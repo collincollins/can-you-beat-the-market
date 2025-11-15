@@ -1,6 +1,7 @@
 // netlify/functions/updateVisitorDocument.js
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { safeParseJSON, createBadRequestResponse } = require('./utils/parseJSON');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -21,6 +22,14 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // SECURITY FIX: Safely parse JSON with proper error handling
+    const parseResult = safeParseJSON(event.body);
+    if (!parseResult.success) {
+      return createBadRequestResponse(parseResult.error);
+    }
+
+    const payload = parseResult.data;
+
     if (!isConnected) {
       await client.connect();
       isConnected = true;
@@ -33,8 +42,6 @@ exports.handler = async (event, context) => {
     const dbName = process.env.MONGODB_DB_NAME || defaultDbName;
     const database = client.db(dbName);
     const visitorsCollection = database.collection('visitors');
-
-    const payload = JSON.parse(event.body);
 
     const {
       documentId,
