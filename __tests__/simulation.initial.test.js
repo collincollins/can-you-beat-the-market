@@ -13,19 +13,21 @@ describe('MarketSimulation Initialization', () => {
   });
 
   test('should initialize with correct simulation values', () => {
-    expect(simulation.currentDay).toBe(0);
+    // After refactor: uses currentIndex instead of currentDay
+    expect(simulation.currentIndex).toBe(0);
     expect(simulation.currentPrice).toBe(100);
     expect(simulation.userShares).toBe(1);
     expect(simulation.userCash).toBe(0);
-    expect(simulation.allPrices).toEqual([100]);
+    // rawData starts empty, populated during prepareDataset
+    expect(simulation.rawData).toEqual([]);
   });
 
   test('should update the marketData store with initial values', () => {
-    // Get the initial marketData from the Svelte store
+    // After refactor: stores start empty, populated during simulation playback
     const initialMarketData = get(marketData);
-    expect(initialMarketData.days).toEqual([0]);
-    expect(initialMarketData.marketPrices).toEqual([100]);
-    expect(initialMarketData.rollingAverages).toEqual([100]);
+    expect(initialMarketData.days).toEqual([]);
+    expect(initialMarketData.marketPrices).toEqual([]);
+    expect(initialMarketData.rollingAverages).toEqual([]);
     expect(initialMarketData.actions).toEqual([]);
   });
 
