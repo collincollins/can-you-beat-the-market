@@ -25,6 +25,27 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // SECURITY FIX: Require admin API key for this sensitive debugging function
+    const adminApiKey = process.env.ADMIN_API_KEY;
+    const providedApiKey = event.headers['x-admin-api-key'] || event.headers['X-Admin-Api-Key'];
+
+    // Verify admin API key is configured
+    if (!adminApiKey) {
+      console.error('ADMIN_API_KEY environment variable not configured');
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'Server configuration error' }),
+      };
+    }
+
+    // Verify the request includes valid admin credentials
+    if (!providedApiKey || providedApiKey !== adminApiKey) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({ message: 'Forbidden: Invalid or missing admin credentials' }),
+      };
+    }
+
     if (!isConnected) {
       await client.connect();
       isConnected = true;

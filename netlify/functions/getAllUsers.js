@@ -22,6 +22,28 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // SECURITY FIX: Use server-side API key instead of client-supplied query parameter
+    // The admin API key should be set as an environment variable
+    const adminApiKey = process.env.ADMIN_API_KEY;
+    const providedApiKey = event.headers['x-admin-api-key'] || event.headers['X-Admin-Api-Key'];
+
+    // Verify admin API key is configured
+    if (!adminApiKey) {
+      console.error('ADMIN_API_KEY environment variable not configured');
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'Server configuration error' }),
+      };
+    }
+
+    // Verify the request includes valid admin credentials
+    if (!providedApiKey || providedApiKey !== adminApiKey) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({ message: 'Forbidden: Invalid or missing admin credentials' }),
+      };
+    }
+
     if (!isConnected) {
       await client.connect();
       isConnected = true;
@@ -35,17 +57,6 @@ exports.handler = async (event, context) => {
     const database = client.db(dbName);
     const usersCollection = database.collection('users');
     const visitorsCollection = database.collection('visitors');
-
-    // Get requesting username from query
-    const requestingUser = event.queryStringParameters?.username;
-
-    // Only allow for user "collin"
-    if (requestingUser?.toLowerCase() !== 'collin') {
-      return {
-        statusCode: 403,
-        body: JSON.stringify({ message: 'Forbidden' }),
-      };
-    }
 
     // Get all users with game counts in single aggregation (avoids N+1 query problem)
     const usersWithCounts = await usersCollection.aggregate([
