@@ -1,13 +1,17 @@
 // __tests__/getAllUsers.security.test.js
-// Test demonstrating the admin authorization bypass vulnerability
+// Test demonstrating the admin authorization bypass vulnerability and its fix
 
 describe('getAllUsers Security - Authorization Bypass', () => {
   let handler;
   let mockClient;
   let mockDb;
   let mockUsersCollection;
+  const ADMIN_API_KEY = 'test-admin-key-123';
 
   beforeEach(() => {
+    // Set the admin API key environment variable
+    process.env.ADMIN_API_KEY = ADMIN_API_KEY;
+
     // Reset modules to ensure clean state
     jest.resetModules();
 
@@ -45,79 +49,113 @@ describe('getAllUsers Security - Authorization Bypass', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    delete process.env.ADMIN_API_KEY;
   });
 
-  test('VULNERABILITY: Should allow access when attacker provides username=collin in query', async () => {
-    // BEFORE FIX: This demonstrates the vulnerability
-    // An attacker can simply add ?username=collin to bypass authorization
-
+  test('FIXED: Query parameter bypass no longer works', async () => {
+    // AFTER FIX: Query parameter bypass is blocked
     const maliciousEvent = {
       httpMethod: 'GET',
       queryStringParameters: {
-        username: 'collin'  // Attacker-controlled value!
-      }
+        username: 'collin'  // This no longer grants access
+      },
+      headers: {}  // No API key provided
     };
 
     const result = await handler(maliciousEvent, {});
 
-    // BEFORE FIX: This should FAIL (return 403) but instead returns 200
-    // The vulnerability allows unauthorized access
-    expect(result.statusCode).toBe(200);
-    const body = JSON.parse(result.body);
-    expect(Array.isArray(body)).toBe(true);
-    expect(body.length).toBeGreaterThan(0);
-
-    console.log('VULNERABILITY CONFIRMED: Unauthorized access granted with query param bypass');
+    // AFTER FIX: Now correctly returns 403
+    expect(result.statusCode).toBe(403);
+    expect(result.body).toContain('Forbidden');
+    expect(result.body).toContain('Invalid or missing admin credentials');
   });
 
-  test('VULNERABILITY: Should allow access with case variations', async () => {
+  test('FIXED: Case variation query bypass no longer works', async () => {
     const maliciousEvent = {
       httpMethod: 'GET',
       queryStringParameters: {
-        username: 'COLLIN'  // Case variation also works due to .toLowerCase()
-      }
+        username: 'COLLIN'
+      },
+      headers: {}
     };
 
     const result = await handler(maliciousEvent, {});
 
-    // BEFORE FIX: This also bypasses security
-    expect(result.statusCode).toBe(200);
+    // AFTER FIX: Correctly blocked
+    expect(result.statusCode).toBe(403);
   });
 
-  test('Should reject requests without proper authorization header', async () => {
+  test('Should reject requests without API key header', async () => {
     const unauthorizedEvent = {
       httpMethod: 'GET',
-      queryStringParameters: {
-        username: 'attacker'
-      }
+      headers: {}
     };
 
     const result = await handler(unauthorizedEvent, {});
 
-    // This correctly returns 403
     expect(result.statusCode).toBe(403);
+    expect(result.body).toContain('Invalid or missing admin credentials');
   });
 
-  test('Should reject requests with no query parameters', async () => {
-    const noParamsEvent = {
+  test('Should reject requests with incorrect API key', async () => {
+    const invalidKeyEvent = {
       httpMethod: 'GET',
-      queryStringParameters: null
+      headers: {
+        'x-admin-api-key': 'wrong-key'
+      }
     };
 
-    const result = await handler(noParamsEvent, {});
+    const result = await handler(invalidKeyEvent, {});
 
     expect(result.statusCode).toBe(403);
   });
-});
 
-describe('Expected Behavior AFTER FIX', () => {
-  test('Should require server-side authentication (not query params)', () => {
-    // AFTER FIX: The function should:
-    // 1. Use environment variable or server-side session to verify admin
-    // 2. NOT trust client-supplied query parameters
-    // 3. Validate requests using secure headers (e.g., API keys, JWT tokens)
+  test('Should allow access with valid API key in lowercase header', async () => {
+    const validEvent = {
+      httpMethod: 'GET',
+      headers: {
+        'x-admin-api-key': ADMIN_API_KEY
+      }
+    };
 
-    // This test documents the expected secure behavior
-    expect(true).toBe(true);
+    const result = await handler(validEvent, {});
+
+    expect(result.statusCode).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(Array.isArray(body)).toBe(true);
+  });
+
+  test('Should allow access with valid API key in mixed-case header', async () => {
+    const validEvent = {
+      httpMethod: 'GET',
+      headers: {
+        'X-Admin-Api-Key': ADMIN_API_KEY
+      }
+    };
+
+    const result = await handler(validEvent, {});
+
+    expect(result.statusCode).toBe(200);
+  });
+
+  test('Should return 500 when ADMIN_API_KEY is not configured', async () => {
+    // Remove the API key
+    delete process.env.ADMIN_API_KEY;
+
+    // Reload handler without API key configured
+    jest.resetModules();
+    handler = require('../netlify/functions/getAllUsers').handler;
+
+    const event = {
+      httpMethod: 'GET',
+      headers: {
+        'x-admin-api-key': 'some-key'
+      }
+    };
+
+    const result = await handler(event, {});
+
+    expect(result.statusCode).toBe(500);
+    expect(result.body).toContain('Server configuration error');
   });
 });
