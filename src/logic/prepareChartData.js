@@ -86,12 +86,16 @@ export function preComputeChartData(rawVisitorDocs) {
     const { slope, intercept, slopeUncertainty } = linearRegression(xValues, yValues);
 
     // Step 4: Generate points for the line
-    let xMin = Math.min(...xValues);
-    let xMax = Math.max(...xValues);
+    // FIX: Check for empty array BEFORE calling Math.min/Math.max
+    // Math.min(...[]) returns Infinity, Math.max(...[]) returns -Infinity
+    let xMin, xMax;
     if (xValues.length === 0) {
         xMin = 0;
         xMax = 0;
-      }
+    } else {
+        xMin = Math.min(...xValues);
+        xMax = Math.max(...xValues);
+    }
     const numLinePoints = 100;
     const step = (xMax - xMin) / (numLinePoints - 1) || 0;
     const regressionPoints = [];
