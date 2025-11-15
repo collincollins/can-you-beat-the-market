@@ -2,6 +2,8 @@
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const crypto = require('crypto');
+const { validatePlayerName, validateScore, validateUserId } = require('./utils/sanitize');
+const { safeParseJSON, createBadRequestResponse } = require('./utils/parseJSON');
 
 const uri = process.env.MONGODB_ENV_VAR_CAN_YOU_BEAT_THE_MARKET;
 const client = new MongoClient(uri, {
@@ -37,34 +39,46 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // parse the incoming data.
-    const data = JSON.parse(event.body);
-    const { playerName, score, userId } = data;
+    // SECURITY FIX: Safely parse JSON
+    const parseResult = safeParseJSON(event.body);
+    if (!parseResult.success) {
+      return createBadRequestResponse(parseResult.error);
+    }
+
+    const { playerName, score, userId } = parseResult.data;
 
     console.log('Received high score submission.');
 
-    // validate input.
-    if (
-      typeof playerName !== 'string' ||
-      playerName.trim() === '' ||
-      typeof score !== 'number' ||
-      score < 0
-    ) {
-      console.log('Validation failed for data.');
+    // SECURITY FIX: Comprehensive input validation with sanitization
+    const playerNameValidation = validatePlayerName(playerName);
+    if (!playerNameValidation.valid) {
+      console.log('Player name validation failed:', playerNameValidation.error);
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Invalid input data.' }),
+        body: JSON.stringify({ message: playerNameValidation.error }),
       };
     }
-    
-    // Require userId for high score submission (logged-in users only)
-    if (!userId) {
-      console.log('High score submission requires logged-in user.');
+
+    const scoreValidation = validateScore(score);
+    if (!scoreValidation.valid) {
+      console.log('Score validation failed:', scoreValidation.error);
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: scoreValidation.error }),
+      };
+    }
+
+    const userIdValidation = validateUserId(userId);
+    if (!userIdValidation.valid) {
+      console.log('UserId validation failed:', userIdValidation.error);
       return {
         statusCode: 403,
         body: JSON.stringify({ message: 'Must be logged in to submit high score.' }),
       };
     }
+
+    // Use sanitized player name
+    const sanitizedPlayerName = playerNameValidation.sanitized;
 
     // connect to MongoDB if not already connected.
     if (!isConnected) {
@@ -107,7 +121,7 @@ exports.handler = async (event, context) => {
       {
         $set: {
           updatedAt: new Date(),
-          playerName: playerName.trim(),
+          playerName: sanitizedPlayerName,  // SECURITY FIX: Use sanitized name
           userId: userId,
           visitorFingerprint: visitorFingerprint  // save hashed IP here.
         },
@@ -120,7 +134,7 @@ exports.handler = async (event, context) => {
     // 2. append a history log in the "highScoreHistory" collection.
     const highScoreHistoryCollection = database.collection('highScoreHistory');
     await highScoreHistoryCollection.insertOne({
-      playerName: playerName.trim(),
+      playerName: sanitizedPlayerName,  // SECURITY FIX: Use sanitized name
       score,
       userId: userId,
       visitorFingerprint: visitorFingerprint,  // save hashed IP for history as well.
