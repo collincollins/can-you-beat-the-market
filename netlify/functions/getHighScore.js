@@ -42,6 +42,10 @@ exports.handler = async (event, context) => {
     if (!currentScoreDoc) {
       return {
         statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes - high scores change infrequently
+        },
         body: JSON.stringify({ score: 0, playerName: 'No one yet' }),
       };
     }
@@ -50,6 +54,10 @@ exports.handler = async (event, context) => {
     const { score, playerName } = currentScoreDoc;
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes - high scores change infrequently
+      },
       body: JSON.stringify({ score, playerName }),
     };
   } catch (error) {

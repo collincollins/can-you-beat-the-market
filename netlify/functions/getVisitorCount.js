@@ -49,8 +49,16 @@ exports.handler = async (event, context) => {
 
     const count = result[0]?.count || 0;
 
+    // Add aggressive caching headers to reduce function invocations
+    // Visitor count changes infrequently, so 24-hour cache is safe
+    // This significantly reduces function invocation costs
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=86400, s-maxage=86400', // 24 hours
+        'X-Cache-Date': new Date().toISOString(),
+      },
       body: JSON.stringify({ count }),
     };
   } catch (error) {

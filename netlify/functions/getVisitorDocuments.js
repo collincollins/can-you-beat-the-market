@@ -114,10 +114,15 @@ exports.handler = async (event, context) => {
       
       console.log(`Response size: ${jsonString.length} bytes uncompressed, ${compressed.length} bytes compressed`);
       
+      // Add HTTP caching headers - 6 hours matching MongoDB cache TTL
+      // Use no-cache when force=true to bypass HTTP cache
+      const cacheControl = force === 'true' ? 'no-cache' : 'public, max-age=21600, s-maxage=21600';
+      
       return {
         statusCode: 200,
         body: compressed.toString('base64'),
         headers: {
+          'Cache-Control': cacheControl,
           'X-Cache-Date': cachedData.updatedAt.toISOString(),
           'Content-Encoding': 'gzip',
           'Content-Type': 'application/json'
@@ -290,10 +295,15 @@ exports.handler = async (event, context) => {
     
     console.log(`Response size: ${jsonString.length} bytes uncompressed, ${compressed.length} bytes compressed (was ~433KB before optimization)`);
 
+    // Add HTTP caching headers - 6 hours matching MongoDB cache TTL
+    // Use no-cache when force=true to bypass HTTP cache
+    const cacheControl = force === 'true' ? 'no-cache' : 'public, max-age=21600, s-maxage=21600';
+
     return {
       statusCode: 200,
       body: compressed.toString('base64'),
       headers: {
+        'Cache-Control': cacheControl,
         'X-Cache-Date': now.toISOString(),
         'X-Cache-Status': 'MISS',
         'Content-Encoding': 'gzip',

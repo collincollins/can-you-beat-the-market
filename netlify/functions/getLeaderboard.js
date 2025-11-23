@@ -66,8 +66,16 @@ exports.handler = async (event, context) => {
     
     if (isCacheValid) {
       console.log(`Using cached leaderboard for ${cacheId}`);
+      // Add HTTP caching headers - 6 hours matching MongoDB cache TTL
+      // Use no-cache when force=true to bypass HTTP cache
+      const cacheControl = force === 'true' ? 'no-cache' : 'public, max-age=21600, s-maxage=21600';
       return {
         statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': cacheControl,
+          'X-Cache-Date': cachedData.updatedAt.toISOString(),
+        },
         body: JSON.stringify(cachedData.data),
       };
     }
@@ -268,8 +276,16 @@ exports.handler = async (event, context) => {
 
     console.log(`Leaderboard cache updated for ${cacheId}`);
 
+    // Add HTTP caching headers - 6 hours matching MongoDB cache TTL
+    // Use no-cache when force=true to bypass HTTP cache
+    const cacheControl = force === 'true' ? 'no-cache' : 'public, max-age=21600, s-maxage=21600';
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': cacheControl,
+        'X-Cache-Date': now.toISOString(),
+      },
       body: JSON.stringify(simplifiedLeaderboard),
     };
   } catch (error) {

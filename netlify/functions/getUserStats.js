@@ -106,7 +106,14 @@ exports.handler = async (event, context) => {
     
     if (isStale) {
       // Update the cache by calculating from all valid games
-      const allValidGames = await visitorsCollection.find({ valid: true }).toArray();
+      // CRITICAL FIX: Only fetch the fields we need to reduce memory usage
+      // This prevents loading hundreds of thousands of full documents into memory
+      // Add timeout to prevent long-running queries
+      const allValidGames = await visitorsCollection
+        .find({ valid: true })
+        .project({ portfolioCAGR: 1, buyHoldCAGR: 1, _id: 0 }) // Only fetch needed fields
+        .maxTimeMS(10000) // 10 second timeout
+        .toArray();
       
       const globalAvgExcessCAGR = allValidGames.length > 0
         ? allValidGames.reduce((sum, g) => sum + (g.portfolioCAGR - g.buyHoldCAGR), 0) / allValidGames.length
