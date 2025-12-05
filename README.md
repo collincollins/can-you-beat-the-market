@@ -6,6 +6,11 @@ A neo-brutalist simulation game that challenges you to time your trades and outp
 ## Overview
 This project is built with Svelte and bundled with Vite. It leverages Chart.js for real-time charting and Netlify serverless functions to handle backend operations including user authentication, personal statistics tracking, high score management, and visitor analytics.
 
+## Site Statistics
+- **33,500+** unique visitors across **449,000** sessions
+- **353,000+** games played
+- Processed **1,060,000+** years of market simulation in **5,200+** hours of playtime
+
 ## Key Features
 - **Dual Market Modes**: Choose between simulated market data (geometric Brownian motion with 9% drift and 20% volatility) or real historical S&P 500 data with randomly selected, date-blinded periods.
 - **Time Compression**: Experience 3 years of market movements in 30 seconds (10 seconds = 1 market year), with an optional slow-motion mode that doubles the duration.
