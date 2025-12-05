@@ -1287,16 +1287,13 @@ function handleStatsClose() {
           style="height: 40px; width: 239px;"
         />
       </a>
-      <div style="font-size: 0.7em; color: 'black'; margin-top: -10px; margin-left: 50px; margin-right: 50px;">
-        <sup>*</sup> <a href="https://dontbuythat.org" target="_blank" rel="noopener noreferrer" style="color: #435b9f; text-decoration: none;">Don't Buy That</a> coffee and see how much your money could grow into.
-      </div>
     {/if}
     <div class="counter-container" style="margin-bottom: 20px;">
       <p style="margin-top: 8px; margin-bottom: 2px; font-size: 0.5em;">Visitors</p>
       <retro-counter></retro-counter>
     </div>
     <div>
-      <p style="margin-top: 0px; font-size: 0.5em;">made by collin</p>
+      <p style="margin-top: 0px; font-size: 0.5em;">made by <a href="https://collincollins.com" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">collin</a></p>
     </div>
   </div>
 
